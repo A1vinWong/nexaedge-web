@@ -272,14 +272,42 @@ with tab2:
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== 📧 底部统一白名单 + 📥 数据保存与下载 ====================
-# ==================== 📊 页面底部访客计数器 ====================
-st.markdown("<br><hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
+# ==================== 📧 底部统一白名单递交表单 ====================
+st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
+st.markdown(f'<h3 style="text-align:center; color:#A2FF00; font-size:22px;">{"🚀 Secure Your Early Whitelist Seat" if lang=="English" else "🚀 锁定早期测试网白名单席位"}</h3>', unsafe_allow_html=True)
 
-# 动态生成的极客风黑绿计数器图标（自动统计独立访客与浏览量）
+with st.form("unified_whitelist_form"):
+    u_email = st.text_input("Email Address" if lang=="English" else "您的电子邮箱:")
+    u_wallet = st.text_input("Solana Wallet Address" if lang=="English" else "Solana 钱包地址:")
+    submitted = st.form_submit_button("SUBMIT & RETAIN SEAT ⚡" if lang=="English" else "提交并归档体验收益 ⚡")
+    if submitted:
+        if u_email.strip() != "":
+            with open("whitelist.txt", "a", encoding="utf-8") as f:
+                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
+            st.balloons()
+            st.success(f"🎯 Saved successfully with {st.session_state.app_earned:,.1f} $NEXA score!")
+
+# ==================== 📥 后台管理员白名单下载 ====================
+st.markdown("<br>", unsafe_allow_html=True)
+if os.path.exists("whitelist.txt"):
+    with open("whitelist.txt", "r", encoding="utf-8") as f:
+        whitelist_data = f.read()
+    
+    st.download_button(
+        label="📥 Download Whitelist Data (Admin Only)" if lang=="English" else "📥 下载白名单数据 (管理员专用)",
+        data=whitelist_data,
+        file_name="nexaedge_whitelist.txt",
+        mime="text/plain",
+        key="admin_download_btn"
+    )
+else:
+    st.markdown("<p style='text-align:center; color:#555; font-size:12px;'>暂无白名单数据提交 / No data submitted yet</p>", unsafe_allow_html=True)
+
+# ==================== 📊 访客计数器展示（独立排版层） ====================
+st.markdown("<br><hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
 visitor_counter_html = """
-<div style="text-align: center; margin-top: 15px; opacity: 0.85;">
-    <p style="color: #88929b; font-size: 12px; margin-bottom: 8px;">
+<div style="text-align: center; margin-top: 5px; opacity: 0.85;">
+    <p style="color: #88929b; font-size: 11px; margin-bottom: 8px; letter-spacing: 1px;">
         ➔ NEXAEDGE NETWORK NODE STATUS
     </p>
     <a href="https://info.flagcounter.com/NexaEdge">
@@ -290,4 +318,5 @@ visitor_counter_html = """
 """
 st.markdown(visitor_counter_html, unsafe_allow_html=True)
 
+# 页脚版权
 st.markdown("<br><p style='text-align:center; color:#445; font-size: 11px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
