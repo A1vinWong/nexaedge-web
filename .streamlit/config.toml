@@ -1,0 +1,10 @@
+[theme]
+primaryColor = "#A2FF00"
+backgroundColor = "#0b0f12"
+secondaryBackgroundColor = "#11171d"
+textColor = "#ffffff"
+font = "sans serif"
+
+[server]
+# 强制 Streamlit 忽略系统的颜色偏好，直接使用上面定义的暗黑配置
+theme = "dark"
