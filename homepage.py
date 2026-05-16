@@ -11,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 🟢 像素级复刻：黑绿科技风全局 CSS 样式 ---
+# --- 🟢 极客黑绿科技风全局 CSS 样式 ---
 st.markdown("""
     <style>
     /* 全局深色底色 */
@@ -102,13 +102,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ==================== 🌐 TOP: 语言一键切换与状态初始化 ====================
+# ==================== 🌐 TOP: 状态初始化与语言一键切换 ====================
 if 'app_earned' not in st.session_state:
-    st.session_state.app_earned = 1452.70000  # 像素级同步截图中的初始代币量
+    st.session_state.app_earned = 1452.70000  # 同步你截图中的代币基数
 if 'app_running' not in st.session_state:
     st.session_state.app_running = False
 if 'chart_history' not in st.session_state:
-    # 预设一条平缓向上的初始算力历史曲线
     st.session_state.chart_history = [25.0, 28.0, 26.0, 31.0, 29.0, 35.0, 32.0, 38.0, 36.0, 41.0, 39.0, 42.0]
 
 lang_col1, lang_col2 = st.columns([3, 1])
@@ -120,26 +119,29 @@ with lang_col2:
 
 st.markdown("<div style='margin-top: -10px;'></div>", unsafe_allow_html=True)
 
-# ==================== 🪐 LOGO 门面横幅 ====================
-if os.path.exists("IMG_7651.jpeg"):
-    st.image("IMG_7651.jpeg", use_container_width=True)
-else:
-    st.markdown(f'<h1 style="text-align:center; color:#A2FF00; font-size:38px; font-weight:800; margin-bottom:0;">NexaEdge Network</h1>', unsafe_allow_html=True)
-
+# 动态大标题
+st.markdown(f'<h1 style="text-align:center; color:#A2FF00; font-size:38px; font-weight:800; margin-bottom:0;">NexaEdge Network</h1>', unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ==================== 🗺️ 核心多页签系统 (Tabs) ====================
+# ==================== 🗺️ 核心双页签切换系统 ====================
 tab1_title = "🌐 Overview & Pillars" if lang == "English" else "🌐 项目通识与壁垒"
 tab2_title = "📱 Node Dashboard (Live)" if lang == "English" else "📱 边缘节点控制台 (实时)"
 
 tab1, tab2 = st.tabs([tab1_title, tab2_title])
 
 # =========================================================================
-# 🏠 第一页：完整的项目官方硬核介绍与量化计算器
+# 🏠 第一页：完整的项目官方硬核介绍 + 实机渲染图 + 量化计算器
 # =========================================================================
 with tab1:
     if lang == "English":
         st.markdown('<p style="font-size: 18px; color: #bdc3c7; text-align: center; margin-top:10px; margin-bottom: 25px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
+
+        # 🪐 核心加回：在第一页的核心醒目位置展示手机 App 的高精渲染图！
+        # 请确保把你的图片命名为 image.png 放在代码同级目录下
+        if os.path.exists("image.png"):
+            st.image("image.png", caption="NexaEdge Mobile App Interface Preview", use_container_width=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
 
         # 核心数据流
         c1, c2, c3 = st.columns(3)
@@ -184,6 +186,12 @@ with tab1:
         # 中文完整介绍
         st.markdown('<p style="font-size: 17px; color: #bdc3c7; text-align: center; margin-top:10px; margin-bottom: 25px;">让全球 50 亿部闲置手机，成为 AI 时代的高纯度语料燃料工厂</p>', unsafe_allow_html=True)
 
+        # 🪐 核心加回：在第一页的核心醒目位置展示手机 App 的高精渲染图！
+        if os.path.exists("image.png"):
+            st.image("image.png", caption="NexaEdge 手机端 App 真实视觉预览", use_container_width=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="平台技术抽成", value="20%", delta="纯现金流造血")
         with c2: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
@@ -221,26 +229,24 @@ with tab1:
             st.warning(f"💼 您的算力采购预算总计：**{data_need * 6.0:.2f} USD**")
 
 # =========================================================================
-# 📱 第二页：修复后的全动态手机端控制台交互体验
+# 📱 第二页：全动态、可操作的手机端控制台实时体验舱
 # =========================================================================
 with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 📱 渲染虚拟手机外壳
+    # 📱 渲染虚拟手机外壳组件
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
     
-    # 模块 1：DASHBOARD & 实时算力面积图 (完美替换旧组件，确保稳定运行)
+    # 模块 1：DASHBOARD & 实时算力面积图
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
     current_hash = random.uniform(43.5, 49.8) if st.session_state.app_running else 0.0
     st.markdown(f'<div class="app-title">DASHBOARD</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="font-size:11px; color:#88929b; margin-bottom:5px;">NETWORK HASH RATE (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div>', unsafe_allow_html=True)
     
-    # 如果处于启动运行状态，则让算力历史数据实现动态尾部滚动
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
     
-    # 将历史列表包装成 DataFrame 并调用原生内置高亮图表
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
     st.area_chart(chart_df, height=90, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -290,7 +296,7 @@ with tab2:
     ]
     if st.session_state.app_running:
         st.markdown(f'<div class="app-log">{random.choice(logs_pool)}<br>{random.choice(logs_pool)}</div>', unsafe_allow_html=True)
-        # 挂机产生数字高速跳动效果
+        # 实时滚年代币
         st.session_state.app_earned += 0.0142
         time.sleep(0.4)
         st.rerun()
