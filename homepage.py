@@ -23,7 +23,7 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式（精准去黑条不伤图表版） ---
+# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式 ---
 st.markdown("""
     <style>
     /* 全局去暗灰背景 */
@@ -35,16 +35,6 @@ st.markdown("""
         display: none !important;
     }
     
-    /* 🔥【精准锁定修复】只针对产生空胶囊黑条的封闭容器进行剔除，绝不误伤 image 和 chart */
-    [data-testid="stVerticalBlock"] > div:empty,
-    [data-testid="stMarkdownContainer"] p:empty,
-    .element-container:empty {
-        display: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        height: 0 !important;
-    }
-    
     /* 模块样式 */
     .feature-box {
         background-color: #11171d; 
@@ -53,27 +43,20 @@ st.markdown("""
         border-left: 5px solid #A2FF00; 
         margin-bottom: 20px;
     }
-    .app-container {
-        background-color: #11171d;
-        border: 2px solid #1e272e;
-        border-radius: 24px;
-        padding: 25px;
-        max-width: 450px;
-        margin: 0 auto;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-        text-align: center;
+    
+    /* 优化原生 st.container 卡片的背景色与边框，完美贴合暗黑科技风 */
+    [data-testid="stContainer"] {
+        background-color: #161c23 !important;
+        border: 1px solid #252e38 !important;
+        border-radius: 16px !important;
+        padding: 18px !important;
+        margin-bottom: 15px !important;
     }
-    .app-card {
-        background-color: #161c23;
-        border: 1px solid #252e38;
-        border-radius: 16px;
-        padding: 18px;
-        margin-bottom: 15px;
-        text-align: left;
-    }
+    
     .app-title { font-size: 14px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 26px; font-weight: 700; }
     .neon-green-text { color: #A2FF00 !important; }
+    
     .temp-section {
         display: flex;
         align-items: center;
@@ -92,6 +75,7 @@ st.markdown("""
         font-size: 12px;
         color: #88929b;
     }
+    
     .stTabs [data-baseweb="tab-list"] { gap: 10px; justify-content: center; }
     .stTabs [data-baseweb="tab"] {
         background-color: #11171d !important;
@@ -159,7 +143,7 @@ with tab1:
 
         st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
         hours = st.slider("Estimated Overnight Duration (Hours/Day):", min_value=1, max_value=12, value=6)
-        device_os = st.radio("Operating System:", ["iOS (iPhone)", "Android"], horizontal=True)
+        device_os = st.radio("Operating System:", ["iOS (iPhone)", "Android"], horizontal=True, key="os_en")
         monthly_est = hours * 0.35 * 30
         st.success(f"🎉 Estimated Monthly Yield: {monthly_est:.2f} USDT")
 
@@ -190,7 +174,7 @@ with tab1:
 
         st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
         hours = st.slider("预估每日夜间闲置充电时长 (小时/天):", min_value=1, max_value=12, value=6)
-        device_os = st.radio("操作系统类型:", ["iOS (iPhone)", "Android"], horizontal=True)
+        device_os = st.radio("操作系统类型:", ["iOS (iPhone)", "Android"], horizontal=True, key="os_zh")
         monthly_est = hours * 0.35 * 30
         st.success(f"🎉 预计每月可为您带来收益约: {monthly_est:.2f} USDT")
 
@@ -211,96 +195,96 @@ with tab1:
         """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（修复图表失踪问题）
+# 📱 第二页：边缘节点控制台（改用原生 Container，完美消灭空格）
 # =========================================================================
 with tab2:
-    st.markdown('<div class="app-container" style="margin-top:15px; padding-bottom:5px;">', unsafe_allow_html=True)
-    
-    # --- 📊 模块 1：控制面板 ---
-    st.markdown('<div class="app-card">', unsafe_allow_html=True)
-    panel_title = "DASHBOARD" if lang == "English" else "控制面板"
-    st.markdown(f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span class="app-title">{panel_title}</span><span style="color:#88929b; font-size:14px;">⚙️</span></div>', unsafe_allow_html=True)
-    
-    current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
-    hash_label = "NETWORK HASH RATE" if lang == "English" else "当前节点算力"
-    st.markdown(f'<div style="font-size:11px; color:#88929b; margin-bottom:5px;">{hash_label} (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div>', unsafe_allow_html=True)
-    
-    if st.session_state.app_running:
-        st.session_state.chart_history.pop(0)
-        st.session_state.chart_history.append(current_hash)
-    chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
-    st.line_chart(chart_df, height=95, use_container_width=True)
-    
-    current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
-    status_tag = "SAFE" if lang == "English" else "安全控温中"
-    
-    st.markdown(f"""
-    <div class="temp-section">
-        <div style="display:flex; align-items:center;"><span style="font-size:24px; margin-right:8px;">🌡️</span><span class="app-value" style="font-size:22px;">{current_temp:.1f}°C</span></div>
-        <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:4px 10px; border-radius:12px; border:1px solid #A2FF00;">{status_tag}</span>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # --- ⏱️ 模块 2：运行时长与收益比面板 ---
-    st.markdown('<div class="app-card">', unsafe_allow_html=True)
-    timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
-    st.markdown(f'<div class="app-title">{timer_title}</div>', unsafe_allow_html=True)
-    
-    s_sec = st.session_state.session_seconds
-    time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
-    session_generated = s_sec * 0.25
-    
-    t_label = "SESSION DURATION:" if lang == "English" else "本次连续运行时间:"
-    r_label = "EST. RATIO:" if lang == "English" else "当前时产比折算:"
-    ratio_text = "0.25 NEXA / sec (≈ 900 NEXA/hr)" if lang == "English" else "0.25 NEXA / 秒 (约 900 NEXA/小时)"
-    yield_lbl = "SESSION YIELD:" if lang == "English" else "本次会话已产出:"
-    
-    st.markdown(f"""
-    <div style="display:flex; justify-content:space-between; margin-top:8px;">
-        <div style="text-align:left;">
-            <div style="font-size:11px; color:#88929b;">{t_label}</div>
-            <div class="app-value" style="font-size:20px; color:#ffffff; font-family:monospace;">{time_str}</div>
-        </div>
-        <div style="text-align:right;">
-            <div style="font-size:11px; color:#88929b;">{yield_lbl}</div>
-            <div class="app-value neon-green-text" style="font-size:20px;">+{session_generated:,.1f} <span style="font-size:11px; color:#ffffff;">NEXA</span></div>
-        </div>
-    </div>
-    <div class="ratio-box">
-        ⚡ <b>{r_label}</b> {ratio_text}
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # --- 🟢 模块 3：节点全局总详情 ---
-    st.markdown('<div class="app-card">', unsafe_allow_html=True)
-    node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
-    st.markdown(f'<div class="app-title" style="margin-bottom:12px;">{node_header}</div>', unsafe_allow_html=True)
-    st.markdown('<div style="font-size:12px; color:#88929b; margin-bottom:12px;">NODE_ID: <span style="color:#ffffff; font-weight:bold;">@nexaedge / Acc1 (active)</span></div>', unsafe_allow_html=True)
-    
-    if lang == "English":
-        run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
-        status_lbl = "MINING STATUS:"
-        earnings_lbl = "TOTAL ACCUMULATED:"
-    else:
-        run_status = "运行中" if st.session_state.app_running else "待机就绪"
-        status_lbl = "挖矿状态:"
-        earnings_lbl = "账户总累计代币:"
+    if target_image:
+        st.image(target_image, use_container_width=True)
         
-    status_color = "#A2FF00" if st.session_state.app_running else "#88929b"
+    st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
     
-    st.markdown(f"""
-    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-        <span style="font-size:11px; color:#88929b; font-weight:bold;">{status_lbl}</span>
-        <span style="font-size:11px; color:#88929b; font-weight:bold;">{earnings_lbl}</span>
-    </div>
-    <div style="display:flex; justify-content:space-between; align-items:baseline;">
-        <span style="color:{status_color}; font-size:15px; font-weight:800;">● {run_status}</span>
-        <span class="app-value neon-green-text" style="font-size:24px;">{st.session_state.app_earned:,.2f} <span style="font-size:13px; color:#ffffff; font-weight:normal;">NEXA</span></span>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    # --- 📊 模块 1：控制面板 (原生容器包装) ---
+    with st.container(border=True):
+        panel_title = "DASHBOARD" if lang == "English" else "控制面板"
+        st.markdown(f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span class="app-title">{panel_title}</span><span style="color:#88929b; font-size:14px;">⚙️</span></div>', unsafe_allow_html=True)
+        
+        current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
+        hash_label = "NETWORK HASH RATE" if lang == "English" else "当前节点算力"
+        st.markdown(f'<div style="font-size:11px; color:#88929b; margin-bottom:5px;">{hash_label} (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div>', unsafe_allow_html=True)
+        
+        if st.session_state.app_running:
+            st.session_state.chart_history.pop(0)
+            st.session_state.chart_history.append(current_hash)
+        chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
+        st.line_chart(chart_df, height=105, use_container_width=True)
+        
+        current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
+        status_tag = "SAFE" if lang == "English" else "安全控温中"
+        
+        st.markdown(f"""
+        <div class="temp-section">
+            <div style="display:flex; align-items:center;"><span style="font-size:24px; margin-right:8px;">🌡️</span><span class="app-value" style="font-size:22px;">{current_temp:.1f}°C</span></div>
+            <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:4px 10px; border-radius:12px; border:1px solid #A2FF00;">{status_tag}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # --- ⏱️ 模块 2：运行时长与收益比面板 (原生容器包装) ---
+    with st.container(border=True):
+        timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
+        st.markdown(f'<div class="app-title">{timer_title}</div>', unsafe_allow_html=True)
+        
+        s_sec = st.session_state.session_seconds
+        time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+        session_generated = s_sec * 0.25
+        
+        t_label = "SESSION DURATION:" if lang == "English" else "本次连续运行时间:"
+        r_label = "EST. RATIO:" if lang == "English" else "当前时产比折算:"
+        ratio_text = "0.25 NEXA / sec (≈ 900 NEXA/hr)" if lang == "English" else "0.25 NEXA / 秒 (约 900 NEXA/小时)"
+        yield_lbl = "SESSION YIELD:" if lang == "English" else "本次会话已产出:"
+        
+        st.markdown(f"""
+        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+            <div style="text-align:left;">
+                <div style="font-size:11px; color:#88929b;">{t_label}</div>
+                <div class="app-value" style="font-size:20px; color:#ffffff; font-family:monospace;">{time_str}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:11px; color:#88929b;">{yield_lbl}</div>
+                <div class="app-value neon-green-text" style="font-size:20px;">+{session_generated:,.1f} <span style="font-size:11px; color:#ffffff;">NEXA</span></div>
+            </div>
+        </div>
+        <div class="ratio-box">
+            ⚡ <b>{r_label}</b> {ratio_text}
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # --- 🟢 模块 3：节点全局总详情 (原生容器包装) ---
+    with st.container(border=True):
+        node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
+        st.markdown(f'<div class="app-title" style="margin-bottom:12px;">{node_header}</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:12px; color:#88929b; margin-bottom:12px;">NODE_ID: <span style="color:#ffffff; font-weight:bold;">@nexaedge / Acc1 (active)</span></div>', unsafe_allow_html=True)
+        
+        if lang == "English":
+            run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
+            status_lbl = "MINING STATUS:"
+            earnings_lbl = "TOTAL ACCUMULATED:"
+        else:
+            run_status = "运行中" if st.session_state.app_running else "待机就绪"
+            status_lbl = "挖矿状态:"
+            earnings_lbl = "账户总累计代币:"
+            
+        status_color = "#A2FF00" if st.session_state.app_running else "#88929b"
+        
+        st.markdown(f"""
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span style="font-size:11px; color:#88929b; font-weight:bold;">{status_lbl}</span>
+            <span style="font-size:11px; color:#88929b; font-weight:bold;">{earnings_lbl}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <span style="color:{status_color}; font-size:15px; font-weight:800;">● {run_status}</span>
+            <span class="app-value neon-green-text" style="font-size:24px;">{st.session_state.app_earned:,.2f} <span style="font-size:13px; color:#ffffff; font-weight:normal;">NEXA</span></span>
+        </div>
+        """, unsafe_allow_html=True)
 
     # 🕹️ 核心控制大按钮
     if not st.session_state.app_running:
@@ -320,8 +304,6 @@ with tab2:
         st.session_state.session_seconds += 1     
         time.sleep(1.0)                            
         st.rerun()
-            
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== 📧 底部统一白名单递交表单 ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:25px;'>", unsafe_allow_html=True)
