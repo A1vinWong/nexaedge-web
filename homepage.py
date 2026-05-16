@@ -64,6 +64,15 @@ st.markdown("""
         border-radius: 12px;
         margin-top: 10px;
     }
+    .ratio-box {
+        background-color: #11171d;
+        border: 1px dashed #252e38;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #88929b;
+    }
     .stTabs [data-baseweb="tab-list"] { gap: 10px; justify-content: center; }
     .stTabs [data-baseweb="tab"] {
         background-color: #11171d !important;
@@ -97,6 +106,8 @@ st.markdown("""
 if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
+# 新增：运行时长计数状态（以秒为单位）
+if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 
 # 顶栏标题
 st.markdown(f'<h1 style="text-align:center; color:#A2FF00; font-size:38px; font-weight:800; margin-bottom:0;">NexaEdge Network</h1>', unsafe_allow_html=True)
@@ -187,7 +198,7 @@ with tab1:
         """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台
+# 📱 第二页：边缘节点控制台（新增时间收益比组件）
 # =========================================================================
 with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -224,7 +235,41 @@ with tab2:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # --- 🟢 模块 2：节点详情 ---
+    # --- ⏱️ 核心新增：时光计算器与时间收益比例面板 ---
+    st.markdown('<div class="app-card">', unsafe_allow_html=True)
+    timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
+    st.markdown(f'<div class="app-title">{timer_title}</div>', unsafe_allow_html=True)
+    
+    # 将累计的秒数转换成 00:00:00 格式
+    s_sec = st.session_state.session_seconds
+    time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+    
+    # 计算当前会话产生的临时估算代币数 (假定1秒挖0.25个NEXA)
+    session_generated = s_sec * 0.25
+    
+    t_label = "SESSION DURATION:" if lang == "English" else "本次连续运行时间:"
+    r_label = "EST. RATIO:" if lang == "English" else "当前时产比折算:"
+    ratio_text = "0.25 NEXA / sec (≈ 900 NEXA/hr)" if lang == "English" else "0.25 NEXA / 秒 (约 900 NEXA/小时)"
+    yield_lbl = "SESSION YIELD:" if lang == "English" else "本次会话已产出:"
+    
+    st.markdown(f"""
+    <div style="display:flex; justify-content:space-between; margin-top:8px;">
+        <div style="text-align:left;">
+            <div style="font-size:11px; color:#88929b;">{t_label}</div>
+            <div class="app-value" style="font-size:20px; color:#ffffff; font-family:monospace;">{time_str}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px; color:#88929b;">{yield_lbl}</div>
+            <div class="app-value neon-green-text" style="font-size:20px;">+{session_generated:,.1f} <span style="font-size:11px; color:#ffffff;">NEXA</span></div>
+        </div>
+    </div>
+    <div class="ratio-box">
+        ⚡ <b>{r_label}</b> {ratio_text}
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # --- 🟢 模块 2：节点全局总详情 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
     node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
     st.markdown(f'<div class="app-title" style="margin-bottom:12px;">{node_header}</div>', unsafe_allow_html=True)
@@ -233,11 +278,11 @@ with tab2:
     if lang == "English":
         run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
         status_lbl = "MINING STATUS:"
-        earnings_lbl = "TOKEN EARNINGS:"
+        earnings_lbl = "TOTAL ACCUMULATED:"
     else:
         run_status = "运行中" if st.session_state.app_running else "待机就绪"
         status_lbl = "挖矿状态:"
-        earnings_lbl = "已积累代币收益:"
+        earnings_lbl = "账户总累计代币:"
         
     status_color = "#A2FF00" if st.session_state.app_running else "#88929b"
     
@@ -248,7 +293,7 @@ with tab2:
     </div>
     <div style="display:flex; justify-content:space-between; align-items:baseline;">
         <span style="color:{status_color}; font-size:15px; font-weight:800;">● {run_status}</span>
-        <span class="app-value neon-green-text" style="font-size:24px;">{st.session_state.app_earned:,.1f} <span style="font-size:13px; color:#ffffff; font-weight:normal;">NEXA</span></span>
+        <span class="app-value neon-green-text" style="font-size:24px;">{st.session_state.app_earned:,.2f} <span style="font-size:13px; color:#ffffff; font-weight:normal;">NEXA</span></span>
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -265,9 +310,11 @@ with tab2:
             st.session_state.app_running = False
             st.rerun()
             
+    # 动态刷新渲染逻辑
     if st.session_state.app_running:
-        st.session_state.app_earned += 0.125
-        time.sleep(0.5)
+        st.session_state.app_earned += 0.25       # 增加全局总代币
+        st.session_state.session_seconds += 1     # 运行时间秒数自增
+        time.sleep(1.0)                            # 严格一秒刷新一次
         st.rerun()
             
     st.markdown('</div>', unsafe_allow_html=True)
@@ -283,7 +330,7 @@ with st.form("unified_whitelist_form"):
     if submitted:
         if u_email.strip() != "":
             with open("whitelist.txt", "a", encoding="utf-8") as f:
-                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
+                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | ActiveTime: {st.session_state.session_seconds}s\n")
             st.balloons()
             st.success(f"🎯 Saved successfully with {st.session_state.app_earned:,.1f} $NEXA score!")
 
@@ -303,7 +350,7 @@ if os.path.exists("whitelist.txt"):
 else:
     st.markdown("<p style='text-align:center; color:#555; font-size:12px;'>暂无白名单数据提交 / No data submitted yet</p>", unsafe_allow_html=True)
 
-# ==================== 📊 访客计数器展示（独立排版层） ====================
+# ==================== 📊 访客计数器展示 ====================
 st.markdown("<br><hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
 visitor_counter_html = """
 <div style="text-align: center; margin-top: 5px; opacity: 0.85;">
