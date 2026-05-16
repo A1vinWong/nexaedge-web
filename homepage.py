@@ -23,7 +23,7 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式（强力去幽灵空格条版） ---
+# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式（精准去黑条不伤图表版） ---
 st.markdown("""
     <style>
     /* 全局去暗灰背景 */
@@ -35,17 +35,14 @@ st.markdown("""
         display: none !important;
     }
     
-    /* 🔥【核心修复】强力过滤所有会导致生成暗色空长条的 Streamlit 幽灵容器 */
+    /* 🔥【精准锁定修复】只针对产生空胶囊黑条的封闭容器进行剔除，绝不误伤 image 和 chart */
+    [data-testid="stVerticalBlock"] > div:empty,
     [data-testid="stMarkdownContainer"] p:empty,
-    [data-testid="stMarkdownContainer"] :empty,
-    div[data-testid="stBlock"] blockquote:empty,
-    .stMarkdown div:empty,
-    div:empty {
+    .element-container:empty {
         display: none !important;
         margin: 0 !important;
         padding: 0 !important;
         height: 0 !important;
-        border: none !important;
     }
     
     /* 模块样式 */
@@ -105,7 +102,7 @@ st.markdown("""
     }
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; border-bottom-color: #A2FF00 !important; }
     
-    /* 按钮基础样式优化 */
+    /* 按钮基础样式 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
@@ -214,14 +211,10 @@ with tab1:
         """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（纯净去块优化版）
+# 📱 第二页：边缘节点控制台（修复图表失踪问题）
 # =========================================================================
 with tab2:
-    # 外部大卡片容器包装
-    st.markdown('<div class="app-container" style="margin-top:15px; padding-bottom:15px;">', unsafe_allow_html=True)
-    
-    if target_image:
-        st.image(target_image, use_container_width=True)
+    st.markdown('<div class="app-container" style="margin-top:15px; padding-bottom:5px;">', unsafe_allow_html=True)
     
     # --- 📊 模块 1：控制面板 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
@@ -309,7 +302,7 @@ with tab2:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🕹️ 核心控制大按钮（移除外部不必要的分隔，直接渲染按钮）
+    # 🕹️ 核心控制大按钮
     if not st.session_state.app_running:
         btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
         if st.button(btn_start_txt, key="app_start_btn"):
