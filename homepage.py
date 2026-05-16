@@ -23,7 +23,7 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式（已剔除幽灵空格条） ---
+# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式（强力去幽灵空格条版） ---
 st.markdown("""
     <style>
     /* 全局去暗灰背景 */
@@ -35,12 +35,17 @@ st.markdown("""
         display: none !important;
     }
     
-    /* 过滤掉 Streamlit 默认给空 markdown 生成的黑条边框 */
+    /* 🔥【核心修复】强力过滤所有会导致生成暗色空长条的 Streamlit 幽灵容器 */
     [data-testid="stMarkdownContainer"] p:empty,
-    [data-testid="stMarkdownContainer"] iframe:empty {
+    [data-testid="stMarkdownContainer"] :empty,
+    div[data-testid="stBlock"] blockquote:empty,
+    .stMarkdown div:empty,
+    div:empty {
         display: none !important;
         margin: 0 !important;
         padding: 0 !important;
+        height: 0 !important;
+        border: none !important;
     }
     
     /* 模块样式 */
@@ -99,6 +104,8 @@ st.markdown("""
         font-weight: 700 !important;
     }
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; border-bottom-color: #A2FF00 !important; }
+    
+    /* 按钮基础样式优化 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
@@ -207,16 +214,17 @@ with tab1:
         """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（无空格条纯净版）
+# 📱 第二页：边缘节点控制台（纯净去块优化版）
 # =========================================================================
 with tab2:
-    st.markdown('<div class="app-container" style="margin-top:15px;">', unsafe_allow_html=True)
+    # 外部大卡片容器包装
+    st.markdown('<div class="app-container" style="margin-top:15px; padding-bottom:15px;">', unsafe_allow_html=True)
     
     if target_image:
         st.image(target_image, use_container_width=True)
     
     # --- 📊 模块 1：控制面板 ---
-    st.markdown('<div class="app-card" style="margin-top:15px;">', unsafe_allow_html=True)
+    st.markdown('<div class="app-card">', unsafe_allow_html=True)
     panel_title = "DASHBOARD" if lang == "English" else "控制面板"
     st.markdown(f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span class="app-title">{panel_title}</span><span style="color:#88929b; font-size:14px;">⚙️</span></div>', unsafe_allow_html=True)
     
@@ -228,7 +236,7 @@ with tab2:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
-    st.line_chart(chart_df, height=85, use_container_width=True)
+    st.line_chart(chart_df, height=95, use_container_width=True)
     
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
     status_tag = "SAFE" if lang == "English" else "安全控温中"
@@ -241,7 +249,7 @@ with tab2:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # --- ⏱️ 核心：时光计算器与时间收益比例面板 ---
+    # --- ⏱️ 模块 2：运行时长与收益比面板 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
     timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
     st.markdown(f'<div class="app-title">{timer_title}</div>', unsafe_allow_html=True)
@@ -272,7 +280,7 @@ with tab2:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # --- 🟢 模块 2：节点全局总详情 ---
+    # --- 🟢 模块 3：节点全局总详情 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
     node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
     st.markdown(f'<div class="app-title" style="margin-bottom:12px;">{node_header}</div>', unsafe_allow_html=True)
@@ -301,7 +309,7 @@ with tab2:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🕹️ 核心大按钮
+    # 🕹️ 核心控制大按钮（移除外部不必要的分隔，直接渲染按钮）
     if not st.session_state.app_running:
         btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
         if st.button(btn_start_txt, key="app_start_btn"):
@@ -313,7 +321,7 @@ with tab2:
             st.session_state.app_running = False
             st.rerun()
             
-    # 动态刷新渲染逻辑
+    # 实时刷新时钟动画渲染
     if st.session_state.app_running:
         st.session_state.app_earned += 0.25       
         st.session_state.session_seconds += 1     
