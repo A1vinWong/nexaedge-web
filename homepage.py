@@ -180,10 +180,14 @@ with tab1:
             <h4 style="color:white; margin-top:0; font-size:17px;">🔥 独创：39°C 智能温控风控屏障</h4>
             <p style="color:#bdc3c7; font-size:13px;">坚守绝不伤机的底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，彻底打消硬件损耗焦虑。</p>
         </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin-top:0; font-size:17px;">🤝 2:1 拜占庭冗余反作弊校验</h4>
+            <p style="color:#bdc3c7; font-size:13px;">去中心化多数投票共识。我们将原始语料切片分发至 3 个完全独立的边缘节点进行交叉校验，确保向 AI 客户交付 100% 真实、未被污染的高纯度数据集。</p>
+        </div>
         """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（全中文/全英文自适应）
+# 📱 第二页：边缘节点控制台
 # =========================================================================
 with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -194,9 +198,8 @@ with tab2:
     
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     
-    # --- 📊 模块 1：DASHBOARD 仪表盘面板 ---
+    # --- 📊 模块 1：控制面板 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
-    
     panel_title = "DASHBOARD" if lang == "English" else "控制面板"
     st.markdown(f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span class="app-title">{panel_title}</span><span style="color:#88929b; font-size:14px;">⚙️</span></div>', unsafe_allow_html=True)
     
@@ -210,7 +213,6 @@ with tab2:
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
     st.line_chart(chart_df, height=85, use_container_width=True)
     
-    # 🌟 动态计算温度并转换中文状态标签
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
     status_tag = "SAFE" if lang == "English" else "安全控温中"
     
@@ -222,13 +224,12 @@ with tab2:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # --- 🟢 模块 2：PARTICIPANT NODE 节点详情 ---
+    # --- 🟢 模块 2：节点详情 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
     node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
     st.markdown(f'<div class="app-title" style="margin-bottom:12px;">{node_header}</div>', unsafe_allow_html=True)
     st.markdown('<div style="font-size:12px; color:#88929b; margin-bottom:12px;">NODE_ID: <span style="color:#ffffff; font-weight:bold;">@nexaedge / Acc1 (active)</span></div>', unsafe_allow_html=True)
     
-    # 运行状态及收益文本的国际化
     if lang == "English":
         run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
         status_lbl = "MINING STATUS:"
@@ -252,7 +253,7 @@ with tab2:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🕹️ 核心交互大按钮（完美支持中英文切换）
+    # 🕹️ 核心大按钮
     if not st.session_state.app_running:
         btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
         if st.button(btn_start_txt, key="app_start_btn"):
