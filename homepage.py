@@ -23,10 +23,27 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式 ---
+# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式（已剔除幽灵空格条） ---
 st.markdown("""
     <style>
+    /* 全局去暗灰背景 */
     .stApp { background-color: #0b0f12; }
+    
+    /* 彻底隐藏顶部无用白条及右下角开发者管理小标签 */
+    #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"], 
+    header, [data-testid="stHeader"] {
+        display: none !important;
+    }
+    
+    /* 过滤掉 Streamlit 默认给空 markdown 生成的黑条边框 */
+    [data-testid="stMarkdownContainer"] p:empty,
+    [data-testid="stMarkdownContainer"] iframe:empty {
+        display: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* 模块样式 */
     .feature-box {
         background-color: #11171d; 
         padding: 20px; 
@@ -106,12 +123,10 @@ st.markdown("""
 if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
-# 新增：运行时长计数状态（以秒为单位）
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 
-# 顶栏标题
-st.markdown(f'<h1 style="text-align:center; color:#A2FF00; font-size:38px; font-weight:800; margin-bottom:0;">NexaEdge Network</h1>', unsafe_allow_html=True)
-st.markdown("<br>", unsafe_allow_html=True)
+# 顶栏主标题
+st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:38px; font-weight:800; margin-top:10px; margin-bottom:10px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
 # 双语切换选择器
 lang = st.selectbox("🌐 Choose Language / 选择语言", ["English", "中文"], index=0)
@@ -125,8 +140,6 @@ tab1, tab2 = st.tabs([tab1_title, tab2_title])
 # 🏠 第一页：项目介绍与通识壁垒
 # =========================================================================
 with tab1:
-    st.markdown("<br>", unsafe_allow_html=True)
-    
     if target_image:
         st.image(target_image, caption="NexaEdge App Preview", use_container_width=True)
 
@@ -140,15 +153,13 @@ with tab1:
 
         st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
 
-        st.markdown('<h2 style="color:#A2FF00; font-size:24px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
         hours = st.slider("Estimated Overnight Duration (Hours/Day):", min_value=1, max_value=12, value=6)
         device_os = st.radio("Operating System:", ["iOS (iPhone)", "Android"], horizontal=True)
         monthly_est = hours * 0.35 * 30
         st.success(f"🎉 Estimated Monthly Yield: {monthly_est:.2f} USDT")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        st.markdown('<h2 style="color:#A2FF00; font-size:24px;">⚡ Key Pillars</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:20px;">⚡ Key Pillars</h2>', unsafe_allow_html=True)
         st.markdown("""
         <div class="feature-box">
             <h4 style="color:white; margin-top:0; font-size:17px;">📱 Passive Income via Charging</h4>
@@ -173,15 +184,13 @@ with tab1:
 
         st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
 
-        st.markdown('<h2 style="color:#A2FF00; font-size:24px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
         hours = st.slider("预估每日夜间闲置充电时长 (小时/天):", min_value=1, max_value=12, value=6)
         device_os = st.radio("操作系统类型:", ["iOS (iPhone)", "Android"], horizontal=True)
         monthly_est = hours * 0.35 * 30
         st.success(f"🎉 预计每月可为您带来收益约: {monthly_est:.2f} USDT")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        st.markdown('<h2 style="color:#A2FF00; font-size:24px;">⚡ 核心壁垒</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:20px;">⚡ 核心壁垒</h2>', unsafe_allow_html=True)
         st.markdown("""
         <div class="feature-box">
             <h4 style="color:white; margin-top:0; font-size:17px;">📱 锁屏充电·睡后收入 (零门槛)</h4>
@@ -198,19 +207,16 @@ with tab1:
         """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（新增时间收益比组件）
+# 📱 第二页：边缘节点控制台（无空格条纯净版）
 # =========================================================================
 with tab2:
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="app-container">', unsafe_allow_html=True)
+    st.markdown('<div class="app-container" style="margin-top:15px;">', unsafe_allow_html=True)
     
     if target_image:
         st.image(target_image, use_container_width=True)
     
-    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-    
     # --- 📊 模块 1：控制面板 ---
-    st.markdown('<div class="app-card">', unsafe_allow_html=True)
+    st.markdown('<div class="app-card" style="margin-top:15px;">', unsafe_allow_html=True)
     panel_title = "DASHBOARD" if lang == "English" else "控制面板"
     st.markdown(f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span class="app-title">{panel_title}</span><span style="color:#88929b; font-size:14px;">⚙️</span></div>', unsafe_allow_html=True)
     
@@ -235,16 +241,13 @@ with tab2:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # --- ⏱️ 核心新增：时光计算器与时间收益比例面板 ---
+    # --- ⏱️ 核心：时光计算器与时间收益比例面板 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
     timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
     st.markdown(f'<div class="app-title">{timer_title}</div>', unsafe_allow_html=True)
     
-    # 将累计的秒数转换成 00:00:00 格式
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
-    
-    # 计算当前会话产生的临时估算代币数 (假定1秒挖0.25个NEXA)
     session_generated = s_sec * 0.25
     
     t_label = "SESSION DURATION:" if lang == "English" else "本次连续运行时间:"
@@ -312,16 +315,16 @@ with tab2:
             
     # 动态刷新渲染逻辑
     if st.session_state.app_running:
-        st.session_state.app_earned += 0.25       # 增加全局总代币
-        st.session_state.session_seconds += 1     # 运行时间秒数自增
-        time.sleep(1.0)                            # 严格一秒刷新一次
+        st.session_state.app_earned += 0.25       
+        st.session_state.session_seconds += 1     
+        time.sleep(1.0)                            
         st.rerun()
             
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== 📧 底部统一白名单递交表单 ====================
-st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
-st.markdown(f'<h3 style="text-align:center; color:#A2FF00; font-size:22px;">{"🚀 Secure Your Early Whitelist Seat" if lang=="English" else "🚀 锁定早期测试网白名单席位"}</h3>', unsafe_allow_html=True)
+st.markdown("<hr style='border:1px solid #1e272e; margin-top:25px;'>", unsafe_allow_html=True)
+st.markdown(f'<h3 style="text-align:center; color:#A2FF00; font-size:22px; margin-bottom:15px;">{"🚀 Secure Your Early Whitelist Seat" if lang=="English" else "🚀 锁定早期测试网白名单席位"}</h3>', unsafe_allow_html=True)
 
 with st.form("unified_whitelist_form"):
     u_email = st.text_input("Email Address" if lang=="English" else "您的电子邮箱:")
@@ -335,7 +338,6 @@ with st.form("unified_whitelist_form"):
             st.success(f"🎯 Saved successfully with {st.session_state.app_earned:,.1f} $NEXA score!")
 
 # ==================== 📥 后台管理员白名单下载 ====================
-st.markdown("<br>", unsafe_allow_html=True)
 if os.path.exists("whitelist.txt"):
     with open("whitelist.txt", "r", encoding="utf-8") as f:
         whitelist_data = f.read()
@@ -348,10 +350,10 @@ if os.path.exists("whitelist.txt"):
         key="admin_download_btn"
     )
 else:
-    st.markdown("<p style='text-align:center; color:#555; font-size:12px;'>暂无白名单数据提交 / No data submitted yet</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#555; font-size:12px; margin-top:15px;'>暂无白名单数据提交 / No data submitted yet</p>", unsafe_allow_html=True)
 
 # ==================== 📊 访客计数器展示 ====================
-st.markdown("<br><hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
+st.markdown("<hr style='border:1px solid #1e272e; margin-top:25px;'>", unsafe_allow_html=True)
 visitor_counter_html = """
 <div style="text-align: center; margin-top: 5px; opacity: 0.85;">
     <p style="color: #88929b; font-size: 11px; margin-bottom: 8px; letter-spacing: 1px;">
@@ -366,4 +368,4 @@ visitor_counter_html = """
 st.markdown(visitor_counter_html, unsafe_allow_html=True)
 
 # 页脚版权
-st.markdown("<br><p style='text-align:center; color:#445; font-size: 11px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:15px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
