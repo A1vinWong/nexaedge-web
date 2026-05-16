@@ -297,3 +297,23 @@ with st.form("unified_whitelist_form"):
         if u_email:
             st.balloons()
             st.success(f"🎯 Saved with {st.session_state.app_earned:,.1f} $NEXA score!")
+            with open("whitelist.txt", "a") as f:
+                f.write(f"{u_email},{u_wallet},{st.session_state.app_earned:.4f}\n")
+
+# --- 📱 专为手机端添加的：本地数据一键下载组件 ---
+st.markdown("<br>", unsafe_allow_html=True)
+if os.path.exists("whitelist.txt"):
+    with open("whitelist.txt", "r") as f:
+        whitelist_data = f.read()
+    
+    st.download_button(
+        label="📥 Download Whitelist Data (Admin Only)" if lang=="English" else "📥 下载白名单数据 (管理员专用)",
+        data=whitelist_data,
+        file_name="nexaedge_whitelist.txt",
+        mime="text/plain",
+        key="admin_download_btn"
+    )
+else:
+    st.markdown("<p style='text-align:center; color:#555; font-size:12px;'>暂无白名单数据提交 / No data submitted yet</p>", unsafe_allow_html=True)
+
+st.markdown("<br><p style='text-align:center; color:#445;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
