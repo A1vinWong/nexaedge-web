@@ -189,3 +189,133 @@ else:
                 with open("whitelist.txt", "a") as f: f.write(f"{user_email},{wallet_addr}\n")
             else:
                 st.error("请输入有效的邮箱地址。")
+import streamlit as st
+import os
+import time
+import random
+
+# 1. Page Configuration
+st.set_page_config(
+    page_title="NexaEdge | Web-Node Experience",
+    page_icon="🟢",
+    layout="centered"
+)
+
+# --- 🟢 CYBER-TECH CSS STYLING ---
+st.markdown("""
+    <style>
+    .stApp { background-color: #0b0f12; }
+    .node-box {
+        background-color: #11171d; 
+        padding: 25px; 
+        border-radius: 15px; 
+        border: 1px solid #A2FF00;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .metric-text { font-family: 'Courier New', monospace; color: #A2FF00; font-size: 32px; font-weight: bold; }
+    .status-log { font-family: 'Courier New', monospace; color: #bdc3c7; font-size: 12px; height: 80px; overflow-y: auto; text-align: left; background: #000; padding: 10px; border-radius: 5px; }
+    div.stButton > button:first-child {
+        background-color: #A2FF00 !important;
+        color: #0b0f12 !important;
+        font-weight: 800 !important;
+        width: 100%;
+        border-radius: 8px !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Language Selection at Top
+lang = st.selectbox("🌐 Language", ["English", "中文"], index=0, label_visibility="collapsed")
+
+# ==================== 🪐 HEADER ====================
+if os.path.exists("logo.png"):
+    st.image("logo.png", use_container_width=True)
+
+st.markdown(f'<h3 style="text-align:center; color:#A2FF00;">{"Experience Web-Node Earning" if lang == "English" else "Web-Node 算力收益初体验"}</h3>', unsafe_allow_html=True)
+
+# ==================== ⚡ WEB-NODE SIMULATOR ====================
+# 初始化 Session State 用于存储模拟收益
+if 'nexa_earned' not in st.session_state:
+    st.session_state.nexa_earned = 0.0
+if 'is_running' not in st.session_state:
+    st.session_state.is_running = False
+
+st.markdown(f"""
+<div style="text-align:center; color:#bdc3c7; font-size:14px;">
+    {'Run the virtual WASM node to see how your device generates $NEXA.' if lang == 'English' else '运行虚拟 WASM 节点，直观感受手机如何通过算力产生 $NEXA。'}
+</div>
+""", unsafe_allow_html=True)
+
+with st.container():
+    # 模拟矿机外壳
+    st.markdown('<div class="node-box">', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.caption("EST. EARNINGS" if lang == "English" else "预计累计收益")
+        st.markdown(f'<div class="metric-text">{st.session_state.nexa_earned:.5f} <span style="font-size:14px;">$NEXA</span></div>', unsafe_allow_html=True)
+    with col2:
+        temp = random.uniform(34.5, 38.8) if st.session_state.is_running else 32.0
+        st.caption("TEMP GAARD" if lang == "English" else "实时温控")
+        st.markdown(f'<div class="metric-text" style="color:{"#ff4b4b" if temp > 38 else "#A2FF00"}">{temp:.1f}°C</div>', unsafe_allow_html=True)
+    
+    # 状态日志模拟
+    logs = [
+        "> Initializing WASM Sandbox...",
+        "> Connecting to Solana Mainnet...",
+        "> Sharding Dataset #0921-AI...",
+        "> Cleaning raw voice data...",
+        "> Verification redundant check (2:1)...",
+        "> Proof of Computation submitted."
+    ]
+    
+    if st.session_state.is_running:
+        st.markdown(f'<div class="status-log">{random.choice(logs)}<br>{random.choice(logs)}</div>', unsafe_allow_html=True)
+        # 增加收益逻辑
+        st.session_state.nexa_earned += 0.00021 
+        time.sleep(0.5) # 稍微延迟增加真实感
+        st.rerun() # 强制刷新页面产生跳动效果
+    else:
+        st.markdown(f'<div class="status-log">> {"System Standby. Click below to start." if lang == "English" else "系统待命。点击下方按钮开始体验。"}</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# 启动/停止按钮
+if not st.session_state.is_running:
+    if st.button("🚀 ACTIVATE WEB-NODE" if lang == "English" else "🚀 启动 WEB-NODE 体验"):
+        st.session_state.is_running = True
+        st.rerun()
+else:
+    if st.button("🛑 STOP & CLAIM" if lang == "English" else "🛑 停止并保存收益"):
+        st.session_state.is_running = False
+        st.success(f"Claimed {st.session_state.nexa_earned:.4f} $NEXA to your preview session!")
+        st.rerun()
+
+# ==================== 📊 VALUE PROP & CALCULATOR ====================
+st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
+
+if lang == "English":
+    st.markdown("""
+    <h2 style="color:#A2FF00;">Why it works?</h2>
+    <p style="color:#bdc3c7;">Your browser is now a micro-worker. In the real app, this happens at the OS level, processing data for global AI labs while you sleep.</p>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <h2 style="color:#A2FF00;">为什么这能赚钱？</h2>
+    <p style="color:#bdc3c7;">您的浏览器现在就是一个微型“打工人”。在正式 App 中，这将在系统底层运行，在您睡觉时为全球 AI 实验室清洗数据。</p>
+    """, unsafe_allow_html=True)
+
+# ==================== 📧 LEAD GENERATION ====================
+st.markdown(f'<h2 style="color:#A2FF00;">{"🚀 Save Earnings to Whitelist" if lang == "English" else "🚀 将收益存档至白名单"}</h2>', unsafe_allow_html=True)
+
+with st.form("whitelist_form"):
+    user_email = st.text_input("Email" if lang == "English" else "电子邮箱")
+    submitted = st.form_submit_button("SUBMIT & RESERVE AIRDROP" if lang == "English" else "提交并预约空投")
+    if submitted and user_email:
+        st.balloons()
+        st.success("Reserved! Your session earnings have been recorded.")
+        with open("whitelist.txt", "a") as f: f.write(f"{user_email},{st.session_state.nexa_earned}\n")
+
+# Footer
+st.markdown("<br><p style='text-align:center; color:#555;'>NexaEdge Network © 2025 | Tier-3 DePIN Protocol</p>", unsafe_allow_html=True)
