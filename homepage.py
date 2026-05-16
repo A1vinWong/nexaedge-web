@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import time
 import random
-import numpy as np
+import pandas as pd
 
 # 1. 全局页面基础配置
 st.set_page_config(
@@ -93,8 +93,8 @@ st.markdown("""
         letter-spacing: 1px;
     }
     
-    /* 灰黑色辅助按钮 */
-    div.stButton > button[key*="stop"] {
+    /* 灰黑色辅助按钮（专门锁定暂停按钮颜色） */
+    div.stButton > button[key*="app_stop_btn"] {
         background-color: #1e272e !important;
         color: #ff4b4b !important;
         border: 1px solid #ff4b4b !important;
@@ -107,8 +107,9 @@ if 'app_earned' not in st.session_state:
     st.session_state.app_earned = 1452.70000  # 像素级同步截图中的初始代币量
 if 'app_running' not in st.session_state:
     st.session_state.app_running = False
-if 'chart_data' not in st.session_state:
-    st.session_state.chart_data = list(np.random.uniform(20, 50, 15))
+if 'chart_history' not in st.session_state:
+    # 预设一条平缓向上的初始算力历史曲线
+    st.session_state.chart_history = [25.0, 28.0, 26.0, 31.0, 29.0, 35.0, 32.0, 38.0, 36.0, 41.0, 39.0, 42.0]
 
 lang_col1, lang_col2 = st.columns([3, 1])
 with lang_col2:
@@ -128,7 +129,6 @@ else:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==================== 🗺️ 核心多页签系统 (Tabs) ====================
-# 中英文动态标签菜单
 tab1_title = "🌐 Overview & Pillars" if lang == "English" else "🌐 项目通识与壁垒"
 tab2_title = "📱 Node Dashboard (Live)" if lang == "English" else "📱 边缘节点控制台 (实时)"
 
@@ -221,7 +221,7 @@ with tab1:
             st.warning(f"💼 您的算力采购预算总计：**{data_need * 6.0:.2f} USD**")
 
 # =========================================================================
-# 📱 第二页：像素级复刻手机端控制台交互体验
+# 📱 第二页：修复后的全动态手机端控制台交互体验
 # =========================================================================
 with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -229,22 +229,25 @@ with tab2:
     # 📱 渲染虚拟手机外壳
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
     
-    # 模块 1：DASHBOARD & 实时算力折线图
+    # 模块 1：DASHBOARD & 实时算力面积图 (完美替换旧组件，确保稳定运行)
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
-    current_hash = random.uniform(42.5, 48.9) if st.session_state.app_running else 0.0
+    current_hash = random.uniform(43.5, 49.8) if st.session_state.app_running else 0.0
     st.markdown(f'<div class="app-title">DASHBOARD</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:11px; color:#88929b; margin-bottom:10px;">NETWORK HASH RATE (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:11px; color:#88929b; margin-bottom:5px;">NETWORK HASH RATE (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div>', unsafe_allow_html=True)
     
-    # 渲染波动的实时算力折线图（复刻截图中的折线走势）
+    # 如果处于启动运行状态，则让算力历史数据实现动态尾部滚动
     if st.session_state.app_running:
-        st.session_state.chart_data.pop(0)
-        st.session_state.chart_data.append(current_hash)
-    st.sparkline(st.session_state.chart_data, height=60)
+        st.session_state.chart_history.pop(0)
+        st.session_state.chart_history.append(current_hash)
+    
+    # 将历史列表包装成 DataFrame 并调用原生内置高亮图表
+    chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
+    st.area_chart(chart_df, height=90, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     # 模块 2：智能硬件控温面板
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
-    current_temp = random.uniform(36.2, 37.1) if st.session_state.app_running else 31.2
+    current_temp = random.uniform(36.4, 37.0) if st.session_state.app_running else 31.2
     st.markdown(f'<div class="app-title">THERMAL STATUS</div>', unsafe_allow_html=True)
     status_label = "SAFE" if current_temp < 38 else "WARNING"
     st.markdown(f"""
@@ -287,8 +290,8 @@ with tab2:
     ]
     if st.session_state.app_running:
         st.markdown(f'<div class="app-log">{random.choice(logs_pool)}<br>{random.choice(logs_pool)}</div>', unsafe_allow_html=True)
-        # 实时挂机增加代币
-        st.session_state.app_earned += 0.0042
+        # 挂机产生数字高速跳动效果
+        st.session_state.app_earned += 0.0142
         time.sleep(0.4)
         st.rerun()
     else:
@@ -297,11 +300,11 @@ with tab2:
     
     # 📱 核心交互大按钮
     if not st.session_state.app_running:
-        if st.button("START COMPUTE SESSION" if lang=="English" else "开始执行算力任务", key="app_start_btn"):
+        if st.button("START COMPUTE SESSION", key="app_start_btn"):
             st.session_state.app_running = True
             st.rerun()
     else:
-        if st.button("PAUSE SESSION" if lang=="English" else "暂停算力任务", key="app_stop_btn"):
+        if st.button("PAUSE SESSION", key="app_stop_btn"):
             st.session_state.app_running = False
             st.rerun()
             
@@ -325,4 +328,3 @@ with st.form("unified_whitelist_form"):
             st.error("Please enter a valid email." if lang=="English" else "请输入有效的电子邮箱。")
 
 st.markdown("<br><p style='text-align:center; color:#445;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
-
