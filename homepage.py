@@ -422,17 +422,44 @@ with tab2:
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== 📧 底部统一白名单递交表单 ====================
+# ==================== 📧 底部统一白名单递交表单（新增强力硬核去重逻辑） ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 with st.form("unified_whitelist_form"):
     st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:5px;">🚀 {"Secure Early Whitelist Seat" if lang=="English" else "🚀 锁定早期创世白名单席位"}</div>', unsafe_allow_html=True)
-    u_email = st.text_input("Email Address:" if lang=="English" else "电子邮箱地址:")
-    u_wallet = st.text_input("Solana Wallet Address:" if lang=="English" else "Solana 钱包接收地址:")
+    u_email = st.text_input("Email Address:" if lang=="English" else "电子邮箱地址:").strip()
+    u_wallet = st.text_input("Solana Wallet Address:" if lang=="English" else "Solana 钱包接收地址:").strip()
+    
     if st.form_submit_button("SUBMIT SEAT ⚡" if lang=="English" else "提交并保留创世资格 ⚡"):
-        if u_email.strip() != "":
-            with open("whitelist.txt", "a", encoding="utf-8") as f:
-                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
-            st.balloons()
+        if u_email == "" or u_wallet == "":
+            st.error("❌ Please fill in both fields! / 请完整填写邮箱和钱包地址！")
+        else:
+            # 建立默认存储逻辑以防读取报错
+            is_duplicate = False
+            
+            # 高效精确读盘去重检索
+            if os.path.exists("whitelist.txt"):
+                with open("whitelist.txt", "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                for line in lines:
+                    # 强效切割并做大小写不敏感匹配验证
+                    if f"Email: {u_email} |" in line or f"Email: {u_email.lower()} |" in line:
+                        is_duplicate = True
+                        break
+                    if f"| Wallet: {u_wallet}" in line or f"| Wallet: {u_wallet.lower()}" in line or f"| Wallet: {u_wallet}\n" in line:
+                        is_duplicate = True
+                        break
+            
+            if is_duplicate:
+                if lang == "English":
+                    st.error("⚠️ Submission Rejected! This Email or Solana Wallet has already claimed a whitelist allocation.")
+                else:
+                    st.error("⚠️ 提交失败！该邮箱地址或 Solana 钱包已被注册，每个账户仅限申领一次白名单。")
+            else:
+                # 校验安全后写入本地白名单库
+                with open("whitelist.txt", "a", encoding="utf-8") as f:
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
+                st.balloons()
+                st.success("🎉 Whitelist recorded successfully! / 白名单资格锁定成功！")
 
 if os.path.exists("whitelist.txt"):
     with open("whitelist.txt", "r", encoding="utf-8") as f: whitelist_data = f.read()
