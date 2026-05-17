@@ -4,6 +4,7 @@ import time
 import random
 import pandas as pd
 import glob
+import hashlib
 
 # 1. 全局页面基础配置
 st.set_page_config(
@@ -39,15 +40,21 @@ def get_project_image():
 
 target_image = get_project_image()
 
+# --- 🛠️ 推荐码工具函数 ---
+def generate_referral_code(wallet_str):
+    """根据钱包地址前几位和哈希生成一个简短唯一的推荐码"""
+    if not wallet_str:
+        return ""
+    hasher = hashlib.md5(wallet_str.encode('utf-8')).hexdigest().upper()
+    return f"NEXA-{wallet_str[:4].upper()}-{hasher[:4]}"
+
 # --- 🟢 极客黑绿科技风 CSS 全量优化 ---
 st.markdown("""
     <style>
-    /* 全局去暗灰背景 */
     .stApp {
         background-color: #0b0f12;
     }
     
-    /* 彻底隐藏顶部无用白条及右下角开发者管理小标签 */
     #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"] {
         display: none !important;
     }
@@ -58,7 +65,6 @@ st.markdown("""
         display: none !important;
     }
     
-    /* 强力抹杀 Streamlit 原生自带的所有空置边界、缝隙和多余空框 */
     [data-testid="stVerticalBlock"] > div:empty {
         display: none !important;
         margin: 0 !important;
@@ -69,7 +75,6 @@ st.markdown("""
         background: transparent !important;
     }
     
-    /* --- st.tabs 组件样式微调 (左和右) --- */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         background-color: transparent !important;
@@ -99,7 +104,6 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* --- 自定义手机 App 容器结构 --- */
     .app-container {
         background-color: #11171d;
         border: 1px solid #1e272e;
@@ -117,7 +121,6 @@ st.markdown("""
         margin-bottom: 10px;
     }
     
-    /* 文字与排版样式 */
     .app-title { font-size: 12px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 22px; font-weight: 700; }
     .neon-green-text { color: #A2FF00 !important; }
@@ -132,17 +135,6 @@ st.markdown("""
         margin-top: 6px;
     }
     
-    .ratio-box {
-        background-color: #11171d;
-        border: 1px dashed #252e38;
-        border-radius: 8px;
-        padding: 8px 10px;
-        margin-top: 8px;
-        font-size: 12px;
-        color: #88929b;
-    }
-    
-    /* --- stButton 样式 --- */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
@@ -162,7 +154,6 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* 白名单表单卡片 */
     [data-testid="stForm"] {
         background-color: #161c23 !important;
         border: 1px solid #252e38 !important;
@@ -171,7 +162,6 @@ st.markdown("""
         margin-top: 20px !important;
     }
     
-    /* 优化单选组件 Selectbox/Radio 在黑绿风格下的展现 */
     div[data-testid="stSelectbox"] label, div[data-testid="stRadio"] label {
         color: #88929b !important;
         font-size: 12px !important;
@@ -186,10 +176,33 @@ st.markdown("""
         margin-bottom: 15px;
     }
 
-    /* 极致缩小的全网真实数据大盘卡片样式（防止窄屏换行） */
     .mini-stat-card { text-align: center; background-color:#141d26; padding: 6px 4px; border-radius: 10px; min-height: 55px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; transform: scale(0.95); }
     .mini-stat-value { font-size: 13px !important; font-weight: bold; font-family: monospace; margin-top: 2px; white-space: nowrap; }
+    
+    /* 社交媒体按钮行布局 */
+    .social-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+        margin: 10px 0;
+    }
+    .social-btn {
+        display: block;
+        text-align: center;
+        padding: 6px;
+        background-color: #11171d;
+        border: 1px solid #252e38;
+        border-radius: 8px;
+        color: #bdc3c7 !important;
+        font-size: 11px;
+        font-weight: bold;
+        text-decoration: none;
+    }
+    .social-btn:hover {
+        border-color: #A2FF00;
+        color: #A2FF00 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -200,6 +213,7 @@ if 'chart_history' not in st.session_state: st.session_state.chart_history = [22
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
+if 'my_referral_code' not in st.session_state: st.session_state.my_referral_code = ""
 
 # 真实同步全局状态到共享内存区
 if st.session_state.app_running:
@@ -422,14 +436,42 @@ with tab2:
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== 📧 底部统一白名单递交表单（新增强力硬核去重逻辑） ====================
+# ==================== 📧 底部白名单与社交推荐奖励表单 ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
+
+# 显示用户自己生成的专属邀请码
+if st.session_state.my_referral_code:
+    st.markdown(f"""
+    <div class="app-card" style="border: 1px solid #A2FF00; text-align:center;">
+        <span style="font-size:12px; color:#88929b;">🎯 YOUR REFERRAL CODE / 你的专属邀请码:</span><br>
+        <span style="font-size:20px; font-weight:bold; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span><br>
+        <p style="font-size:11px; color:#bdc3c7; margin-top:5px; margin-bottom:0;">
+            Share this code! Earn <b>+500 NEXA</b> for every user who registers and follows our socials (even without an airdrop whitelist match!)
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
 with st.form("unified_whitelist_form"):
-    st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:5px;">🚀 {"Secure Early Whitelist Seat" if lang=="English" else "🚀 锁定早期创世白名单席位"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:5px;">🚀 {"Secure Whitelist Seat & Referral Program" if lang=="English" else "🚀 锁定创世白名单席位与推荐裂变奖励"}</div>', unsafe_allow_html=True)
+    
+    # 5大社交平台直达任务区
+    st.markdown(f'<p style="font-size:11px; color:#88929b; margin-bottom: 2px;">⚡ STEP 1: Follow & Share our Social Pages / 关注并分享官方社媒</p>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="social-grid">
+        <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
+        <a class="social-btn" href="https://x.com/nexaedge_?s=21&t=8onO0h_fTxzmAGu431ZxXw" target="_blank">🐦 X (Twitter)</a>
+        <a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>
+        <a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>
+        <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f'<p style="font-size:11px; color:#88929b; margin-top:10px; margin-bottom: 2px;">📝 STEP 2: Fill in Details / 填写申领基础资料</p>', unsafe_allow_html=True)
     u_email = st.text_input("Email Address:" if lang=="English" else "电子邮箱地址:").strip()
     u_wallet = st.text_input("Solana Wallet Address:" if lang=="English" else "Solana 钱包接收地址:").strip()
+    u_ref_input = st.text_input("Referral Code (Optional):" if lang=="English" else "推荐人邀请码 (选填):").strip()
     
-    if st.form_submit_button("SUBMIT SEAT ⚡" if lang=="English" else "提交并保留创世资格 ⚡"):
+    if st.form_submit_button("SUBMIT SEAT & ACTIVATE CODE ⚡" if lang=="English" else "提交席位并激活推荐码 ⚡"):
         if u_email == "" or u_wallet == "":
             st.error("❌ Please fill in both fields! / 请完整填写邮箱和钱包地址！")
         else:
@@ -453,10 +495,18 @@ with st.form("unified_whitelist_form"):
                 else:
                     st.error("⚠️ 提交失败！该邮箱地址或 Solana 钱包已被注册，每个账户仅限申领一次白名单。")
             else:
+                # 动态派生此用户的专属推荐码
+                generated_code = generate_referral_code(u_wallet)
+                st.session_state.my_referral_code = generated_code
+                
+                # 写入本地白名单库（结构包含：邮箱、钱包、算力、专属码、推荐人码）
+                ref_by = u_ref_input if u_ref_input else "NONE"
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
-                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | RefCode: {generated_code} | ReferredBy: {ref_by}\n")
+                
                 st.balloons()
-                st.success("🎉 Whitelist recorded successfully! / 白名单资格锁定成功！")
+                st.success("🎉 Registration Successful! Your referral code is now activated. / 资格锁定成功！您的专属邀请码已成功激活。")
+                st.rerun()
 
 if os.path.exists("whitelist.txt"):
     with open("whitelist.txt", "r", encoding="utf-8") as f: whitelist_data = f.read()
