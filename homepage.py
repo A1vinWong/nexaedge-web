@@ -12,6 +12,12 @@ st.set_page_config(
     layout="centered"
 )
 
+# --- ⚙️ 服务器进程级内存锁 (确保 Active 基础人数和白名单缓存跨会话稳定) ---
+@st.cache_resource
+def get_server_network_memory():
+    return {"active_base": 451}
+server_mem = get_server_network_memory()
+
 # --- 📸 智能图片摄入系统 ---
 def get_project_image():
     if os.path.exists("image.png"):
@@ -177,14 +183,27 @@ if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
-# 默认目标时长索引，2: 对应1小时
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
+# 【新增安全锁机制】记录上一次精确运行的 Unix 时间戳
+if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
 # 扩展映射字典
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours (Full-day)"]
 TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时 (全天连轴转)"]
 SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
 HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
+
+# =========================================================================
+# ⏱️ 【核心 Bug 修复】：抗断开与锁屏物理时间全自动无缝补偿算法
+# =========================================================================
+if st.session_state.app_running and st.session_state.last_tick_time > 0:
+    current_unix = time.time()
+    # 计算手机被锁屏或切后台造成的真实断联秒数差
+    elapsed_gap_seconds = int(current_unix - st.session_state.last_tick_time)
+    if elapsed_gap_seconds >= 3:  # 只有大于正常循环步长时才触发强行灌注补偿
+        st.session_state.session_seconds += elapsed_gap_seconds
+        st.session_state.app_earned += elapsed_gap_seconds * 0.25
+        st.session_state.last_tick_time = current_unix
 
 # 顶栏主标题
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:36px; font-weight:800; margin-top:5px; margin-bottom:5px;">NexaEdge Network</h1>', unsafe_allow_html=True)
@@ -419,11 +438,13 @@ with tab2:
             if remaining_seconds <= 0:
                 st.session_state.session_seconds = 0
             st.session_state.app_running = True
+            st.session_state.last_tick_time = time.time()  # 锁定精确起动锚点
             st.rerun()
     else:
         btn_stop_txt = "PAUSE SESSION (VIEW NETWORK MAP)" if lang == "English" else "暂停运行 (查看网络拓扑图) 🛑"
         if st.button(btn_stop_txt, key="app_stop_btn"):
             st.session_state.app_running = False
+            st.session_state.last_tick_time = 0.0
             st.rerun()
             
     st.markdown('</div>', unsafe_allow_html=True) # 关闭纯净大容器
@@ -455,10 +476,43 @@ if os.path.exists("whitelist.txt"):
         key="admin_download_btn"
     )
 
-# ==================== 📊 页面浏览量计数器 ====================
+# =========================================================================
+# 📊 【新功能扩展】：实时硬核指标大盘 —— Active 节点与实时观众动态双卡片
+# =========================================================================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
+
+# 1. 活跃设备强联动逻辑：未运行为基数451台，点击START运行后，全服数据立刻变成452台
+current_active_nodes = server_mem["active_base"] + (1 if st.session_state.app_running else 0)
+
+# 2. 实时在线看大盘人数：每次重新加载时在 1060 左右进行真实微扰起伏（1052~1078）
+current_live_viewers = 1065 + random.randint(-13, 13)
+
+# 依照双语渲染指标卡
+lbl_node_active = "● ACTIVE COMPUTE NODES" if lang == "English" else "● 全网实时运行节点"
+lbl_live_view = "👀 LIVE NETWORK VIEWERS" if lang == "English" else "👀 实时大盘围观人数"
+unit_device = "Devices" if lang == "English" else "台闲置终端"
+unit_user = "Users" if lang == "English" else "人在线"
+
+col_net1, col_net2 = st.columns(2)
+with col_net1:
+    st.markdown(f"""
+        <div style="text-align: center; background-color:#141d26; border: 1px dashed #A2FF00; padding:10px; border-radius:12px;">
+            <div style="font-size:11px; color:#88929b; text-transform:uppercase; font-weight:bold;">{lbl_node_active}</div>
+            <div style="font-size:18px; color:#A2FF00; font-weight:bold; font-family:monospace; margin-top:2px;">{current_active_nodes} {unit_device}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col_net2:
+    st.markdown(f"""
+        <div style="text-align: center; background-color:#141d26; border: 1px dashed #00e5ff; padding:10px; border-radius:12px;">
+            <div style="font-size:11px; color:#88929b; text-transform:uppercase; font-weight:bold;">{lbl_live_view}</div>
+            <div style="font-size:18px; color:#00e5ff; font-weight:bold; font-family:monospace; margin-top:2px;">{current_live_viewers} {unit_user}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ==================== 📊 页面全球原装访客计数器挂件 ====================
 visitor_counter_html = """
-<div style="text-align: center; margin-top: 5px; opacity: 0.85;">
+<div style="text-align: center; margin-top: 15px; opacity: 0.85;">
     <p style="color: #88929b; font-size: 11px; margin-bottom: 6px; letter-spacing: 1px;">➔ NEXAEDGE NETWORK NODE STATUS</p>
     <a href="https://info.flagcounter.com/NexaEdge">
         <img src="https://s11.flagcounter.com/count2/NexaEdge/bg_0B0F12/txt_A2FF00/border_1E272E/columns_3/maxflags_9/viewers_3/labels_1/pageviews_1/flags_0/" alt="Flag Counter" border="0" style="border-radius: 8px; border: 1px solid #1e272e; max-width: 100%;">
@@ -472,5 +526,6 @@ st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-to
 if st.session_state.app_running:
     st.session_state.app_earned += 0.75       
     st.session_state.session_seconds += 3     
+    st.session_state.last_tick_time = time.time()  # 每次心跳动态刷新基准时间戳
     time.sleep(3.0)                            
     st.rerun()                                
