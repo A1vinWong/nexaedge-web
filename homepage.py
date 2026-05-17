@@ -35,7 +35,7 @@ def update_global_active(delta):
 
 live_nodes_count = load_global_status()["active_count"]
 
-# --- 🟢 极客黑绿科技风 CSS 样式表（一比一高度还原你的精美 UI） ---
+# --- 🟢 极客黑绿科技风 CSS 样式表（精细对齐你的每一张原始截图） ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
@@ -47,7 +47,7 @@ st.markdown("""
     [data-testid="stElementContainer"] { border: none !important; background: transparent !important; }
     
     /* 导航 Tab 样式 */
-    .stTabs [data-baseweb="tab-list"] { gap: 12px; background-color: transparent !important; justify-content: center; border: none !important; }
+    .stTabs [data-baseweb="tab-list"] { gap: 12px; background-color: transparent !important; justify-content: center; border: none !important; margin-bottom: 20px !important; }
     .stTabs [data-baseweb="tab"] {
         background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px 8px 0px 0px !important;
         border: 1px solid #1e272e !important; border-bottom: none !important; padding: 10px 22px !important; font-weight: 700 !important; font-size: 14px !important;
@@ -55,7 +55,7 @@ st.markdown("""
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; background-color: #161c23 !important; border-top: 2px solid #A2FF00 !important; }
     .stTabs [data-baseweb="tab-highlight"] { background-color: #A2FF00 !important; height: 0px !important; }
     
-    /* 卡片及字体 */
+    /* 卡片及字体排版 */
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 15px; margin-bottom: 12px; }
     .app-title { font-size: 13px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 32px; font-weight: 700; }
@@ -90,18 +90,18 @@ SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
 HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
 
 # =========================================================================
-# 📸 顶栏全局恒定区域（图片、主标题与核心口号在两页顶部永远不消失！）
+# 📸 顶栏全局恒定区域（Logo、主标题与核心口号移到 Tab 外部，两页完美固定！）
 # =========================================================================
 if os.path.exists("image.png"):
     st.image("image.png", use_container_width=True)
 
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:36px; font-weight:800; margin-top:5px; margin-bottom:5px;">NexaEdge Network</h1>', unsafe_allow_html=True)
-st.markdown('<p style="font-size: 16px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px; margin-bottom: 20px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
+st.markdown('<p style="font-size: 16px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px; margin-bottom: 25px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["🌐 Overview & Pillars", "📱 Node Dashboard (Live)"])
 
 # =========================================================================
-# 🏠 第一页：Overview 介绍页（复原最完美的纯净初始版本）
+# 🏠 第一页：Overview 介绍页（彻底移除了 1 Devices，还原最初完美状态）
 # =========================================================================
 with tab1:
     # --- 1. Settlement Base 区域 ---
@@ -109,18 +109,14 @@ with tab1:
     st.markdown('<h2 style="color:#ffffff; font-size:32px; font-weight:700; margin-top:0; margin-bottom:4px;">Solana SPL</h2>', unsafe_allow_html=True)
     st.markdown('<div style="margin-bottom:25px;"><span style="background-color:#141d26; color:#A2FF00; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:12px; border: 1px solid #1e272e;">↑ Low Gas / High TPS</span></div>', unsafe_allow_html=True)
     
-    # --- 2. 三大核心指标排版（最原始排版） ---
+    # --- 2. 纯正的两大核心指标排版（彻底去掉了 1 Devices 卡片） ---
     st.markdown('<div class="app-title">Network Fee</div>', unsafe_allow_html=True)
     st.markdown('<div class="app-value" style="margin-bottom:2px;">20%</div>', unsafe_allow_html=True)
     st.markdown('<div class="neon-green-text" style="font-size:12px; font-weight:bold; margin-bottom:20px;">↑ Pure Revenue Flow</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="app-title">Safety Threshold</div>', unsafe_allow_html=True)
     st.markdown('<div class="app-value" style="margin-bottom:2px;">39°C</div>', unsafe_allow_html=True)
-    st.markdown('<div style="color:#ff6b6b; font-size:12px; font-weight:bold; margin-bottom:20px;">↑ Device Safety Lock</div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="app-title">Global Active Nodes</div>', unsafe_allow_html=True)
-    st.markdown('<div class="app-value" style="margin-bottom:2px;">1 Devices</div>', unsafe_allow_html=True)
-    st.markdown('<div class="neon-green-text" style="font-size:12px; font-weight:bold; margin-bottom:25px;">↑ Live Infrastructure</div>', unsafe_allow_html=True)
+    st.markdown('<div style="color:#ff6b6b; font-size:12px; font-weight:bold; margin-bottom:25px;">↑ Device Safety Lock</div>', unsafe_allow_html=True)
     
     st.markdown("<hr style='border:1px solid #1e272e; margin: 20px 0;'>", unsafe_allow_html=True)
     
@@ -153,11 +149,11 @@ with tab1:
     """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：Node Dashboard 控制台页（黑条已被连根拔起）
+# 📱 第二页：Node Dashboard 控制台页（无冗余黑条，顶部完美享有 Logo）
 # =========================================================================
 with tab2:
     # 1. 倒计时目标时间设定
-    st.markdown('<div class="app-title" style="margin-top:10px; margin-bottom:5px;">⏳ COMPUTE TIMER (AUTO-STOP)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="app-title" style="margin-top:5px; margin-bottom:5px;">⏳ COMPUTE TIMER (AUTO-STOP)</div>', unsafe_allow_html=True)
     selected_time_tab2 = st.selectbox("Set target runtime for this session:", TIME_OPTIONS_EN, index=st.session_state.target_time_index, key="time_select_tab2", label_visibility="collapsed")
     st.session_state.target_time_index = TIME_OPTIONS_EN.index(selected_time_tab2)
     target_total_seconds = SECONDS_MAP[st.session_state.target_time_index]
@@ -282,7 +278,7 @@ if u_email.strip() == "admin666":
     st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================================================================
-# 📊 底部动态数据同步区（完美安放在计数器上方，精美隐藏，毫不张扬）
+# 📊 底部动态数据同步区（完美安放在国旗计数器上方，精准呈现活数据）
 # =========================================================================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 st.markdown(f"""
