@@ -48,16 +48,19 @@ st.markdown("""
     .app-title { font-size: 14px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 26px; font-weight: 700; }
     .neon-green-text { color: #A2FF00 !important; }
+    
+    /* 优化双排监测组件轴线对齐 */
     .temp-section {
         display: flex;
         align-items: center;
         justify-content: space-between;
         background: #11171d;
-        padding: 12px 15px;
+        padding: 10px 15px;
         border-radius: 12px;
-        margin-top: 5px;
-        margin-bottom: 2px;
+        margin-top: 6px;
+        margin-bottom: 4px;
     }
+    
     .ratio-box {
         background-color: #11171d;
         border: 1px dashed #252e38;
@@ -77,6 +80,8 @@ st.markdown("""
         font-weight: 700 !important;
     }
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; border-bottom-color: #A2FF00 !important; }
+    
+    /* 按钮基础样式 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
@@ -94,6 +99,17 @@ st.markdown("""
         border: 1px solid #252e38 !important;
         box-shadow: none !important;
     }
+    
+    /* 🛑 熔断安全历史快照盒样式 */
+    .snapshot-box {
+        background-color: #1e1215;
+        border: 1px solid #ff3344;
+        border-left: 5px solid #ff3344;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 15px;
+        color: #ffcccc;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -102,6 +118,13 @@ if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
+
+# 🔴 【熔断保护机制】状态机锁
+if 'temp_triggered' not in st.session_state: st.session_state.temp_triggered = False
+if 'battery_triggered' not in st.session_state: st.session_state.battery_triggered = False
+if 'triggered_temp' not in st.session_state: st.session_state.triggered_temp = 0.0
+if 'triggered_battery' not in st.session_state: st.session_state.triggered_battery = 0
+if 'triggered_time' not in st.session_state: st.session_state.triggered_time = "00:00:00"
 
 # 顶栏主标题
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:38px; font-weight:800; margin-top:10px; margin-bottom:10px;">NexaEdge Network</h1>', unsafe_allow_html=True)
@@ -125,7 +148,7 @@ with tab1:
         st.markdown('<p style="font-size: 19px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 15px; margin-bottom: 25px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue Flow")
-        with c2: st.metric(label="Safety Threshold", value="39°C", delta="Device Safety Lock", delta_color="inverse")
+        with c2: st.metric(label="Safety Threshold", value="39°C / 20%", delta="Hardware Guard Lock", delta_color="inverse")
         with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / High TPS")
         st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
         st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
@@ -137,7 +160,7 @@ with tab1:
         st.markdown('<p style="font-size: 19px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 15px; margin-bottom: 25px;">让全球 50 亿部闲置手机，成为 AI 时代的高纯度语料燃料工厂</p>', unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="平台技术抽成", value="20%", delta="纯现金流造血")
-        with c2: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
+        with c2: st.metric(label="智能硬件风控", value="39°C / 20%", delta="温控及低电量双锁", delta_color="inverse")
         with c3: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
         st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
         st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
@@ -147,7 +170,7 @@ with tab1:
         st.success(f"🎉 预计每月可为您带来收益约: {monthly_est:.2f} USDT")
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（解决频繁刷新连接报错问题）
+# 📱 第二页：边缘节点控制台（补全电量风控与禁止激活逻辑）
 # =========================================================================
 with tab2:
     if target_image:
@@ -155,22 +178,51 @@ with tab2:
         
     st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
     
-    # 动态数值更新
+    # 🔋 电池参数生成（为了测试低电量拦截，你可以把 85 临时改成 15）
+    current_battery = random.randint(32, 36) if st.session_state.app_running else 85
+    current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
+    
+    # ------ 🔥 1. 运行中：触发【温度过热 39.0°C】自动断开机制 ------
+    if st.session_state.app_running and current_temp >= 39.0:
+        st.session_state.temp_triggered = True
+        st.session_state.triggered_temp = current_temp
+        s_sec = st.session_state.session_seconds
+        st.session_state.triggered_time = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+        st.session_state.app_running = False
+        st.toast("🔥 THERMAL INTERRUPT INITIATED!", icon="🛑")
+        st.rerun()
+
+    # ------ 🔋 2. 运行中：触发【电量低于 20%】自动断开熔断机制 ------
+    if st.session_state.app_running and current_battery < 20:
+        st.session_state.battery_triggered = True
+        st.session_state.triggered_battery = current_battery
+        s_sec = st.session_state.session_seconds
+        st.session_state.triggered_time = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+        st.session_state.app_running = False
+        st.toast("🔋 BATTERY TOO LOW! SAFE STOP INITIATED.", icon="🛑")
+        st.rerun()
+
+    # 🔴 渲染历史温度熔断快照看板
+    if st.session_state.temp_triggered:
+        if lang == "English":
+            st.markdown(f'<div class="snapshot-box"><b style="color:#ff3344; font-size:15px;">🛑 HARDWARE THERMAL GUARD INTERRUPT</b><br><span style="font-size:12px; color:#88929b;">Force-stopped to prevent battery degradation.</span><hr style="border:0.5px solid #ff3344; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>🔥 SHUTDOWN TEMP: <b style="color:#ffffff;">{st.session_state.triggered_temp:.1f}°C</b></span><span>⏱️ RUNTIME: <b style="color:#ffffff;">{st.session_state.triggered_time}</b></span></div></div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="snapshot-box"><b style="color:#ff3344; font-size:15px;">🛑 智能温控风控保护·强制熔断已执行</b><br><span style="font-size:12px; color:#88929b;">系统检测到设备温度超标，已紧急执行安全下线，保障您的手机硬件与电池寿命。</span><hr style="border:0.5px solid #ff3344; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>🔥 自动停机温度: <b style="color:#ffffff;">{st.session_state.triggered_temp:.1f}°C</b></span><span>⏱️ 连续安全时长: <b style="color:#ffffff;">{st.session_state.triggered_time}</b></span></div></div>', unsafe_allow_html=True)
+
+    # 🔴 渲染历史低电量熔断快照看板
+    if st.session_state.battery_triggered:
+        if lang == "English":
+            st.markdown(f'<div class="snapshot-box"><b style="color:#ff3344; font-size:15px;">🛑 BATTERY SAFEGUARD INTERRUPT</b><br><span style="font-size:12px; color:#88929b;">Node deactivated automatically because battery level dropped below 20%.</span><hr style="border:0.5px solid #ff3344; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>🔋 SHUTDOWN BATTERY: <b style="color:#ffffff;">{st.session_state.triggered_battery}%</b></span><span>⏱️ RUNTIME: <b style="color:#ffffff;">{st.session_state.triggered_time}</b></span></div></div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="snapshot-box"><b style="color:#ff3344; font-size:15px;">🛑 电池寿命保护·低电量自动熔断</b><br><span style="font-size:12px; color:#88929b;">系统检测到剩余电量已低于 20%，为防止过度放电，算力会话已自动挂起。</span><hr style="border:0.5px solid #ff3344; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>🔋 停机时剩余电量: <b style="color:#ffffff;">{st.session_state.triggered_battery}%</b></span><span>⏱️ 连续安全时长: <b style="color:#ffffff;">{st.session_state.triggered_time}</b></span></div></div>', unsafe_allow_html=True)
+
+    # 算力曲线数据更新
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
     
-    current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
-    
-    # ------ 🔥 安全过热检测熔断 ------
-    if st.session_state.app_running and current_temp >= 39.0:
-        st.toast("🔥 OVERHEAT WARNING DETECTED!" if lang == "English" else "🔥 检测到硬件核心过热警告！", icon="⚠️")
-        st.error("⚠️ EMERGENCY STOP: Device temperature hit {:.1f}°C!".format(current_temp) if lang == "English" else "⚠️ 紧急停机：设备温度已达 {:.1f}°C！熔断控温机制已强制启动。".format(current_temp))
-        st.session_state.app_running = False
-        st.rerun()
-
     # --- 📊 模块 1：控制面板 ---
     with st.container(border=True):
         panel_title = "DASHBOARD" if lang == "English" else "控制面板"
@@ -181,11 +233,21 @@ with tab2:
         
         st.line_chart(chart_df, height=105, use_container_width=True)
         
-        status_tag = "SAFE" if lang == "English" else "安全控温中"
+        # 核心监测状态（支持温度+电量双显）
+        if st.session_state.temp_triggered or st.session_state.battery_triggered:
+            status_tag = "COOLDOWN LOCK" if lang == "English" else "风险断开保护"
+            status_style = "background-color:#2a1418; color:#ff3344; border:1px solid #ff3344;"
+        else:
+            status_tag = "SAFE" if lang == "English" else "智能控电控温中"
+            status_style = "background-color:#1e272e; color:#A2FF00; border:1px solid #A2FF00;"
+            
         st.markdown(f"""
         <div class="temp-section">
-            <div style="display:flex; align-items:center; line-height:1;"><span style="font-size:22px; margin-right:8px; display:inline-block; vertical-align:middle;">🌡️</span><span class="app-value" style="font-size:22px; display:inline-block; vertical-align:middle;">{current_temp:.1f}°C</span></div>
-            <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:5px 12px; border-radius:12px; border:1px solid #A2FF00; line-height:1;">{status_tag}</span>
+            <div style="display:flex; align-items:center; line-height:1; gap:15px;">
+                <div><span style="font-size:20px; margin-right:5px; vertical-align:middle;">🌡️</span><span class="app-value" style="font-size:20px; vertical-align:middle;">{current_temp:.1f}°C</span></div>
+                <div><span style="font-size:20px; margin-right:5px; vertical-align:middle;">🔋</span><span class="app-value" style="font-size:20px; vertical-align:middle;">{current_battery}%</span></div>
+            </div>
+            <span style="{status_style} font-size:11px; font-weight:bold; padding:5px 12px; border-radius:12px; line-height:1;">{status_tag}</span>
         </div>
         """, unsafe_allow_html=True)
     
@@ -226,15 +288,17 @@ with tab2:
         st.markdown('<div style="font-size:12px; color:#88929b; margin-bottom:12px;">NODE_ID: <span style="color:#ffffff; font-weight:bold;">@nexaedge / Acc1 (active)</span></div>', unsafe_allow_html=True)
         
         if lang == "English":
-            run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
+            run_status = "ACTIVE" if st.session_state.app_running else ("BATTERY LOCK" if st.session_state.battery_triggered else ("THERMAL LOCK" if st.session_state.temp_triggered else "STANDBY"))
             status_lbl = "MINING STATUS:"
             earnings_lbl = "TOTAL ACCUMULATED:"
         else:
-            run_status = "运行中" if st.session_state.app_running else "待机就绪"
+            run_status = "运行中" if st.session_state.app_running else ("电量锁定中" if st.session_state.battery_triggered else ("温控锁定中" if st.session_state.temp_triggered else "待机就绪"))
             status_lbl = "挖矿状态:"
             earnings_lbl = "账户总累计代币:"
             
-        status_color = "#A2FF00" if st.session_state.app_running else "#88929b"
+        if st.session_state.app_running: status_color = "#A2FF00"
+        elif st.session_state.temp_triggered or st.session_state.battery_triggered: status_color = "#ff3344"
+        else: status_color = "#88929b"
         
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
@@ -247,23 +311,31 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
 
-    # 🕹️ 控制大按钮
+    # ------ 🕹️ 核心控制大按钮（内嵌低电量禁止激活安全拦截） ------
     if not st.session_state.app_running:
         btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
         if st.button(btn_start_txt, key="app_start_btn"):
-            st.session_state.app_running = True
-            st.rerun()
+            # 🚨 核心风控拦截：如果电量低于 20%，立刻禁止启动并报红色警告
+            if current_battery < 20:
+                st.error("❌ ACTIVATION DENIED: Battery level is below 20%. Please plugin charger first!" if lang == "English" else "❌ 启动失败：当前手机剩余电量低于 20%。为保护电池寿命，系统已锁定禁止激活！")
+            else:
+                # 满足安全要求，清空熔断历史标记，恢复计时
+                st.session_state.temp_triggered = False
+                st.session_state.battery_triggered = False
+                st.session_state.session_seconds = 0
+                st.session_state.app_running = True
+                st.rerun()
     else:
         btn_stop_txt = "PAUSE SESSION (VIEW NETWORK MAP)" if lang == "English" else "暂停运行 (查看网络拓扑图) 🛑"
         if st.button(btn_stop_txt, key="app_stop_btn"):
             st.session_state.app_running = False
             st.rerun()
             
-    # 🏎️ 优化核心高频刷新机制，阻断 Websocket 数据挤压越界
+    # 心跳高频刷新平滑缓冲
     if st.session_state.app_running:
         st.session_state.app_earned += 0.25       
         st.session_state.session_seconds += 1     
-        time.sleep(1.2)  # 👈 从 1.0 上调至 1.2 秒，增加前端浏览器数据处理缓冲时间
+        time.sleep(1.2)  
         st.rerun()
 
 # ==================== 📧 底部统一白名单递交表单 ====================
