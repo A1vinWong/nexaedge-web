@@ -83,6 +83,7 @@ if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
+if 'just_finished' not in st.session_state: st.session_state.just_finished = False # 用来记录是否是刚到时完工的状态
 
 # ==========================================
 # 🌐 2. 国际化多语言词典映射
@@ -231,16 +232,26 @@ with tab2:
     st.session_state.target_time_index = TIME_OPTIONS.index(selected_time_tab2)
     target_total_seconds = SECONDS_MAP[st.session_state.target_time_index]
     
+    # 核心修改：到时停止逻辑（拦截数据，使其停留在完成时间，不复位）
     if st.session_state.app_running and st.session_state.session_seconds >= target_total_seconds:
         st.session_state.app_running = False
+        st.session_state.just_finished = True  # 激活完工停留锁定状态
         update_global_active(-1)
         st.toast(T["wl_toast"][lang])
 
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
-    s_sec = st.session_state.session_seconds
     
-    remaining_seconds = max(0, target_total_seconds - s_sec)
+    # 根据状态判断时间数据的展现方式
+    if st.session_state.just_finished:
+        # 如果是到时自动停下的，数据完美锁死在终点
+        s_sec = target_total_seconds
+        remaining_seconds = 0
+    else:
+        # 否则正常读取当前运行时长
+        s_sec = st.session_state.session_seconds
+        remaining_seconds = max(0, target_total_seconds - s_sec)
+        
     remaining_str = f"{remaining_seconds // 3600:02d}:{(remaining_seconds % 3600) // 60:02d}:{remaining_seconds % 60:02d}"
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     session_generated = s_sec * 0.25
@@ -308,18 +319,22 @@ with tab2:
 
     if not st.session_state.app_running:
         if st.button(T["btn_start"][lang], key="app_start_btn"):
-            if remaining_seconds <= 0: st.session_state.session_seconds = 0
+            # 点击开始时，重置所有计时器和状态标记
+            st.session_state.session_seconds = 0
+            st.session_state.just_finished = False
             st.session_state.app_running = True
             update_global_active(1)
             st.rerun()
     else:
         if st.button(T["btn_stop"][lang], key="app_stop_btn"):
             st.session_state.app_running = False
+            # 手动停止时无需锁定在目标完成时间，保持当前位置即可
+            st.session_state.just_finished = False 
             update_global_active(-1)
             st.rerun()
 
 # =========================================================================
-# 📧 底部白名单递交表单 (新增：智能防刷重校验逻辑)
+# 📧 底部白名单递交表单
 # =========================================================================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 st.markdown(f'<h3 style="color:#A2FF00; font-size:18px; font-weight:700;"><span style="font-size:16px;">🚀</span> {T["wl_title"][lang]}</h3>', unsafe_allow_html=True)
@@ -333,25 +348,20 @@ with st.form("unified_whitelist_form"):
         if u_email == "" or u_wallet == "":
             st.error(T["err_empty"][lang])
         elif u_email == "admin666":
-            # 管理员通道，不执行排重写入
             pass
         else:
-            # 读取历史数据进行唯一性核验
             is_duplicate = False
             if os.path.exists("whitelist.txt"):
                 with open("whitelist.txt", "r", encoding="utf-8") as f:
                     whitelist_content = f.read()
                 
-                # 检查邮箱是否已存在
                 if f"Email: {u_email} |" in whitelist_content:
                     st.error(T["err_dup_email"][lang])
                     is_duplicate = True
-                # 检查钱包是否已存在
                 elif f"Wallet: {u_wallet} |" in whitelist_content:
                     st.error(T["err_dup_wallet"][lang])
                     is_duplicate = True
             
-            # 校验通过，允许写入
             if not is_duplicate:
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
