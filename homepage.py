@@ -2,6 +2,8 @@ import streamlit as st
 import time
 import random
 import pandas as pd
+import base64
+import os
 
 # ==========================================
 # 1. 页面核心配置（必须放在第一行）
@@ -13,10 +15,11 @@ st.set_page_config(
 )
 
 # ==========================================
-# 🔒 服务器进程级全局共享内存（保护在线人数与白名单）
+# 🔒 服务器进程级内存安全锁（保证 451 人数准确不重置）
 # ==========================================
 @st.cache_resource
 def get_global_network_memory():
+    # 设定安全的初始活跃基数
     return {
         "active_count": 451,
         "whitelist_db": []
@@ -24,7 +27,7 @@ def get_global_network_memory():
 
 global_memory = get_global_network_memory()
 
-# --- ⚙️ 顶层会话状态变量初始化 ---
+# --- ⚙️ 顶层状态变量初始化 ---
 if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
@@ -33,7 +36,7 @@ if 'just_finished' not in st.session_state: st.session_state.just_finished = Fal
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
-# --- 🔄 物理时间时间差精确自动补偿 ---
+# --- 🔄 跨页面物理时间差精确自动补偿 ---
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     now = time.time()
     elapsed_real_seconds = int(now - st.session_state.last_tick_time)
@@ -43,17 +46,30 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
         st.session_state.last_tick_time = now
 
 # ==========================================
-# 🟢 极致复原：高级黑绿极客 CSS 视觉引擎
+# 🖼️ 图片完美内嵌引擎（解决 st.image 引起的红字报错）
+# ==========================================
+def get_image_base64(img_path):
+    if os.path.exists(img_path):
+        with open(img_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode()
+    return ""
+
+# 自动读取你项目目录下的 image.png
+img_base64 = get_image_base64("image.png")
+
+# ==========================================
+# 🟢 极致复原：高级黑绿极客全套 CSS 样式
 # ==========================================
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
     
-    /* 代替图片：自适应呼吸发光高级科技 Logo */
-    .logo-container { text-align: center; padding: 35px 10px; background: radial-gradient(circle, rgba(162,255,0,0.09) 0%, rgba(11,15,18,0) 70%); border-radius: 20px; margin-bottom: 5px; }
-    .logo-text { color: #A2FF00; font-size: 38px; font-weight: 900; letter-spacing: -1px; text-shadow: 0 0 25px rgba(162, 255, 0, 0.4); margin: 0; }
+    /* 顶部图片/Logo 居中自适应容器 */
+    .logo-container { text-align: center; padding: 20px 10px; margin-bottom: 5px; }
+    .logo-img { max-width: 90%; height: auto; border-radius: 10px; }
+    .fallback-logo { color: #A2FF00; font-size: 38px; font-weight: 900; text-shadow: 0 0 25px rgba(162, 255, 0, 0.4); margin: 0; }
     
-    /* 核心极客卡片外框样式 */
+    /* 精致半透明黑卡片与技术介绍排版 */
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 15px; margin-bottom: 12px; }
     .app-title { font-size: 13px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 32px; font-weight: 700; }
@@ -61,20 +77,19 @@ st.markdown("""
     .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 10px 14px; border-radius: 10px; margin-top: 4px; }
     .ratio-box { background-color: #11171d; border: 1px dashed #252e38; border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 12px; color: #88929b; }
     
-    /* 启动按钮样式全局高亮复原 */
+    /* 按钮样式强化复原 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 16px !important;
         width: 100%; border-radius: 12px !important; border: none !important; padding: 12px 0 !important; box-shadow: 0 0 15px rgba(162, 255, 0, 0.3);
     }
-    /* 暂停按钮暗色调复原 */
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #252e38 !important; box-shadow: none !important; }
     
-    /* 白名单表单卡片复原 */
+    /* 表单与同步框 */
     [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 20px !important; margin-top: 20px !important; }
     </style>
 """, unsafe_allow_html=True)
 # ==========================================
-# 🌐 跨语种国际化翻译字典（完美复原介绍）
+# 🌐 国际化全套介绍双语字典
 # ==========================================
 col_pad, col_lang = st.columns([4, 1])
 with col_lang:
@@ -127,13 +142,20 @@ T = {
     "net_sync": {"English": "🟢 NETWORK SYNCHRONIZED: {} ACTIVE DEVICES ONLINE", "中文": "🟢 全网数据实时同步: 当前共有 {} 个活跃设备在线"}
 }
 
-# 挂载科技发光 Logo 与标语介绍
-st.markdown('<div class="logo-container"><p class="logo-text">NexaEdge Network</p></div>', unsafe_allow_html=True)
-st.markdown(f'<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-bottom: 25px;">{T["slogan"][lang]}</p>', unsafe_allow_html=True)
+# ==========================================
+# 🖼️ 2. 渲染顶部图片 Logo 与项目大标题介绍
+# ==========================================
+if img_base64:
+    st.markdown(f'<div class="logo-container"><img class="logo-img" src="data:image/png;base64,{img_base64}" alt="NexaEdge Logo"></div>', unsafe_allow_html=True)
+else:
+    st.markdown('<div class="logo-container"><p class="fallback-logo">NexaEdge Network</p></div>', unsafe_allow_html=True)
 
+st.markdown(f'<p style="font-size: 15px; color: #A2FF00; font-weight:bold; text-align: center; margin-bottom: 25px; padding: 0 10px;">{T["slogan"][lang]}</p>', unsafe_allow_html=True)
+
+# 创建双标签页
 tab1, tab2 = st.tabs([T["tab1"][lang], T["tab2"][lang]])
 
-# --- Tab 1: 核心项目介绍与收益计算器 ---
+# --- Tab 1: 完整版项目技术介绍、卡片、收益预估 ---
 with tab1:
     st.markdown(f'<div class="app-card"><div class="app-title">{T["net_fee"][lang]}</div><div class="app-value">20%</div><div class="neon-green-text" style="font-size:12px; font-weight:bold;">{T["net_fee_sub"][lang]}</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="app-card"><div class="app-title">{T["safety"][lang]}</div><div class="app-value">39°C</div><div style="color:#ff6b6b; font-size:12px; font-weight:bold;">{T["safety_sub"][lang]}</div></div>', unsafe_allow_html=True)
@@ -148,7 +170,7 @@ with tab1:
     st.markdown(f'<h3 style="color:#A2FF00; font-size:18px; font-weight:700; margin-top:15px;">{T["pillar_title"][lang]}</h3>', unsafe_allow_html=True)
     st.markdown(f'<div class="app-card" style="border-left: 3px solid #A2FF00; padding-left:12px; margin-bottom:10px;"><h4 style="color:#ffffff; margin:0 0 4px 0; font-size:14px;">{T["p1_t"][lang]}</h4><p style="color:#88929b; font-size:12px; margin:0;">{T["p1_d"][lang]}</p></div><div class="app-card" style="border-left: 3px solid #ff6b6b; padding-left:12px; margin-bottom:10px;"><h4 style="color:#ffffff; margin:0 0 4px 0; font-size:14px;">{T["p2_t"][lang]}</h4><p style="color:#88929b; font-size:12px; margin:0;">{T["p2_d"][lang]}</p></div>', unsafe_allow_html=True)
 
-# --- Tab 2: 核心控制台实时监控 ---
+# --- Tab 2: 核心实时挖矿控制台（100% 精确人数计算逻辑） ---
 with tab2:
     st.markdown(f'<div class="app-title" style="margin-top:5px; margin-bottom:5px;">{T["timer_t"][lang]}</div>', unsafe_allow_html=True)
     if st.session_state.app_running:
@@ -162,7 +184,7 @@ with tab2:
     if st.session_state.app_running and st.session_state.session_seconds >= target_total_seconds:
         st.session_state.app_running = False
         st.session_state.just_finished = True 
-        global_memory["active_count"] = max(451, global_memory["active_count"] - 1)
+        global_memory["active_count"] = max(451, global_memory["active_count"] - 1) # 点击停止/到时，全网人数精准减 1
         st.rerun()
 
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
@@ -192,7 +214,7 @@ with tab2:
             st.session_state.just_finished = False
             st.session_state.app_running = True
             st.session_state.last_tick_time = time.time()
-            global_memory["active_count"] += 1
+            global_memory["active_count"] += 1 # 用户一点击启动，全网人数立即精准加 1 变成 452！
             st.rerun()
     else:
         if st.button(T["btn_stop"][lang], key="app_stop_btn"):
@@ -200,7 +222,7 @@ with tab2:
             global_memory["active_count"] = max(451, global_memory["active_count"] - 1)
             st.rerun()
 
-# --- 创世白名单申请 ---
+# --- 🚀 创世白名单申请表单 ---
 with st.form("wl_form"):
     st.markdown(f'<p style="color:#A2FF00; font-weight:bold; margin:0;">{T["wl_title"][lang]}</p>', unsafe_allow_html=True)
     u_email = st.text_input(T["wl_mail"][lang], key="em").strip()
@@ -211,20 +233,25 @@ with st.form("wl_form"):
             st.success("SUCCESS!")
 
 # ==========================================
-# 📊 实时全网人数挂件 与 Flag Counter 访客计数器（100% 修复还原）
+# 📊 完美底部挂件：实时在线人数 ＋ Flag Counter 全球访客计数器
 # ==========================================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
-st.markdown(f'<div style="text-align: center; margin-bottom: 12px;"><span style="background-color:#141d26; color:#A2FF00; font-size:13px; font-weight:bold; padding:6px 14px; border-radius:30px; border: 1px dashed #A2FF00;">{T["net_sync"][lang].format(global_memory["active_count"])}</span></div>', unsafe_allow_html=True)
 
+# 🟢 全网数据同步框（实时显示当前 451 / 452 准确在线人数）
+st.markdown(f'<div style="text-align: center; margin-bottom: 15px;"><span style="background-color:#141d26; color:#A2FF00; font-size:13px; font-weight:bold; padding:6px 14px; border-radius:30px; border: 1px dashed #A2FF00;">{T["net_sync"][lang].format(global_memory["active_count"])}</span></div>', unsafe_allow_html=True)
+
+# 🌐 Flag Counter 访客计数器（精准复原国旗计数卡片）
 st.markdown("""
-<div style="text-align: center; margin-top: 5px; opacity: 0.85;">
+<div style="text-align: center; margin-top: 5px; opacity: 0.95;">
     <a href="https://info.flagcounter.com/NexaEdge">
         <img src="https://s11.flagcounter.com/count2/NexaEdge/bg_0B0F12/txt_A2FF00/border_1E272E/columns_3/maxflags_9/viewers_3/labels_1/pageviews_1/flags_0/" alt="Flag Counter" border="0" style="border-radius: 8px; border: 1px solid #1e272e; max-width: 100%;">
     </a>
 </div>
 """, unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:10px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
 
+st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:15px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
+
+# --- 🏃‍♂️ 定时驱动器 ---
 if st.session_state.app_running:
     time.sleep(1.0)
     st.session_state.app_earned += 0.25       
