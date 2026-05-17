@@ -4,6 +4,7 @@ import time
 import random
 import pandas as pd
 import glob
+from datetime import datetime, timedelta
 
 # 1. 全局页面基础配置
 st.set_page_config(
@@ -49,7 +50,6 @@ st.markdown("""
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 26px; font-weight: 700; }
     .neon-green-text { color: #A2FF00 !important; }
     
-    /* 优化双排监测组件轴线对齐 */
     .temp-section {
         display: flex;
         align-items: center;
@@ -81,7 +81,6 @@ st.markdown("""
     }
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; border-bottom-color: #A2FF00 !important; }
     
-    /* 按钮基础样式 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
@@ -100,31 +99,30 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* 🛑 熔断安全历史快照盒样式 */
     .snapshot-box {
-        background-color: #1e1215;
-        border: 1px solid #ff3344;
-        border-left: 5px solid #ff3344;
+        background-color: #121e15;
+        border: 1px solid #00ff66;
+        border-left: 5px solid #00ff66;
         border-radius: 8px;
         padding: 12px;
         margin-bottom: 15px;
-        color: #ffcccc;
+        color: #ccffdd;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 状态初始化
+# --- 🚀 状态机初始化 ---
 if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
-if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 
-# 🔴 【熔断保护机制】状态机锁
-if 'temp_triggered' not in st.session_state: st.session_state.temp_triggered = False
-if 'battery_triggered' not in st.session_state: st.session_state.battery_triggered = False
-if 'triggered_temp' not in st.session_state: st.session_state.triggered_temp = 0.0
-if 'triggered_battery' not in st.session_state: st.session_state.triggered_battery = 0
-if 'triggered_time' not in st.session_state: st.session_state.triggered_time = "00:00:00"
+# ⏱️ 定时器专属状态机
+if 'target_duration_min' not in st.session_state: st.session_state.target_duration_min = 10  # 默认挂机10分钟（演示用）
+if 'elapsed_seconds' not in st.session_state: st.session_state.elapsed_seconds = 0
+if 'start_time_str' not in st.session_state: st.session_state.start_time_str = ""
+if 'end_time_str' not in st.session_state: st.session_state.end_time_str = ""
+if 'timer_completed' not in st.session_state: st.session_state.timer_completed = False
+if 'last_completed_yield' not in st.session_state: st.session_state.last_completed_yield = 0.0
 
 # 顶栏主标题
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:38px; font-weight:800; margin-top:10px; margin-bottom:10px;">NexaEdge Network</h1>', unsafe_allow_html=True)
@@ -148,29 +146,17 @@ with tab1:
         st.markdown('<p style="font-size: 19px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 15px; margin-bottom: 25px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue Flow")
-        with c2: st.metric(label="Safety Threshold", value="39°C / 20%", delta="Hardware Guard Lock", delta_color="inverse")
+        with c2: st.metric(label="Smart Timer", value="Customized", delta="Auto-Stop Safeguard")
         with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / High TPS")
-        st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
-        st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
-        hours = st.slider("Estimated Overnight Duration (Hours/Day):", min_value=1, max_value=12, value=6)
-        device_os = st.radio("Operating System:", ["iOS (iPhone)", "Android"], horizontal=True, key="os_en")
-        monthly_est = hours * 0.35 * 30
-        st.success(f"🎉 Estimated Monthly Yield: {monthly_est:.2f} USDT")
     else:
         st.markdown('<p style="font-size: 19px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 15px; margin-bottom: 25px;">让全球 50 亿部闲置手机，成为 AI 时代的高纯度语料燃料工厂</p>', unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="平台技术抽成", value="20%", delta="纯现金流造血")
-        with c2: st.metric(label="智能硬件风控", value="39°C / 20%", delta="温控及低电量双锁", delta_color="inverse")
+        with c2: st.metric(label="智能时长控制器", value="自主定时", delta="到期自动断开保护")
         with c3: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-        st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
-        st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
-        hours = st.slider("预估每日夜间闲置充电时长 (小时/天):", min_value=1, max_value=12, value=6)
-        device_os = st.radio("操作系统类型:", ["iOS (iPhone)", "Android"], horizontal=True, key="os_zh")
-        monthly_est = hours * 0.35 * 30
-        st.success(f"🎉 预计每月可为您带来收益约: {monthly_est:.2f} USDT")
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（补全电量风控与禁止激活逻辑）
+# 📱 第二页：边缘节点控制台（全新引入：运行时长控制器）
 # =========================================================================
 with tab2:
     if target_image:
@@ -178,52 +164,69 @@ with tab2:
         
     st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
     
-    # 🔋 电池参数生成（为了测试低电量拦截，你可以把 85 临时改成 15）
-    current_battery = random.randint(32, 36) if st.session_state.app_running else 85
-    current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
+    # 模拟环境固定数值（避免随机跳动影响视觉）
+    current_battery = 34 if st.session_state.app_running else 85
+    current_temp = 36.5 if st.session_state.app_running else 31.2
     
-    # ------ 🔥 1. 运行中：触发【温度过热 39.0°C】自动断开机制 ------
-    if st.session_state.app_running and current_temp >= 39.0:
-        st.session_state.temp_triggered = True
-        st.session_state.triggered_temp = current_temp
-        s_sec = st.session_state.session_seconds
-        st.session_state.triggered_time = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+    # ------ ⏱️ 核心逻辑：判断定时挂机时间是否到期 ------
+    target_total_seconds = st.session_state.target_duration_min * 60
+    
+    if st.session_state.app_running and st.session_state.elapsed_seconds >= target_total_seconds:
+        st.session_state.timer_completed = True
+        st.session_state.last_completed_yield = st.session_state.elapsed_seconds * 0.25
         st.session_state.app_running = False
-        st.toast("🔥 THERMAL INTERRUPT INITIATED!", icon="🛑")
+        st.toast("⏰ SESSION COMPLETED SUCCESSFULLY!", icon="✅")
         st.rerun()
 
-    # ------ 🔋 2. 运行中：触发【电量低于 20%】自动断开熔断机制 ------
-    if st.session_state.app_running and current_battery < 20:
-        st.session_state.battery_triggered = True
-        st.session_state.triggered_battery = current_battery
-        s_sec = st.session_state.session_seconds
-        st.session_state.triggered_time = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
-        st.session_state.app_running = False
-        st.toast("🔋 BATTERY TOO LOW! SAFE STOP INITIATED.", icon="🛑")
-        st.rerun()
-
-    # 🔴 渲染历史温度熔断快照看板
-    if st.session_state.temp_triggered:
+    # 🟢 渲染定时任务圆满圆满结束的“战报看板”
+    if st.session_state.timer_completed:
         if lang == "English":
-            st.markdown(f'<div class="snapshot-box"><b style="color:#ff3344; font-size:15px;">🛑 HARDWARE THERMAL GUARD INTERRUPT</b><br><span style="font-size:12px; color:#88929b;">Force-stopped to prevent battery degradation.</span><hr style="border:0.5px solid #ff3344; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>🔥 SHUTDOWN TEMP: <b style="color:#ffffff;">{st.session_state.triggered_temp:.1f}°C</b></span><span>⏱️ RUNTIME: <b style="color:#ffffff;">{st.session_state.triggered_time}</b></span></div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="snapshot-box"><b style="color:#00ff66; font-size:15px;">⏰ SMART TIMER: SESSION SECURED</b><br><span style="font-size:12px; color:#88929b;">Your scheduled compute plan has successfully completed.</span><hr style="border:0.5px solid #00ff66; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>📅 TIME FRAME: <b style="color:#ffffff;">{st.session_state.start_time_str} → {st.session_state.end_time_str}</b></span><span>💰 REVENUE: <b style="color:#A2FF00;">+{st.session_state.last_completed_yield:,.1f} NEXA</b></span></div></div>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="snapshot-box"><b style="color:#ff3344; font-size:15px;">🛑 智能温控风控保护·强制熔断已执行</b><br><span style="font-size:12px; color:#88929b;">系统检测到设备温度超标，已紧急执行安全下线，保障您的手机硬件与电池寿命。</span><hr style="border:0.5px solid #ff3344; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>🔥 自动停机温度: <b style="color:#ffffff;">{st.session_state.triggered_temp:.1f}°C</b></span><span>⏱️ 连续安全时长: <b style="color:#ffffff;">{st.session_state.triggered_time}</b></span></div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="snapshot-box"><b style="color:#00ff66; font-size:15px;">⏰ 智能定时器：算力计划圆满完成</b><br><span style="font-size:12px; color:#88929b;">您设定的定时挂机任务已安全到期，系统已执行自动下线保护。</span><hr style="border:0.5px solid #00ff66; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>📅 运行周期: <b style="color:#ffffff;">{st.session_state.start_time_str} 到 {st.session_state.end_time_str}</b></span><span>💰 会话净收益: <b style="color:#A2FF00;">+{st.session_state.last_completed_yield:,.1f} NEXA</b></span></div></div>', unsafe_allow_html=True)
 
-    # 🔴 渲染历史低电量熔断快照看板
-    if st.session_state.battery_triggered:
-        if lang == "English":
-            st.markdown(f'<div class="snapshot-box"><b style="color:#ff3344; font-size:15px;">🛑 BATTERY SAFEGUARD INTERRUPT</b><br><span style="font-size:12px; color:#88929b;">Node deactivated automatically because battery level dropped below 20%.</span><hr style="border:0.5px solid #ff3344; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>🔋 SHUTDOWN BATTERY: <b style="color:#ffffff;">{st.session_state.triggered_battery}%</b></span><span>⏱️ RUNTIME: <b style="color:#ffffff;">{st.session_state.triggered_time}</b></span></div></div>', unsafe_allow_html=True)
+    # --- ⏱️ 模块 1：时控配置面板（未运行状态下可见） ---
+    with st.container(border=True):
+        if not st.session_state.app_running:
+            config_title = "⏱️ COMPUTE TIMER CONFIG" if lang == "English" else "⏱️ 边缘挂机时长控制器"
+            st.markdown(f'<div class="app-title">{config_title}</div>', unsafe_allow_html=True)
+            
+            # 时长选择器
+            st.session_state.target_duration_min = st.slider(
+                "Select Plan Duration (Minutes) / 设定本次挂机时长 (分钟):" if lang=="English" else "设定本次挂机总时长 (分钟):",
+                min_value=1, max_value=480, value=10, step=1
+            )
+            
+            # 计算预估区间
+            now = datetime.now()
+            est_end = now + timedelta(minutes=st.session_state.target_duration_min)
+            est_gain = st.session_state.target_duration_min * 60 * 0.25
+            
+            st.markdown(f"""
+            <div class="ratio-box" style="margin-top:10px;">
+                ⏱️ <b>{"Estimated Timeline:" if lang=="English" else "预计运行时间段:"}</b> {now.strftime('%H:%M:%S')} ➔ {est_end.strftime('%H:%M:%S')}<br>
+                💎 <b>{"Expected Session Yield:" if lang=="English" else "到期预估总产出:"}</b> <span class='neon-green-text'>+{est_gain:,.1f} NEXA</span>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="snapshot-box"><b style="color:#ff3344; font-size:15px;">🛑 电池寿命保护·低电量自动熔断</b><br><span style="font-size:12px; color:#88929b;">系统检测到剩余电量已低于 20%，为防止过度放电，算力会话已自动挂起。</span><hr style="border:0.5px solid #ff3344; margin:8px 0;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>🔋 停机时剩余电量: <b style="color:#ffffff;">{st.session_state.triggered_battery}%</b></span><span>⏱️ 连续安全时长: <b style="color:#ffffff;">{st.session_state.triggered_time}</b></span></div></div>', unsafe_allow_html=True)
+            # 运行中状态下：锁定并精美展示当前运行的实际时间段
+            active_title = "⚡ LIVE SESSION TIMELINE" if lang == "English" else "⚡ 当前会话运行时间轴"
+            st.markdown(f'<div class="app-title">{active_title}</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="ratio-box" style="background-color:#1c241b; border:1px solid #A2FF00;">
+                📅 <b>{"Active Mining Period:" if lang=="English" else "当前挂机有效时段:"}</b> <br>
+                <span style="font-size:16px; color:#ffffff; font-family:monospace;">{st.session_state.start_time_str} ➔ {st.session_state.end_time_str}</span>
+            </div>
+            """, unsafe_allow_html=True)
 
-    # 算力曲线数据更新
+    # 算力波动渲染
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
     
-    # --- 📊 模块 1：控制面板 ---
+    # --- 📊 模块 2：控制大面板 ---
     with st.container(border=True):
         panel_title = "DASHBOARD" if lang == "English" else "控制面板"
         st.markdown(f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span class="app-title">{panel_title}</span><span style="color:#88929b; font-size:14px;">⚙️</span></div>', unsafe_allow_html=True)
@@ -233,72 +236,60 @@ with tab2:
         
         st.line_chart(chart_df, height=105, use_container_width=True)
         
-        # 核心监测状态（支持温度+电量双显）
-        if st.session_state.temp_triggered or st.session_state.battery_triggered:
-            status_tag = "COOLDOWN LOCK" if lang == "English" else "风险断开保护"
-            status_style = "background-color:#2a1418; color:#ff3344; border:1px solid #ff3344;"
-        else:
-            status_tag = "SAFE" if lang == "English" else "智能控电控温中"
-            status_style = "background-color:#1e272e; color:#A2FF00; border:1px solid #A2FF00;"
+        status_tag = "ACTIVE (TIMED)" if st.session_state.app_running else "STANDBY"
+        status_style = "background-color:#142a1a; color:#A2FF00; border:1px solid #A2FF00;" if st.session_state.app_running else "background-color:#1e272e; color:#88929b; border:1px solid #88929b;"
             
         st.markdown(f"""
         <div class="temp-section">
             <div style="display:flex; align-items:center; line-height:1; gap:15px;">
-                <div><span style="font-size:20px; margin-right:5px; vertical-align:middle;">🌡️</span><span class="app-value" style="font-size:20px; vertical-align:middle;">{current_temp:.1f}°C</span></div>
-                <div><span style="font-size:20px; margin-right:5px; vertical-align:middle;">🔋</span><span class="app-value" style="font-size:20px; vertical-align:middle;">{current_battery}%</span></div>
+                <div><span style="font-size:18px; margin-right:3px; vertical-align:middle;">🌡️</span><span class="app-value" style="font-size:18px; vertical-align:middle;">{current_temp:.1f}°C</span></div>
+                <div><span style="font-size:18px; margin-right:3px; vertical-align:middle;">🔋</span><span class="app-value" style="font-size:18px; vertical-align:middle;">{current_battery}%</span></div>
             </div>
             <span style="{status_style} font-size:11px; font-weight:bold; padding:5px 12px; border-radius:12px; line-height:1;">{status_tag}</span>
         </div>
         """, unsafe_allow_html=True)
     
-    # --- ⏱️ 模块 2：运行时长与收益比面板 ---
+    # --- ⏱️ 模块 3：实时收益与倒计时看版 ---
     with st.container(border=True):
-        timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
+        timer_title = "REALTIME SESSION INCOME" if lang == "English" else "实时会话收益与计时"
         st.markdown(f'<div class="app-title">{timer_title}</div>', unsafe_allow_html=True)
         
-        s_sec = st.session_state.session_seconds
-        time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
-        session_generated = s_sec * 0.25
+        # 换算倒计时与当前跑过的时间
+        rem_sec = max(0, target_total_seconds - st.session_state.elapsed_seconds)
+        countdown_str = f"{rem_sec//3600:02d}:{(rem_sec%3600)//60:02d}:{rem_sec%60:02d}"
+        session_generated = st.session_state.elapsed_seconds * 0.25
         
-        t_label = "SESSION DURATION:" if lang == "English" else "本次连续运行时间:"
-        r_label = "EST. RATIO:" if lang == "English" else "当前时产比折算:"
-        ratio_text = "0.25 NEXA / sec (≈ 900 NEXA/hr)" if lang == "English" else "0.25 NEXA / 秒 (约 900 NEXA/小时)"
-        yield_lbl = "SESSION YIELD:" if lang == "English" else "本次会话已产出:"
+        c_label = "TIME REMAINING:" if lang == "English" else "倒计时 (设定计划):"
+        yield_lbl = "LIVE SESSION YIELD:" if lang == "English" else "本次已滚动产出:"
         
         st.markdown(f"""
-        <div style="display:flex; justify-content:space-between; margin-top:8px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; margin-top:8px; margin-bottom:5px;">
             <div style="text-align:left;">
-                <div style="font-size:11px; color:#88929b; margin-bottom:2px;">{t_label}</div>
-                <div class="app-value" style="font-size:20px; color:#ffffff; font-family:monospace;">{time_str}</div>
+                <div style="font-size:11px; color:#88929b; margin-bottom:2px;">{c_label}</div>
+                <div class="app-value" style="font-size:22px; color:#ffffff; font-family:monospace;">{countdown_str}</div>
             </div>
             <div style="text-align:right;">
                 <div style="font-size:11px; color:#88929b; margin-bottom:2px;">{yield_lbl}</div>
-                <div class="app-value neon-green-text" style="font-size:20px;">+{session_generated:,.1f} <span style="font-size:11px; color:#ffffff;">NEXA</span></div>
+                <div class="app-value neon-green-text" style="font-size:22px;">+{session_generated:,.1f} <span style="font-size:11px; color:#ffffff;">NEXA</span></div>
             </div>
-        </div>
-        <div class="ratio-box">
-            ⚡ <b>{r_label}</b> {ratio_text}
         </div>
         """, unsafe_allow_html=True)
     
-    # --- 🟢 模块 3：节点全局总详情 ---
+    # --- 🟢 模块 4：节点全局总详情 ---
     with st.container(border=True):
         node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
         st.markdown(f'<div class="app-title" style="margin-bottom:12px;">{node_header}</div>', unsafe_allow_html=True)
-        st.markdown('<div style="font-size:12px; color:#88929b; margin-bottom:12px;">NODE_ID: <span style="color:#ffffff; font-weight:bold;">@nexaedge / Acc1 (active)</span></div>', unsafe_allow_html=True)
         
         if lang == "English":
-            run_status = "ACTIVE" if st.session_state.app_running else ("BATTERY LOCK" if st.session_state.battery_triggered else ("THERMAL LOCK" if st.session_state.temp_triggered else "STANDBY"))
+            run_status = "RUNNING (TIMED)" if st.session_state.app_running else "STANDBY"
             status_lbl = "MINING STATUS:"
             earnings_lbl = "TOTAL ACCUMULATED:"
         else:
-            run_status = "运行中" if st.session_state.app_running else ("电量锁定中" if st.session_state.battery_triggered else ("温控锁定中" if st.session_state.temp_triggered else "待机就绪"))
+            run_status = "定时运行中" if st.session_state.app_running else "待机就绪"
             status_lbl = "挖矿状态:"
             earnings_lbl = "账户总累计代币:"
             
-        if st.session_state.app_running: status_color = "#A2FF00"
-        elif st.session_state.temp_triggered or st.session_state.battery_triggered: status_color = "#ff3344"
-        else: status_color = "#88929b"
+        status_color = "#A2FF00" if st.session_state.app_running else "#88929b"
         
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
@@ -311,34 +302,36 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
 
-    # ------ 🕹️ 核心控制大按钮（内嵌低电量禁止激活安全拦截） ------
+    # 🕹️ 核心控制大按钮
     if not st.session_state.app_running:
-        btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
+        btn_start_txt = "ACTIVATE TIMED SESSION 🟢" if lang == "English" else "启动边缘算力节点（时控模式） 🟢"
         if st.button(btn_start_txt, key="app_start_btn"):
-            # 🚨 核心风控拦截：如果电量低于 20%，立刻禁止启动并报红色警告
-            if current_battery < 20:
-                st.error("❌ ACTIVATION DENIED: Battery level is below 20%. Please plugin charger first!" if lang == "English" else "❌ 启动失败：当前手机剩余电量低于 20%。为保护电池寿命，系统已锁定禁止激活！")
-            else:
-                # 满足安全要求，清空熔断历史标记，恢复计时
-                st.session_state.temp_triggered = False
-                st.session_state.battery_triggered = False
-                st.session_state.session_seconds = 0
-                st.session_state.app_running = True
-                st.rerun()
+            # 记录点击启动时的准确系统时间区间
+            now_dt = datetime.now()
+            end_dt = now_dt + timedelta(minutes=st.session_state.target_duration_min)
+            
+            st.session_state.start_time_str = now_dt.strftime('%H:%M:%S')
+            st.session_state.end_time_str = end_dt.strftime('%H:%M:%S')
+            
+            # 清空上一轮计数
+            st.session_state.elapsed_seconds = 0
+            st.session_state.timer_completed = False
+            st.session_state.app_running = True
+            st.rerun()
     else:
-        btn_stop_txt = "PAUSE SESSION (VIEW NETWORK MAP)" if lang == "English" else "暂停运行 (查看网络拓扑图) 🛑"
+        btn_stop_txt = "FORCE TERMINATE SESSION 🛑" if lang == "English" else "强行终止当前会话 🛑"
         if st.button(btn_stop_txt, key="app_stop_btn"):
             st.session_state.app_running = False
             st.rerun()
             
-    # 心跳高频刷新平滑缓冲
+    # 高频心跳驱动器（模拟挂机时间流逝与收益实时增加）
     if st.session_state.app_running:
         st.session_state.app_earned += 0.25       
-        st.session_state.session_seconds += 1     
-        time.sleep(1.2)  
+        st.session_state.elapsed_seconds += 1     
+        time.sleep(1.0)  # 精准 1 秒心跳刷新
         st.rerun()
 
-# ==================== 📧 底部统一白名单递交表单 ====================
+# ==================== 📧 底部白名单表单 ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:25px;'>", unsafe_allow_html=True)
 st.markdown(f'<h3 style="text-align:center; color:#A2FF00; font-size:22px; margin-bottom:15px;">{"🚀 Secure Your Early Whitelist Seat" if lang=="English" else "🚀 锁定早期测试网白名单席位"}</h3>', unsafe_allow_html=True)
 
@@ -349,7 +342,7 @@ with st.form("unified_whitelist_form"):
     if submitted:
         if u_email.strip() != "":
             with open("whitelist.txt", "a", encoding="utf-8") as f:
-                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | ActiveTime: {st.session_state.session_seconds}s\n")
+                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
             st.balloons()
 
 if os.path.exists("whitelist.txt"):
@@ -363,15 +356,4 @@ if os.path.exists("whitelist.txt"):
         key="admin_download_btn"
     )
 
-# ==================== 📊 访客计数器展示 ====================
-st.markdown("<hr style='border:1px solid #1e272e; margin-top:25px;'>", unsafe_allow_html=True)
-visitor_counter_html = """
-<div style="text-align: center; margin-top: 5px; opacity: 0.85;">
-    <p style="color: #88929b; font-size: 11px; margin-bottom: 8px; letter-spacing: 1px;">➔ NEXAEDGE NETWORK NODE STATUS</p>
-    <a href="https://info.flagcounter.com/NexaEdge">
-        <img src="https://s11.flagcounter.com/count2/NexaEdge/bg_0B0F12/txt_A2FF00/border_1E272E/columns_3/maxflags_9/viewers_3/labels_1/pageviews_1/flags_0/" alt="Flag Counter" border="0" style="border-radius: 8px; border: 1px solid #1e272e; max-width: 100%;">
-    </a>
-</div>
-"""
-st.markdown(visitor_counter_html, unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:15px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:25px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
