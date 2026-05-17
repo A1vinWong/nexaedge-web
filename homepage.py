@@ -57,7 +57,7 @@ st.markdown("""
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 26px; font-weight: 700; }
     .neon-green-text { color: #A2FF00 !important; }
     
-    /* ✨ 优化温度计：改成 flex 轴线对齐，并整体向上微调，使其与右侧标签完全在一条线上 */
+    /* 优化温度计：改成 flex 轴线对齐，并整体向上微调 */
     .temp-section {
         display: flex;
         align-items: center;
@@ -69,7 +69,7 @@ st.markdown("""
         margin-bottom: 2px;
     }
     
-    /* ✨ 优化时产虚线框：向上提一点，并调整底部外边距，让整个卡片内部空间更工整 */
+    /* 优化时产虚线框：向上提一点，更工整 */
     .ratio-box {
         background-color: #11171d;
         border: 1px dashed #252e38;
@@ -142,7 +142,7 @@ with tab1:
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue Flow")
         with c2: st.metric(label="Safety Threshold", value="39°C", delta="Device Safety Lock", delta_color="inverse")
-        with c3: st.metric(label="Settlement Base", value="Solana Solana", delta="Low Gas / High TPS")
+        with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / High TPS")
 
         st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
 
@@ -200,7 +200,7 @@ with tab1:
         """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（精确调节间距与对齐）
+# 📱 第二页：边缘节点控制台
 # =========================================================================
 with tab2:
     if target_image:
@@ -223,10 +223,24 @@ with tab2:
         chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
         st.line_chart(chart_df, height=105, use_container_width=True)
         
+        # 🟢 基础模拟温度生成
         current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
+        
+        # ------ 🔥 【新增功能】系统级过热检测机制 ------
+        # 注：若要测试弹窗效果，可以临时把 39.0 改成 36.6 
+        if st.session_state.app_running and current_temp >= 39.0:
+            # 1. 弹出系统级 Toast 气泡
+            st.toast("🔥 OVERHEAT WARNING DETECTED!" if lang == "English" else "🔥 检测到硬件核心过热警告！", icon="⚠️")
+            # 2. 顶部红色强力系统警告横幅
+            st.error("⚠️ EMERGENCY STOP: Device temperature hit {:.1f}°C! Auto-throttling activated.".format(current_temp) if lang == "English" else "⚠️ 紧急停机：设备温度已达 {:.1f}°C！熔断控温机制已强制启动。".format(current_temp))
+            # 3. 强制关停节点，防止损坏
+            st.session_state.app_running = False
+            time.sleep(1.0)
+            st.rerun()
+        # ---------------------------------------------
+        
         status_tag = "SAFE" if lang == "English" else "安全控温中"
         
-        # 💡 这里通过 CSS Flex 完全对齐线，消除了温度计下方的空隙
         st.markdown(f"""
         <div class="temp-section">
             <div style="display:flex; align-items:center; line-height:1;"><span style="font-size:22px; margin-right:8px; display:inline-block; vertical-align:middle;">🌡️</span><span class="app-value" style="font-size:22px; display:inline-block; vertical-align:middle;">{current_temp:.1f}°C</span></div>
