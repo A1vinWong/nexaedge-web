@@ -23,7 +23,7 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 极客黑绿科技风：强力清空多余格子 CSS ---
+# --- 🟢 极客黑绿科技风 CSS 全量优化 ---
 st.markdown("""
     <style>
     /* 全局去暗灰背景 */
@@ -42,19 +42,18 @@ st.markdown("""
         display: none !important;
     }
     
-    /* 🔥【致命大招】强力抹杀 Streamlit 原生自带的所有空置边界、缝隙和多余空框 */
+    /* 强力抹杀 Streamlit 原生自带的所有空置边界、缝隙和多余空框 */
     [data-testid="stVerticalBlock"] > div:empty {
         display: none !important;
         margin: 0 !important;
         padding: 0 !important;
     }
-    /* 强行把所有原生容器的 border 置空，避免它们生成你看到的灰色长条格子 */
     [data-testid="stElementContainer"] {
         border: none !important;
         background: transparent !important;
     }
     
-    /* --- 核心精髓：st.tabs 组件样式微调 (左和右，干净无缝) --- */
+    /* --- st.tabs 组件样式微调 (左和右) --- */
     .stTabs [data-baseweb="tab-list"] {
         gap: 12px;
         background-color: transparent !important;
@@ -81,10 +80,10 @@ st.markdown("""
     
     .stTabs [data-baseweb="tab-highlight"] {
         background-color: #A2FF00 !important;
-        height: 0px !important; /* 靠上面的 border-top 驱动，隐藏底层下划线 */
+        height: 0px !important;
     }
     
-    /* --- 自定义高档手机 App 容器结构 --- */
+    /* --- 自定义手机 App 容器结构 --- */
     .app-container {
         background-color: #11171d;
         border: 1px solid #1e272e;
@@ -127,7 +126,7 @@ st.markdown("""
         color: #88929b;
     }
     
-    /* --- stButton 样式：大按钮纯正科技感 --- */
+    /* --- stButton 样式 --- */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
@@ -140,7 +139,6 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(162, 255, 0, 0.3);
     }
     
-    /* 针对 "暂停运行" 按钮的独立样式 */
     div.stButton > button[key*="app_stop_btn"] {
         background-color: #0b0f12 !important;
         color: #ffffff !important;
@@ -172,6 +170,7 @@ if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
+if 'target_runtime_hours' not in st.session_state: st.session_state.target_runtime_hours = 6
 
 # 顶栏主标题
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:36px; font-weight:800; margin-top:5px; margin-bottom:5px;">NexaEdge Network</h1>', unsafe_allow_html=True)
@@ -186,7 +185,7 @@ tab2_title = "📱 Node Dashboard (Live)" if lang == "English" else "📱 边缘
 tab1, tab2 = st.tabs([tab1_title, tab2_title])
 
 # =========================================================================
-# 🏠 第一页：项目介绍与通识壁垒
+# 🏠 第一页：项目介绍与通识壁垒（完美找回三个卡片介绍）
 # =========================================================================
 with tab1:
     if target_image:
@@ -203,8 +202,9 @@ with tab1:
         st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0;'>", unsafe_allow_html=True)
 
         st.markdown('<h2 style="color:#A2FF00; font-size:22px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
-        hours = st.slider("Estimated Overnight Duration (Hours/Day):", min_value=1, max_value=12, value=6)
-        monthly_est = hours * 0.35 * 30
+        hours_input1 = st.slider("Estimated Overnight Duration (Hours/Day):", min_value=1, max_value=12, value=int(st.session_state.target_runtime_hours), key="slider_tab1")
+        st.session_state.target_runtime_hours = hours_input1
+        monthly_est = hours_input1 * 0.35 * 30
         st.success(f"🎉 Estimated Monthly Yield: {monthly_est:.2f} USDT")
 
         st.markdown('<h2 style="color:#A2FF00; font-size:22px; margin-top:15px;">⚡ Key Pillars</h2>', unsafe_allow_html=True)
@@ -216,6 +216,10 @@ with tab1:
         <div class="feature-box">
             <h4 style="color:white; margin-top:0; font-size:16px;">🔥 39°C Thermal Guard</h4>
             <p style="color:#bdc3c7; font-size:13px;">Total hardware protection. System auto-throttles computing loads instantly if the battery touches 39°C. Zero degradation anxiety.</p>
+        </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin-top:0; font-size:16px;">🤝 2:1 Anti-Cheat Verification</h4>
+            <p style="color:#bdc3c7; font-size:13px;">Decentralized majority-voting consensus. We segment raw data across 3 independent nodes to deliver 100% verified datasets to AI clients.</p>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -229,8 +233,9 @@ with tab1:
         st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0;'>", unsafe_allow_html=True)
 
         st.markdown('<h2 style="color:#A2FF00; font-size:22px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
-        hours = st.slider("预估每日夜间闲置充电时长 (小时/天):", min_value=1, max_value=12, value=6)
-        monthly_est = hours * 0.35 * 30
+        hours_input2 = st.slider("预估每日夜间闲置充电时长 (小时/天):", min_value=1, max_value=12, value=int(st.session_state.target_runtime_hours), key="slider_tab1_zh")
+        st.session_state.target_runtime_hours = hours_input2
+        monthly_est = hours_input2 * 0.35 * 30
         st.success(f"🎉 预计每月可为您带来收益约: {monthly_est:.2f} USDT")
 
         st.markdown('<h2 style="color:#A2FF00; font-size:22px; margin-top:15px;">⚡ 核心壁垒</h2>', unsafe_allow_html=True)
@@ -241,25 +246,57 @@ with tab1:
         </div>
         <div class="feature-box">
             <h4 style="color:white; margin-top:0; font-size:16px;">🔥 独创：39°C 智能温控风控屏障</h4>
-            <p style="color:#bdc3c7; font-size:13px;">坚守绝不伤机的底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，彻底打消硬件损耗焦虑。</p>
+            <p style="color:#bdc3c7; font-size:13px;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，彻底打消硬件损耗焦虑。</p>
+        </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin-top:0; font-size:16px;">🤝 2:1 拜占庭冗余反作弊校验</h4>
+            <p style="color:#bdc3c7; font-size:13px;">去中心化多数投票共识。我们将原始语料切片分发至 3 个完全独立的边缘节点进行交叉校验，确保向 AI 客户交付 100% 真实、未被污染的高纯度数据集。</p>
         </div>
         """, unsafe_allow_html=True)
 
+
 # =========================================================================
-# 📱 第二页：边缘节点控制台 (全局采用自定义 HTML 卡片，坚决不留空白格子)
+# 📱 第二页：边缘节点控制台 (移除电池，加入运行时间自动停止计算器)
 # =========================================================================
 with tab2:
-    # 纯净大容器开启
     st.markdown('<div class="app-container" style="margin-top:10px;">', unsafe_allow_html=True)
     
-    # 缩小渲染一次主图，完美紧凑
     if target_image:
         st.image(target_image, use_container_width=True)
     
-    # 计算当前动态数值
+    # --- ⏰ 新增：定时停止调节计算器组件 ---
+    st.markdown('<div class="app-card">', unsafe_allow_html=True)
+    calc_title = "⏳ TIME SETTING (AUTO-STOP)" if lang == "English" else "⏳ 运行时间配置 (到时自动停止)"
+    st.markdown(f'<div class="app-title">{calc_title}</div>', unsafe_allow_html=True)
+    
+    # 允许用户在第二页直接调节计划运行几小时
+    label_slider = "Set target runtime (Hours):" if lang == "English" else "设置本次计划运行时间 (小时):"
+    hours_input_tab2 = st.slider(label_slider, min_value=1, max_value=12, value=int(st.session_state.target_runtime_hours), key="slider_tab2")
+    st.session_state.target_runtime_hours = hours_input_tab2
+    
+    # 计算目标总秒数
+    target_total_seconds = int(st.session_state.target_runtime_hours * 3600)
+    
+    # 检测是否达到时间自动停止
+    if st.session_state.app_running and st.session_state.session_seconds >= target_total_seconds:
+        st.session_state.app_running = False
+        st.toast("⏰ Time reached! Node stopped automatically." if lang == "English" else "⏰ 已达到设定时间！节点已自动安全停止。")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 计算动态数值
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
     s_sec = st.session_state.session_seconds
+    
+    # 计算剩余时间
+    remaining_seconds = max(0, target_total_seconds - s_sec)
+    rem_hours = remaining_seconds // 3600
+    rem_mins = (remaining_seconds % 3600) // 60
+    rem_secs = remaining_seconds % 60
+    remaining_str = f"{rem_hours:02d}:{rem_mins:02d}:{rem_secs:02d}"
+    
+    # 本次已运行时间
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     session_generated = s_sec * 0.25
     
@@ -267,7 +304,7 @@ with tab2:
     hash_label = "NETWORK HASH RATE" if lang == "English" else "当前节点算力"
     status_tag = "SAFE" if lang == "English" else "安全控温中"
 
-    # --- 🗂️ 模块 1：直接用 HTML 打包装配，杜绝原生组件留白问题 ---
+    # --- 🗂️ 模块 1：控制面板（干净包装，无电池百分比） ---
     st.markdown(f"""
     <div class="app-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -280,30 +317,29 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     
-    # 只有折线图必须调用原生的，我们把它单独紧凑地挂接
+    # 折线图
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
     st.line_chart(chart_df, height=95, use_container_width=True)
     
-    # 温度与电池显示
-    bat_icon = "🔋 33%" if st.session_state.app_running else "🔋 85%"
+    # 温度显示（彻底移除电池百分比图标，保持清爽）
     st.markdown(f"""
     <div class="app-card" style="margin-top: -5px;">
         <div class="temp-section">
-            <div style="display:flex; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center;">
                 <span class="app-value" style="font-size:20px;">🌡️ {current_temp:.1f}°C</span>
-                <span class="app-value" style="font-size:16px; color:#88929b;">{bat_icon}</span>
             </div>
             <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:4px 10px; border-radius:12px; border:1px solid #A2FF00;">{status_tag}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # --- 🗂️ 模块 2：时长与收益比 ---
+    # --- 🗂️ 模块 2：时长与收益比（集成倒计时显示） ---
     timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
     t_label = "SESSION DURATION:" if lang == "English" else "本次连续运行时间:"
+    rem_label = "COUNTDOWN TO STOP:" if lang == "English" else "距离自动停止倒计时:"
     r_label = "EST. RATIO:" if lang == "English" else "当前时产比折算:"
     ratio_text = "0.25 NEXA / sec (≈ 900 NEXA/hr)" if lang == "English" else "0.25 NEXA / 秒 (约 900 NEXA/小时)"
     yield_lbl = "SESSION YIELD:" if lang == "English" else "本次会话已产出:"
@@ -314,7 +350,9 @@ with tab2:
         <div style="display:flex; justify-content:space-between; margin-top:8px;">
             <div style="text-align:left;">
                 <div style="font-size:11px; color:#88929b;">{t_label}</div>
-                <div class="app-value" style="font-size:19px; font-family:monospace;">{time_str}</div>
+                <div class="app-value" style="font-size:19px; font-family:monospace; margin-bottom:5px;">{time_str}</div>
+                <div style="font-size:11px; color:#88929b;">{rem_label}</div>
+                <div class="app-value" style="font-size:17px; font-family:monospace; color:#ff9f43;">{remaining_str}</div>
             </div>
             <div style="text-align:right;">
                 <div style="font-size:11px; color:#88929b;">{yield_lbl}</div>
@@ -358,6 +396,9 @@ with tab2:
     if not st.session_state.app_running:
         btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
         if st.button(btn_start_txt, key="app_start_btn"):
+            # 如果刚好倒计时走完了重新点启动，重置一下时间
+            if remaining_seconds <= 0:
+                st.session_state.session_seconds = 0
             st.session_state.app_running = True
             st.rerun()
     else:
