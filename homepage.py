@@ -85,7 +85,7 @@ if 'session_seconds' not in st.session_state: st.session_state.session_seconds =
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 
 # ==========================================
-# 🌐 2. 国际化多语言词典映射 (全面修复控制台汉化)
+# 🌐 2. 国际化多语言词典映射
 # ==========================================
 col_pad, col_lang = st.columns([4, 1])
 with col_lang:
@@ -99,7 +99,7 @@ TIME_OPTIONS = TIME_OPTIONS_EN if lang == "English" else TIME_OPTIONS_ZH
 SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
 HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
 
-# 核心文本字典 (100% 完整中英双语对齐)
+# 核心文本字典
 T = {
     "slogan": {
         "English": "Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.",
@@ -124,7 +124,7 @@ T = {
     "p3_t": {"English": "🤝 2:1 Anti-Cheat Verification", "中文": "🤝 2:1 去中心化防作弊校验"},
     "p3_d": {"English": "Decentralized majority-voting consensus. We segment raw data across 3 independent nodes to deliver 100% verified datasets to AI clients.", "中文": "去中心化多数投票共识。我们将原始数据打散分发给 3 个独立节点，确保向 AI 客户交付 100% 经过验证的真实数据。"},
     
-    # 📱 控制台汉化修复核心区
+    # 控制台区
     "timer_t": {"English": "⏳ COMPUTE TIMER (AUTO-STOP)", "中文": "⏳ 计算计时器 (到时自动停止)"},
     "dash": {"English": "DASHBOARD", "中文": "核心控制面板"},
     "hash": {"English": "NETWORK HASH RATE (MH/s):", "中文": "当前节点算力 (MH/s):"},
@@ -140,7 +140,7 @@ T = {
     "status_standby": {"English": "STANDBY", "中文": "待机中"},
     "acc": {"English": "TOTAL ACCUMULATED:", "中文": "累计已获得总收益:"},
     
-    # 按钮与表单
+    # 按钮、表单与去重校验提示
     "btn_start": {"English": "START COMPUTE SESSION", "中文": "启动计算节点会话"},
     "btn_stop": {"English": "PAUSE SESSION (VIEW NETWORK MAP)", "中文": "暂停会话 (查看全网网络拓扑)"},
     "wl_title": {"English": "🚀 Secure Your Early Whitelist Seat", "中文": "🚀 锁定早期创世白名单席位"},
@@ -148,11 +148,16 @@ T = {
     "wl_wallet": {"English": "Solana Wallet Address:", "中文": "Solana 钱包接收地址:"},
     "wl_btn": {"English": "SUBMIT & RETAIN SEAT ⚡", "中文": "提交并保留创世资格 ⚡"},
     "wl_toast": {"English": "⏰ Timer Finished! Node has been stopped safely.", "中文": "⏰ 定时结束！节点已安全自动停止。"},
-    "net_sync": {"English": "🟢 NETWORK SYNCHRONIZED: {} ACTIVE DEVICES ONLINE", "中文": "🟢 全网数据实时同步: 当前共有 {} 个活跃设备在线"}
+    "net_sync": {"English": "🟢 NETWORK SYNCHRONIZED: {} ACTIVE DEVICES ONLINE", "中文": "🟢 全网数据实时同步: 当前共有 {} 个活跃设备在线"},
+    
+    "err_empty": {"English": "❌ Please fill in both Email and Wallet Address!", "中文": "❌ 请填写完整的电子邮箱和 Solana 钱包地址！"},
+    "err_dup_email": {"English": "❌ This Email address has already applied for the whitelist!", "中文": "❌ 该邮箱地址已经申请过白名单，请勿重复提交！"},
+    "err_dup_wallet": {"English": "❌ This Solana Wallet has already applied for the whitelist!", "中文": "❌ 该 Solana 钱包已绑定过白名单席位，请勿重复提交！"},
+    "success_wl": {"English": "🎉 Welcome aboard! Your genesis whitelist seat has been secured.", "中文": "🎉 欢迎加入！您的创世白名单席位已成功锁定。"}
 }
 
 # =========================================================================
-# 📸 顶栏全局恒定区域（大标题放置在图片最上方）
+# 📸 顶栏全局恒定区域
 # =========================================================================
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:36px; font-weight:800; margin-top:5px; margin-bottom:12px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
@@ -218,7 +223,7 @@ with tab1:
     """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：Node Dashboard 控制台页 (汉化完全修复)
+# 📱 第二页：Node Dashboard 控制台页
 # =========================================================================
 with tab2:
     st.markdown(f'<div class="app-title" style="margin-top:5px; margin-bottom:5px;">{T["timer_t"][lang]}</div>', unsafe_allow_html=True)
@@ -240,7 +245,6 @@ with tab2:
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     session_generated = s_sec * 0.25
     
-    # 算力控制面板
     st.markdown(f"""
     <div class="app-card" style="margin-top:15px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -258,7 +262,6 @@ with tab2:
         st.session_state.chart_history.append(current_hash)
     st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"]), height=95, use_container_width=True)
     
-    # 温度状态卡片（无电池图标）
     st.markdown(f"""
     <div class="app-card" style="margin-top: -5px;">
         <div class="temp-section">
@@ -268,7 +271,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 收益明细 (修复：大标题切换中文时同步改变)
     st.markdown(f"""
     <div class="app-card">
         <div class="app-title">{T["compute_time_ratio"][lang]}</div>
@@ -288,7 +290,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     
-    # 节点基本状态 (修复：ACTIVE 状态变中文)
     run_status = T["status_active"][lang] if st.session_state.app_running else T["status_standby"][lang]
     st.markdown(f"""
     <div class="app-card">
@@ -305,7 +306,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 驱动主按钮
     if not st.session_state.app_running:
         if st.button(T["btn_start"][lang], key="app_start_btn"):
             if remaining_seconds <= 0: st.session_state.session_seconds = 0
@@ -318,22 +318,48 @@ with tab2:
             update_global_active(-1)
             st.rerun()
 
-# ==================== 📧 底部白名单递交表单 ====================
+# =========================================================================
+# 📧 底部白名单递交表单 (新增：智能防刷重校验逻辑)
+# =========================================================================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 st.markdown(f'<h3 style="color:#A2FF00; font-size:18px; font-weight:700;"><span style="font-size:16px;">🚀</span> {T["wl_title"][lang]}</h3>', unsafe_allow_html=True)
 
 with st.form("unified_whitelist_form"):
-    u_email = st.text_input(T["wl_mail"][lang])
-    u_wallet = st.text_input(T["wl_wallet"][lang])
+    u_email = st.text_input(T["wl_mail"][lang]).strip()
+    u_wallet = st.text_input(T["wl_wallet"][lang]).strip()
     submitted = st.form_submit_button(T["wl_btn"][lang])
+    
     if submitted:
-        if u_email.strip() != "" and u_email.strip() != "admin666":
-            with open("whitelist.txt", "a", encoding="utf-8") as f:
-                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
-            st.balloons()
+        if u_email == "" or u_wallet == "":
+            st.error(T["err_empty"][lang])
+        elif u_email == "admin666":
+            # 管理员通道，不执行排重写入
+            pass
+        else:
+            # 读取历史数据进行唯一性核验
+            is_duplicate = False
+            if os.path.exists("whitelist.txt"):
+                with open("whitelist.txt", "r", encoding="utf-8") as f:
+                    whitelist_content = f.read()
+                
+                # 检查邮箱是否已存在
+                if f"Email: {u_email} |" in whitelist_content:
+                    st.error(T["err_dup_email"][lang])
+                    is_duplicate = True
+                # 检查钱包是否已存在
+                elif f"Wallet: {u_wallet} |" in whitelist_content:
+                    st.error(T["err_dup_wallet"][lang])
+                    is_duplicate = True
+            
+            # 校验通过，允许写入
+            if not is_duplicate:
+                with open("whitelist.txt", "a", encoding="utf-8") as f:
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
+                st.success(T["success_wl"][lang])
+                st.balloons()
 
 # 后台监控管理
-if u_email.strip() == "admin666":
+if u_email == "admin666":
     st.markdown('<div class="admin-box">', unsafe_allow_html=True)
     st.markdown('<h2 style="color:#A2FF00; margin-top:0;">📊 全局监控后台 (管理员)</h2>', unsafe_allow_html=True)
     st.metric(label="全网 Active 节点总人数", value=f"{load_global_status()['active_count']} 人")
