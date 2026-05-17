@@ -277,7 +277,7 @@ with tab1:
 
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台 (定时器最大支持选择 24 小时全天运行)
+# 📱 第二页：边缘节点控制台
 # =========================================================================
 with tab2:
     st.markdown('<div class="app-container" style="margin-top:10px;">', unsafe_allow_html=True)
@@ -285,7 +285,7 @@ with tab2:
     if target_image:
         st.image(target_image, use_container_width=True)
     
-    # --- ⏰ 定时自动停止计算器组件（加入 24 小时机制） ---
+    # --- ⏰ 定时自动停止计算器组件 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
     calc_title = "⏳ COMPUTE TIMER (AUTO-STOP)" if lang == "English" else "⏳ 算力定时器 (到时自动停止)"
     st.markdown(f'<div class="app-title">{calc_title}</div>', unsafe_allow_html=True)
@@ -294,7 +294,6 @@ with tab2:
     selected_time_tab2 = st.selectbox(label_select, current_options, index=st.session_state.target_time_index, key="time_select_tab2")
     st.session_state.target_time_index = current_options.index(selected_time_tab2)
     
-    # 获取精确的目标截止总秒数 (最大可支持到 86400 秒，即 24小时)
     target_total_seconds = SECONDS_MAP[st.session_state.target_time_index]
     
     # 自动倒计时强制停止检测
@@ -304,20 +303,28 @@ with tab2:
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 数据状态生成
+    # 数据状态动态生成
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
+    
+    # 【高保真动态电量逻辑】：运行中模拟缓慢掉电或充电饱和状态，待机时稳定在85%
+    if st.session_state.app_running:
+        current_battery = max(15, 85 - (st.session_state.session_seconds // 60))
+    else:
+        current_battery = 85
+        
     s_sec = st.session_state.session_seconds
     
-    # 计算精确的倒计时字符串 (时:分:秒)
+    # 计算精确的倒计时字符串
     remaining_seconds = max(0, target_total_seconds - s_sec)
     rem_hours = remaining_seconds // 3600
     rem_mins = (remaining_seconds % 3600) // 60
     rem_secs = remaining_seconds % 60
     remaining_str = f"{rem_hours:02d}:{rem_mins:02d}:{rem_secs:02d}"
     
-    # 本次连续跑满时长格式化
+    # 本次连续跑满时长格式化 (由于3秒步进，这里精确体现)
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+    # 3秒步进下，对应每3秒产出 0.75 NEXA (保持 0.25 NEXA/秒 的基础速率不变)
     session_generated = s_sec * 0.25
     
     panel_title = "DASHBOARD" if lang == "English" else "控制面板"
@@ -344,12 +351,13 @@ with tab2:
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
     st.line_chart(chart_df, height=95, use_container_width=True)
     
-    # 温度条
+    # ⚡ 升级模块：温度 + 真实感手机电量双重展示条
     st.markdown(f"""
     <div class="app-card" style="margin-top: -5px;">
         <div class="temp-section">
-            <div style="display:flex; align-items:center;">
-                <span class="app-value" style="font-size:20px;">🌡️ {current_temp:.1f}°C</span>
+            <div style="display:flex; align-items:center; gap: 15px;">
+                <span class="app-value" style="font-size:18px;">🌡️ {current_temp:.1f}°C</span>
+                <span class="app-value" style="font-size:18px; color: #10ac84;">🔋 {current_battery}%</span>
             </div>
             <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:4px 10px; border-radius:12px; border:1px solid #A2FF00;">{status_tag}</span>
         </div>
@@ -468,9 +476,10 @@ visitor_counter_html = """
 st.markdown(visitor_counter_html, unsafe_allow_html=True)
 st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:10px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
 
-# ==================== 🏎️ 后台高频刷新驱动器 ====================
+# ==================== 🏎️ 后台低频稳健刷新驱动器 (防御 WebSocket 断连报错) ====================
 if st.session_state.app_running:
-    st.session_state.app_earned += 0.25       
-    st.session_state.session_seconds += 1     
-    time.sleep(1.0)                            
+    # 刷新间隔改为稳健的 3 秒。为了让收益和时长完美对齐，数据每次递增 3 秒的量
+    st.session_state.app_earned += 0.75       
+    st.session_state.session_seconds += 3     
+    time.sleep(3.0)                            
     st.rerun()                                
