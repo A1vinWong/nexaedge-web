@@ -4,7 +4,7 @@ import random
 import pandas as pd
 
 # ==========================================
-# 1. 页面基础配置
+# 1. 页面基础配置（必须是绝对的第一句）
 # ==========================================
 st.set_page_config(
     page_title="NexaEdge Network | Official Node Gateway",
@@ -17,6 +17,7 @@ st.set_page_config(
 # ==========================================
 @st.cache_resource
 def get_global_network_memory():
+    # 设定安全的初始活跃基数
     return {
         "active_count": 451,
         "whitelist_db": []
@@ -33,7 +34,7 @@ if 'just_finished' not in st.session_state: st.session_state.just_finished = Fal
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
-# --- 🔄 跨页面刷新时间补偿机制 ---
+# --- 🔄 跨页面/放视频 物理时间差精确补偿 ---
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     now = time.time()
     elapsed_real_seconds = int(now - st.session_state.last_tick_time)
@@ -43,32 +44,32 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
         st.session_state.last_tick_time = now
 
 # ==========================================
-# 🟢 完美复原：黑绿极客视觉样式表
+# 🟢 极客黑绿全套视觉样式表
 # ==========================================
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
-    /* 科技感发光虚拟Logo */
-    .logo-box { text-align: center; padding: 30px 10px; background: radial-gradient(circle, rgba(162,255,0,0.1) 0%, rgba(11,15,18,0) 70%); border-radius: 20px; margin-bottom: 5px; }
-    .logo-title { color: #A2FF00; font-size: 38px; font-weight: 900; letter-spacing: -0.5px; text-shadow: 0 0 20px rgba(162, 255, 0, 0.4); margin: 0; }
-    /* 精致卡片外框 */
+    /* NexaEdge 专属科技发光虚拟 Logo 样式 */
+    .logo-container { text-align: center; padding: 35px 10px; background: radial-gradient(circle, rgba(162,255,0,0.09) 0%, rgba(11,15,18,0) 70%); border-radius: 20px; margin-bottom: 5px; }
+    .logo-text { color: #A2FF00; font-size: 38px; font-weight: 900; letter-spacing: -1px; text-shadow: 0 0 25px rgba(162, 255, 0, 0.4); margin: 0; }
+    /* 精致半透明黑卡片 */
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 15px; margin-bottom: 12px; }
     .app-title { font-size: 13px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 32px; font-weight: 700; }
     .neon-green-text { color: #A2FF00 !important; }
     .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 10px 14px; border-radius: 10px; margin-top: 4px; }
     .ratio-box { background-color: #11171d; border: 1px dashed #252e38; border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 12px; color: #88929b; }
-    /* 按钮全局样式复原 */
+    /* 按钮样式强化 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 16px !important;
         width: 100%; border-radius: 12px !important; border: none !important; padding: 12px 0 !important; box-shadow: 0 0 15px rgba(162, 255, 0, 0.3);
     }
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #252e38 !important; box-shadow: none !important; }
-    [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 20px !important; margin-top: 15px !important; }
+    [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 20px !important; margin-top: 20px !important; }
     </style>
 """, unsafe_allow_html=True)
 # ==========================================
-# 🌐 国际化多语言完全复原
+# 🌐 语言包配置
 # ==========================================
 col_pad, col_lang = st.columns([4, 1])
 with col_lang:
@@ -82,9 +83,9 @@ SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
 HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
 
 T = {
-    "slogan": {"English": "Transforming idle smartphones into data fuel factories for the AI Era.", "中文": "将全球闲置智能手机转化为 AI 时代的高纯度数据燃料工厂。"},
+    "slogan": {"English": "Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.", "中文": "将全球 50亿+ 闲置智能手机转化为 AI 时代的高纯度数据燃料工厂。"},
     "tab1": {"English": "🌐 Overview & Pillars", "中文": "🌐 项目概述与核心支柱"},
-    "tab2": {"English": "📱 Node Dashboard", "中文": "📱 节点控制台 (实时)"},
+    "tab2": {"English": "📱 Node Dashboard (Live)", "中文": "📱 节点控制台 (实时)"},
     "net_fee": {"English": "Network Fee", "中文": "网络服务费比例"},
     "net_fee_sub": {"English": "↑ Pure Revenue Flow", "中文": "↑ 纯粹网络收益分配流"},
     "safety": {"English": "Safety Threshold", "中文": "硬件安全温度阈值"},
@@ -92,13 +93,13 @@ T = {
     "base": {"English": "Settlement Base", "中文": "底层结算公链"},
     "base_sub": {"English": "↑ Low Gas / High TPS", "中文": "↑ 极低 Gas 消耗 / 高并发 TPS"},
     "calc_title": {"English": "💰 Device Revenue Calculator", "中文": "💰 设备收益预估计算器"},
-    "calc_label": {"English": "Select Daily Session Pattern:", "中文": "选择每日设备预计在线运行时长:"},
-    "calc_res": {"English": "🎉 Est. Monthly Yield (Based on {}/day): {:.2f} USDT", "中文": "🎉 预估每月稳健收益 (基于 每日{}/在线): {:.2f} USDT"},
+    "calc_label": {"English": "Select Daily Session Duration Pattern:", "中文": "选择每日设备预计在线运行时长:"},
+    "calc_res": {"English": "🎉 Estimated Monthly Yield (Based on {}/day): {:.2f} USDT", "中文": "🎉 预估每月稳健收益 (基于 每日{}/在线): {:.2f} USDT"},
     "pillar_title": {"English": "⚡ Key Pillars", "中文": "⚡ 核心技术支柱"},
     "p1_t": {"English": "📱 Passive Income via Charging", "中文": "📱 充电即可获得的被动收入"},
-    "p1_d": {"English": "Earn ~0.35 USDT/hr. Just plug in and lock your screen. Our sandbox cleans AI datasets silently.", "中文": "每小时约赚 0.35 USDT。只需插上充电器并锁屏，我们的轻量级 WASM 沙箱就会在后台静默清洗 AI 数据集。"},
+    "p1_d": {"English": "Earn ~0.35 USDT/hr. Just plug in, connect Wi-Fi, and lock your screen. Our lightweight WASM Sandbox cleans AI datasets silently in the background.", "中文": "每小时约赚 0.35 USDT。只需插上充电器，连接 Wi-Fi 并锁屏，我们的轻量级 WASM 沙箱就会在后台静默清洗 AI 数据集。"},
     "p2_t": {"English": "🔥 39°C Thermal Guard", "中文": "🔥 39°C 电池热量守护者"},
-    "p2_d": {"English": "Total hardware protection. System auto-throttles computing loads instantly if battery touches 39°C.", "中文": "全方位硬件保护。一旦电池温度触及 39°C，系统将瞬间自动降频、削减计算负载，免除电池损耗焦虑。"},
+    "p2_d": {"English": "Total hardware protection. System auto-throttles computing loads instantly if the battery touches 39°C. Zero degradation anxiety.", "中文": "全方位硬件保护。一旦电池温度触及 39°C，系统将瞬间自动降频、削减计算负载。完全不用担心电池损耗问题。"},
     "timer_t": {"English": "⏳ COMPUTE TIMER (AUTO-STOP)", "中文": "⏳ 计算计时器 (到时自动停止)"},
     "dash": {"English": "DASHBOARD", "中文": "核心控制面板"},
     "hash": {"English": "NETWORK HASH RATE (MH/s):", "中文": "当前节点算力 (MH/s):"},
@@ -115,24 +116,24 @@ T = {
     "acc": {"English": "TOTAL ACCUMULATED:", "中文": "累计已获得总收益:"},
     "btn_start": {"English": "START COMPUTE SESSION", "中文": "启动计算节点会话"},
     "btn_stop": {"English": "PAUSE SESSION (VIEW NETWORK MAP)", "中文": "暂停会话 (查看全网网络拓扑)"},
-    "wl_title": {"English": "🚀 Secure Early Whitelist Seat", "中文": "🚀 锁定早期创世白名单席位"},
+    "wl_title": {"English": "🚀 Secure Your Early Whitelist Seat", "中文": "🚀 锁定早期创世白名单席位"},
     "wl_mail": {"English": "Email Address:", "中文": "电子邮箱地址:"},
     "wl_wallet": {"English": "Solana Wallet Address:", "中文": "Solana 钱包接收地址:"},
-    "wl_btn": {"English": "SUBMIT SEAT ⚡", "中文": "提交并保留创世资格 ⚡"},
+    "wl_btn": {"English": "SUBMIT & RETAIN SEAT ⚡", "中文": "提交并保留创世资格 ⚡"},
     "net_sync": {"English": "🟢 NETWORK SYNCHRONIZED: {} ACTIVE DEVICES ONLINE", "中文": "🟢 全网数据实时同步: 当前共有 {} 个活跃设备在线"}
 }
 
-# 纯 HTML/CSS 发光科技 Logo（彻底终结报错）
-st.markdown('<div class="logo-box"><p class="logo-title">NexaEdge Network</p></div>', unsafe_allow_html=True)
-st.markdown(f'<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-bottom: 20px;">{T["slogan"][lang]}</p>', unsafe_allow_html=True)
+# 100% 安全挂载：纯代码渲染极客科技发光 Logo（告别 st.image 引起的红字报错）
+st.markdown('<div class="logo-container"><p class="logo-text">NexaEdge Network</p></div>', unsafe_allow_html=True)
+st.markdown(f'<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-bottom: 25px;">{T["slogan"][lang]}</p>', unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([T["tab1"][lang], T["tab2"][lang]])
 
-# --- Tab 1: 介绍与计算器 ---
+# --- Tab 1 内容 ---
 with tab1:
     st.markdown(f'<div class="app-card"><div class="app-title">{T["net_fee"][lang]}</div><div class="app-value">20%</div><div class="neon-green-text" style="font-size:12px; font-weight:bold;">{T["net_fee_sub"][lang]}</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="app-card"><div class="app-title">{T["safety"][lang]}</div><div class="app-value">39°C</div><div style="color:#ff6b6b; font-size:12px; font-weight:bold;">{T["safety_sub"][lang]}</div></div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="app-card"><div class="app-title">{T["base"][lang]}</div><div class="app-value" style="font-size:24px;">Solana SPL</div><div class="neon-green-text" style="font-size:11px;">{T["base_sub"][lang]}</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="app-card"><div class="app-title">{T["base"][lang]}</div><div class="app-value" style="font-size:26px;">Solana SPL</div><div class="neon-green-text" style="font-size:11px;">{T["base_sub"][lang]}</div></div>', unsafe_allow_html=True)
     
     st.markdown(f'<h3 style="color:#A2FF00; font-size:18px; font-weight:700; margin-top:15px;">{T["calc_title"][lang]}</h3>', unsafe_allow_html=True)
     selected_time_tab1 = st.selectbox(T["calc_label"][lang], TIME_OPTIONS, index=st.session_state.target_time_index, key="time_select_tab1")
@@ -141,9 +142,9 @@ with tab1:
     st.success(T["calc_res"][lang].format(selected_time_tab1, monthly_est))
     
     st.markdown(f'<h3 style="color:#A2FF00; font-size:18px; font-weight:700; margin-top:15px;">{T["pillar_title"][lang]}</h3>', unsafe_allow_html=True)
-    st.markdown(f'<div class="app-card" style="border-left: 3px solid #A2FF00; padding-left:12px;"><h4 style="color:#ffffff; margin:0 0 4px 0; font-size:14px;">{T["p1_t"][lang]}</h4><p style="color:#88929b; font-size:12px; margin:0;">{T["p1_d"][lang]}</p></div><div class="app-card" style="border-left: 3px solid #ff6b6b; padding-left:12px;"><h4 style="color:#ffffff; margin:0 0 4px 0; font-size:14px;">{T["p2_t"][lang]}</h4><p style="color:#88929b; font-size:12px; margin:0;">{T["p2_d"][lang]}</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="app-card" style="border-left: 3px solid #A2FF00; padding-left:12px; margin-bottom:10px;"><h4 style="color:#ffffff; margin:0 0 4px 0; font-size:14px;">{T["p1_t"][lang]}</h4><p style="color:#88929b; font-size:12px; margin:0;">{T["p1_d"][lang]}</p></div><div class="app-card" style="border-left: 3px solid #ff6b6b; padding-left:12px; margin-bottom:10px;"><h4 style="color:#ffffff; margin:0 0 4px 0; font-size:14px;">{T["p2_t"][lang]}</h4><p style="color:#88929b; font-size:12px; margin:0;">{T["p2_d"][lang]}</p></div>', unsafe_allow_html=True)
 
-# --- Tab 2: 核心监控控制台 ---
+# --- Tab 2 内容 ---
 with tab2:
     st.markdown(f'<div class="app-title" style="margin-top:5px; margin-bottom:5px;">{T["timer_t"][lang]}</div>', unsafe_allow_html=True)
     if st.session_state.app_running:
@@ -195,7 +196,7 @@ with tab2:
             global_memory["active_count"] = max(451, global_memory["active_count"] - 1)
             st.rerun()
 
-# --- 创世白名单表单完全复原 ---
+# --- 创世白名单申请 ---
 with st.form("wl_form"):
     st.markdown(f'<p style="color:#A2FF00; font-weight:bold; margin:0;">{T["wl_title"][lang]}</p>', unsafe_allow_html=True)
     u_email = st.text_input(T["wl_mail"][lang], key="em").strip()
@@ -205,8 +206,20 @@ with st.form("wl_form"):
             global_memory["whitelist_db"].append({"email": u_email, "wallet": u_wallet, "score": f"{st.session_state.app_earned:.1f}"})
             st.success("SUCCESS!")
 
-st.markdown(f'<div style="text-align: center; margin-top:15px;"><span style="background-color:#141d26; color:#A2FF00; font-size:12px; font-weight:bold; padding:5px 10px; border-radius:20px; border: 1px dashed #A2FF00;">{T["net_sync"][lang].format(global_memory["active_count"])}</span></div>', unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#445; font-size: 10px; margin-top:10px;'>NexaEdge Network © 2026</p>", unsafe_allow_html=True)
+# ==========================================
+# 📊 全球数据实时同步挂件与 Flag Counter 访客计数器（100% 复原加回）
+# ==========================================
+st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
+st.markdown(f'<div style="text-align: center; margin-bottom: 12px;"><span style="background-color:#141d26; color:#A2FF00; font-size:13px; font-weight:bold; padding:6px 14px; border-radius:30px; border: 1px dashed #A2FF00;">{T["net_sync"][lang].format(global_memory["active_count"])}</span></div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div style="text-align: center; margin-top: 5px; opacity: 0.85;">
+    <a href="https://info.flagcounter.com/NexaEdge">
+        <img src="https://s11.flagcounter.com/count2/NexaEdge/bg_0B0F12/txt_A2FF00/border_1E272E/columns_3/maxflags_9/viewers_3/labels_1/pageviews_1/flags_0/" alt="Flag Counter" border="0" style="border-radius: 8px; border: 1px solid #1e272e; max-width: 100%;">
+    </a>
+</div>
+""", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:10px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
 
 if st.session_state.app_running:
     time.sleep(1.0)
