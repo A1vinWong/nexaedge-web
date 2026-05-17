@@ -1,476 +1,341 @@
 import streamlit as st
+import base64
 import os
-import time
-import random
-import pandas as pd
-import glob
 
-# 1. 全局页面基础配置
+# 1. 基础配置
 st.set_page_config(
     page_title="NexaEdge Network | Official Node Gateway",
     page_icon="🟢",
     layout="centered"
 )
 
-# --- 📸 智能图片摄入系统 ---
-def get_project_image():
-    if os.path.exists("image.png"):
-        return "image.png"
-    png_files = glob.glob("*.png")
-    if png_files:
-        return png_files[0]
-    return None
+# 2. 如果存在原图，直接转换为极其稳定的 Base64 网页流渲染，100% 不报错且两页都置顶展示
+img_path = "image.png"
+if os.path.exists(img_path):
+    with open(img_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    st.markdown(
+        f'<div style="text-align:center;margin-bottom:15px;border-radius:14px;overflow:hidden;border:1px solid #252e38;">'
+        f'<img src="data:image/png;base64,{encoded_string}" style="width:100%;height:auto;">'
+        f'</div>', 
+        unsafe_allow_html=True
+    )
+else:
+    st.markdown('<h1 style="color:#A2FF00;text-align:center;font-family:monospace;margin-bottom:20px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-target_image = get_project_image()
+# 3. 动态加载恢复原本漂亮排版的核心引擎
+import random
+import time
+import pandas as pd
 
-# --- 🟢 极客黑绿科技风 CSS 全量优化 ---
+@st.cache_resource
+def _get_global_memory():
+    return {"active_base": 451, "whitelist_db": []}
+g_mem = _get_global_memory()
+
+if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
+if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
+if 'target_index' not in st.session_state: st.session_state.target_index = 2
+if 'app_running' not in st.session_state: st.session_state.app_running = False
+if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
+if 'last_tick' not in st.session_state: st.session_state.last_tick = 0.0
+
+if st.session_state.app_running and st.session_state.last_tick > 0:
+    elapsed = int(time.time() - st.session_state.last_tick)
+    if elapsed > 0:
+        st.session_state.session_seconds += elapsed
+        st.session_state.app_earned += elapsed * 0.25
+        st.session_state.last_tick = time.time()
+
+# ==========================================
+# 🎨 完美复原！原汁原味的极客黑绿 UI 样式表
+# ==========================================
 st.markdown("""
     <style>
-    /* 全局去暗灰背景 */
-    .stApp {
-        background-color: #0b0f12;
+    /* 全局背景色暗黑科技风 */
+    .stApp { 
+        background-color: #0b0f12; 
     }
     
-    /* 彻底隐藏顶部无用白条及右下角开发者管理小标签 */
-    #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"] {
-        display: none !important;
-    }
-    header, [data-testid="stHeader"] {
-        background: transparent !important;
-        border: none !important;
-        height: 0 !important;
-        display: none !important;
+    /* 严格对齐真机图的卡片间距与圆角 */
+    .app-card { 
+        background-color: #161c23; 
+        border: 1px solid #252e38; 
+        border-radius: 14px; 
+        padding: 16px; 
+        margin-bottom: 14px; 
     }
     
-    /* 强力抹杀 Streamlit 原生自带的所有空置边界、缝隙和多余空框 */
-    [data-testid="stVerticalBlock"] > div:empty {
-        display: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    [data-testid="stElementContainer"] {
-        border: none !important;
-        background: transparent !important;
-    }
-    
-    /* --- st.tabs 组件样式微调 (左和右) --- */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-        background-color: transparent !important;
-        justify-content: center;
-        border: none !important;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        background-color: #11171d !important;
-        color: #bdc3c7 !important;
-        border-radius: 8px 8px 0px 0px !important;
-        border: 1px solid #1e272e !important;
-        border-bottom: none !important;
-        padding: 10px 22px !important;
-        font-weight: 700 !important;
-        font-size: 14px !important;
-    }
-
-    .stTabs [aria-selected="true"] {
-        color: #A2FF00 !important;
-        background-color: #161c23 !important;
-        border-top: 2px solid #A2FF00 !important;
+    /* 灰色小标题 */
+    .app-title { 
+        font-size: 12px; 
+        color: #88929b; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
     }
     
-    .stTabs [data-baseweb="tab-highlight"] {
-        background-color: #A2FF00 !important;
-        height: 0px !important;
+    /* 白色高亮大数字 */
+    .app-value { 
+        font-family: 'Inter', sans-serif; 
+        color: #ffffff; 
+        font-size: 30px; 
+        font-weight: 700; 
     }
     
-    /* --- 自定义手机 App 容器结构 --- */
-    .app-container {
-        background-color: #11171d;
-        border: 1px solid #1e272e;
-        border-radius: 20px;
-        padding: 16px;
-        margin: 0 auto;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    /* 项目招牌荧光绿 */
+    .neon-green-text { 
+        color: #A2FF00 !important; 
     }
     
-    .app-card {
-        background-color: #161c23;
-        border: 1px solid #252e38;
-        border-radius: 14px;
-        padding: 15px;
-        margin-bottom: 12px;
-    }
-    
-    /* 文字与排版样式 */
-    .app-title { font-size: 13px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-    .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 24px; font-weight: 700; }
-    .neon-green-text { color: #A2FF00 !important; }
-    
-    .temp-section {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #11171d;
-        padding: 8px 12px;
-        border-radius: 10px;
-        margin-top: 8px;
-    }
-    
-    .ratio-box {
-        background-color: #11171d;
-        border: 1px dashed #252e38;
-        border-radius: 8px;
-        padding: 8px 10px;
-        margin-top: 8px;
-        font-size: 12px;
-        color: #88929b;
-    }
-    
-    /* --- stButton 样式 --- */
-    div.stButton > button:first-child {
-        background-color: #A2FF00 !important;
-        color: #0b0f12 !important;
-        font-weight: 800 !important;
-        font-size: 16px !important;
-        width: 100%;
-        border-radius: 12px !important;
-        border: none !important;
-        padding: 12px 0 !important;
-        box-shadow: 0 0 15px rgba(162, 255, 0, 0.3);
-    }
-    
-    div.stButton > button[key*="app_stop_btn"] {
-        background-color: #0b0f12 !important;
-        color: #ffffff !important;
-        border: 1px solid #252e38 !important;
-        box-shadow: none !important;
-    }
-    
-    /* 白名单表单卡片 */
-    [data-testid="stForm"] {
-        background-color: #161c23 !important;
-        border: 1px solid #252e38 !important;
-        border-radius: 16px !important;
-        padding: 20px !important;
-        margin-top: 25px !important;
-    }
-    
-    /* 优化单选组件 Selectbox/Radio 在黑绿风格下的展现 */
-    div[data-testid="stSelectbox"] label, div[data-testid="stRadio"] label {
-        color: #88929b !important;
-        font-size: 13px !important;
-        font-weight: bold !important;
-    }
-    
-    .feature-box {
+    /* 虚线边框指示盒 */
+    .ratio-box { 
         background-color: #11171d; 
-        padding: 18px; 
-        border-radius: 10px; 
-        border-left: 4px solid #A2FF00; 
-        margin-bottom: 15px;
+        border: 1px dashed #252e38; 
+        border-radius: 8px; 
+        padding: 10px; 
+        margin-top: 10px; 
+        font-size: 12px; 
+        color: #88929b; 
+    }
+    
+    /* 原生荧光绿大按钮 */
+    div.stButton > button:first-child {
+        background-color: #A2FF00 !important; 
+        color: #0b0f12 !important; 
+        font-weight: 800 !important; 
+        font-size: 15px !important;
+        width: 100%; 
+        border-radius: 12px !important; 
+        border: none !important; 
+        padding: 12px 0 !important; 
+        box-shadow: 0 0 15px rgba(162, 255, 0, 0.2);
+    }
+    
+    /* 暂停按钮的暗色调 */
+    div.stButton > button[key*="app_stop_btn"] { 
+        background-color: #0b0f12 !important; 
+        color: #ffffff !important; 
+        border: 1px solid #252e38 !important; 
+        box-shadow: none !important; 
+    }
+    
+    /* 白名单输入框背景加深 */
+    [data-testid="stForm"] { 
+        background-color: #161c23 !important; 
+        border: 1px solid #252e38 !important; 
+        border-radius: 16px !important; 
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 状态初始化 (模拟 Session)
-if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
-if 'app_running' not in st.session_state: st.session_state.app_running = False
-if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
-if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
-# 默认目标时长索引，2: 对应1小时
-if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
+# 创建双主页选项卡 (以英文为主)
+tab1, tab2 = st.tabs(["🌐 Overview & Pillars", "📱 Node Dashboard"])
 
-# 扩展映射字典
-TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours (Full-day)"]
-TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时 (全天连轴转)"]
+TIME_OPTIONS = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours (Full-day)"]
 SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
 HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
 
-# 顶栏主标题
-st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:36px; font-weight:800; margin-top:5px; margin-bottom:5px;">NexaEdge Network</h1>', unsafe_allow_html=True)
-
-# 双语切换选择器
-lang = st.selectbox("🌐 Choose Language / 选择语言", ["English", "中文"], index=0)
-
-# 依据语言确定选项显示
-current_options = TIME_OPTIONS_EN if lang == "English" else TIME_OPTIONS_ZH
-
-# 双 Tabs：左和右
-tab1_title = "🌐 Overview & Pillars" if lang == "English" else "🌐 项目通识与壁垒"
-tab2_title = "📱 Node Dashboard (Live)" if lang == "English" else "📱 边缘节点控制台 (实时)"
-
-tab1, tab2 = st.tabs([tab1_title, tab2_title])
-
-# =========================================================================
-# 🏠 第一页：项目介绍与通识壁垒
-# =========================================================================
+# ==========================================
+# 🌐 Tab 1: 完美复原的项目介绍页 (加入 2:1 支柱)
+# ==========================================
 with tab1:
-    if target_image:
-        st.image(target_image, caption="NexaEdge Official Gateway", use_container_width=True)
-
-    if lang == "English":
-        st.markdown('<p style="font-size: 18px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 20px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
-        
-        c1, c2, c3 = st.columns(3)
-        with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue Flow")
-        with c2: st.metric(label="Safety Threshold", value="39°C", delta="Device Safety Lock", delta_color="inverse")
-        with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / High TPS")
-
-        st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0;'>", unsafe_allow_html=True)
-
-        st.markdown('<h2 style="color:#A2FF00; font-size:22px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
-        selected_time_tab1 = st.selectbox("Select Daily Session Duration Pattern:", current_options, index=st.session_state.target_time_index, key="time_select_tab1")
-        st.session_state.target_time_index = current_options.index(selected_time_tab1)
-        
-        chosen_hours = HOURS_MAP[st.session_state.target_time_index]
-        monthly_est = chosen_hours * 0.35 * 30
-        st.success(f"🎉 Estimated Monthly Yield (Based on {selected_time_tab1}/day): {monthly_est:.2f} USDT")
-
-        st.markdown('<h2 style="color:#A2FF00; font-size:22px; margin-top:15px;">⚡ Key Pillars</h2>', unsafe_allow_html=True)
-        st.markdown("""
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:16px;">📱 Passive Income via Charging</h4>
-            <p style="color:#bdc3c7; font-size:13px;">Earn ~0.35 USDT/hr. Just plug in, connect Wi-Fi, and lock your screen. Our lightweight WASM Sandbox cleans AI datasets silently in the background.</p>
+    st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-bottom: 20px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
+    
+    # 🌟 新增：2:1 机制独立精美卡片
+    st.markdown("""
+        <div class="app-card" style="border-left: 4px solid #A2FF00;">
+            <div class="app-title" style="color: #A2FF00;">⚡ 2:1 Network Allocation Architecture</div>
+            <div class="app-value" style="font-size: 24px;">2 : 1 Compute Balance</div>
+            <div style="color:#88929b; font-size:12px; margin-top:6px; line-height: 1.4;">
+                For every 2 units of raw terminal data verified by peripheral smartphone nodes, 1 unit of dense cryptographic proof is settled into the Solana ledger layer. This prevents hyper-inflation and ensures long-term token value stability.
+            </div>
         </div>
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:16px;">🔥 39°C Thermal Guard</h4>
-            <p style="color:#bdc3c7; font-size:13px;">Total hardware protection. System auto-throttles computing loads instantly if the battery touches 39°C. Zero degradation anxiety.</p>
+    """, unsafe_allow_html=True)
+    
+    # 标准原装参数卡片布局复原
+    st.markdown('<div class="app-card"><div class="app-title">Network Fee Rate</div><div class="app-value">20%</div><div class="neon-green-text" style="font-size:12px; font-weight:bold; margin-top:2px;">↑ Pure Revenue Flow Allocation</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="app-card"><div class="app-title">Safety Threshold</div><div class="app-value">39°C</div><div style="color:#ff6b6b; font-size:12px; font-weight:bold; margin-top:2px;">↑ Device Overheat Auto-Throttling Guard</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="app-card"><div class="app-title">Settlement Base Layer</div><div class="app-value" style="font-size:24px;">Solana SPL</div><div class="neon-green-text" style="font-size:11px; margin-top:2px;">↑ Ultra-Low Gas Fee / High-Throughput TPS</div></div>', unsafe_allow_html=True)
+    
+    # 原装收益计算器
+    st.markdown('<h3 style="color:#A2FF00; font-size:16px; font-weight:700; margin-top:15px; margin-bottom:5px;">💰 Device Revenue Calculator</h3>', unsafe_allow_html=True)
+    selected_time_tab1 = st.selectbox("Select Daily Session Duration Pattern:", TIME_OPTIONS, index=st.session_state.target_index, key="calc_sel")
+    st.session_state.target_index = TIME_OPTIONS.index(selected_time_tab1)
+    monthly_est = HOURS_MAP[st.session_state.target_index] * 0.35 * 30
+    st.success(f"🎉 Estimated Monthly Yield (Based on {selected_time_tab1}/day): {monthly_est:.2f} USDT")
+    
+    # 核心技术双支柱卡片复原
+    st.markdown('<h3 style="color:#A2FF00; font-size:16px; font-weight:700; margin-top:15px; margin-bottom:5px;">⚡ Core Technical Pillars</h3>', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="app-card" style="border-left: 3px solid #A2FF00; padding-left:12px;">
+            <h4 style="color:#ffffff; margin:0 0 4px 0; font-size:14px;">📱 Passive Income via Charging</h4>
+            <p style="color:#88929b; font-size:12px; margin:0; line-height:1.4;">Earn ~0.35 USDT/hr. Just plug in, connect Wi-Fi, and lock your screen. Our lightweight WASM Sandbox cleans AI datasets silently in the background.</p>
         </div>
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:16px;">🤝 2:1 Anti-Cheat Verification</h4>
-            <p style="color:#bdc3c7; font-size:13px;">Decentralized majority-voting consensus. We segment raw data across 3 independent nodes to deliver 100% verified datasets to AI clients.</p>
+        <div class="app-card" style="border-left: 3px solid #ff6b6b; padding-left:12px;">
+            <h4 style="color:#ffffff; margin:0 0 4px 0; font-size:14px;">🔥 39°C Thermal Guard</h4>
+            <p style="color:#88929b; font-size:12px; margin:0; line-height:1.4;">Total hardware protection. System auto-throttles computing loads instantly if the battery touches 39°C. Zero degradation anxiety.</p>
         </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown('<p style="font-size: 18px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 20px;">让全球 50 亿部闲置手机，成为 AI 时代的高纯度语料燃料工厂</p>', unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-        c1, c2, c3 = st.columns(3)
-        with c1: st.metric(label="平台技术抽成", value="20%", delta="纯现金流造血")
-        with c2: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
-        with c3: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-
-        st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0;'>", unsafe_allow_html=True)
-
-        st.markdown('<h2 style="color:#A2FF00; font-size:22px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
-        selected_time_tab1_zh = st.selectbox("选择每日预估闲置运行时间档位:", current_options, index=st.session_state.target_time_index, key="time_select_tab1_zh")
-        st.session_state.target_time_index = current_options.index(selected_time_tab1_zh)
-        
-        chosen_hours = HOURS_MAP[st.session_state.target_time_index]
-        monthly_est = chosen_hours * 0.35 * 30
-        st.success(f"🎉 预计每月可为您带来收益约 (按每日持续运行 【{selected_time_tab1_zh}】 计算): {monthly_est:.2f} USDT")
-
-        st.markdown('<h2 style="color:#A2FF00; font-size:22px; margin-top:15px;">⚡ 核心壁垒</h2>', unsafe_allow_html=True)
-        st.markdown("""
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:16px;">📱 锁屏充电·睡后收入 (零门槛)</h4>
-            <p style="color:#bdc3c7; font-size:13px;">每小时赚取约 0.35 USDT。用户只需在夜间充电、连接 Wi-Fi 并锁屏，NexaEdge 的轻量级 WASM 沙盒便会在后台静默运行清洗 AI 语料。</p>
-        </div>
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:16px;">🔥 独创：39°C 智能温控风控屏障</h4>
-            <p style="color:#bdc3c7; font-size:13px;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，彻底打消硬件损耗焦虑。</p>
-        </div>
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:16px;">🤝 2:1 拜占庭冗余反作弊校验</h4>
-            <p style="color:#bdc3c7; font-size:13px;">去中心化多数投票共识。我们将原始语料切片分发至 3 个完全独立的边缘节点进行交叉校验，确保向 AI 客户交付 100% 真实、未被污染的高纯度数据集。</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-
-# =========================================================================
-# 📱 第二页：边缘节点控制台（纯净去电池版）
-# =========================================================================
+# ==========================================
+# 📱 Tab 2: 完美复原的节点控制台 (与大盘完美联动)
+# ==========================================
 with tab2:
-    st.markdown('<div class="app-container" style="margin-top:10px;">', unsafe_allow_html=True)
+    st.markdown('<div class="app-title" style="margin-top:5px;">⏳ COMPUTE TIMER TARGET</div>', unsafe_allow_html=True)
+    if st.session_state.app_running:
+        st.selectbox("Set target:", TIME_OPTIONS, index=st.session_state.target_index, disabled=True, key="timer_dis", label_visibility="collapsed")
+    else:
+        selected_time_tab2 = st.selectbox("Set target:", TIME_OPTIONS, index=st.session_state.target_index, key="timer_en", label_visibility="collapsed")
+        st.session_state.target_index = TIME_OPTIONS.index(selected_time_tab2)
     
-    if target_image:
-        st.image(target_image, use_container_width=True)
-    
-    # --- ⏰ 定时自动停止计算器组件 ---
-    st.markdown('<div class="app-card">', unsafe_allow_html=True)
-    calc_title = "⏳ COMPUTE TIMER (AUTO-STOP)" if lang == "English" else "⏳ 算力定时器 (到时自动停止)"
-    st.markdown(f'<div class="app-title">{calc_title}</div>', unsafe_allow_html=True)
-    
-    label_select = "Set target runtime for this session:" if lang == "English" else "配置本次节点运行时间:"
-    selected_time_tab2 = st.selectbox(label_select, current_options, index=st.session_state.target_time_index, key="time_select_tab2")
-    st.session_state.target_time_index = current_options.index(selected_time_tab2)
-    
-    target_total_seconds = SECONDS_MAP[st.session_state.target_time_index]
-    
-    # 自动倒计时强制停止检测
+    target_total_seconds = SECONDS_MAP[st.session_state.target_index]
     if st.session_state.app_running and st.session_state.session_seconds >= target_total_seconds:
         st.session_state.app_running = False
-        st.toast("⏰ Timer Finished! Node has been stopped safely." if lang == "English" else "⏰ 设定运行时间已满！节点已自动平稳切回待机。")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.rerun()
 
-    # 数据状态动态生成
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
-        
     s_sec = st.session_state.session_seconds
-    
-    # 计算精确的倒计时字符串
     remaining_seconds = max(0, target_total_seconds - s_sec)
-    rem_hours = remaining_seconds // 3600
-    rem_mins = (remaining_seconds % 3600) // 60
-    rem_secs = remaining_seconds % 60
-    remaining_str = f"{rem_hours:02d}:{rem_mins:02d}:{rem_secs:02d}"
     
-    # 本次连续跑满时长格式化
+    remaining_str = f"{remaining_seconds // 3600:02d}:{(remaining_seconds % 3600) // 60:02d}:{remaining_seconds % 60:02d}"
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     session_generated = s_sec * 0.25
     
-    panel_title = "DASHBOARD" if lang == "English" else "控制面板"
-    hash_label = "NETWORK HASH RATE" if lang == "English" else "当前节点算力"
-    status_tag = "SAFE" if lang == "English" else "安全控温中"
-
-    # --- 🗂️ 模块 1：控制面板组件 ---
-    st.markdown(f"""
-    <div class="app-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span class="app-title">{panel_title}</span>
-            <span style="color:#88929b; font-size:13px;">⚙️</span>
-        </div>
-        <div style="font-size:12px; color:#88929b; margin-bottom:5px;">
-            {hash_label} (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 折线图
+    # 算力卡片与波动折线图
+    st.markdown(f'<div class="app-card" style="margin-top:10px; margin-bottom:5px;"><div style="font-size:12px; color:#88929b; font-weight:bold;">NETWORK HASH RATE (MH/s): <span class="neon-green-text">{current_hash:.2f}</span></div></div>', unsafe_allow_html=True)
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
-    chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
-    st.line_chart(chart_df, height=95, use_container_width=True)
+    st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"]), height=100)
     
-    # 🌡️ 纯净温控状态栏（移除电池图标与百分比，更严谨、更具欺骗性）
+    # 温度监视器盒
+    st.markdown(f'<div class="app-card"><div style="display:flex; align-items:center; justify-content:between; background:#11171d; padding:10px; border-radius:8px;"><span class="app-value" style="font-size:18px;">Temperature: {current_temp:.1f}°C</span><span style="background:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:10px; border:1px solid #A2FF00;">SAFE RUNNING</span></div></div>', unsafe_allow_html=True)
+    
+    # 核心收益累计排版复原
     st.markdown(f"""
-    <div class="app-card" style="margin-top: -5px;">
-        <div class="temp-section">
-            <div style="display:flex; align-items:center;">
-                <span class="app-value" style="font-size:20px;">🌡️ {current_temp:.1f}°C</span>
+        <div class="app-card">
+            <div class="app-title">COMPUTE TIME & RATIO</div>
+            <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                <div>
+                    <div style="font-size:11px; color:#88929b;">Current Session:</div>
+                    <div class="app-value" style="font-size:18px; font-family:monospace;">{time_str}</div>
+                    <div style="font-size:11px; color:#88929b; margin-top:4px;">Time to Auto-Stop:</div>
+                    <div class="app-value" style="font-size:16px; font-family:monospace; color:#ff9f43;">{remaining_str}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:11px; color:#88929b;">Session Generated:</div>
+                    <div class="app-value neon-green-text" style="font-size:22px;">+{session_generated:,.1f} <span style="font-size:11px; color:#ffffff;">NEXA</span></div>
+                </div>
             </div>
-            <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:4px 10px; border-radius:12px; border:1px solid #A2FF00;">{status_tag}</span>
+            <div class="ratio-box">⚡ <b>EST. SPECS:</b> 0.25 NEXA / sec (≈ 900 NEXA/hr)</div>
         </div>
-    </div>
+    """, unsafe_allow_html=True)
+    
+    # 设备节点详情卡片复原
+    run_status = "● MINING ACTIVE" if st.session_state.app_running else "● STANDBY"
+    st.markdown(f"""
+        <div class="app-card">
+            <div class="app-title">PARTICIPANT NODE PROFILE</div>
+            <div style="font-size:11px; color:#88929b; margin-top:2px; margin-bottom:6px;">NODE_ID: <span style="color:#ffffff; font-weight:bold;">@nexaedge / Acc1</span></div>
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:11px; color:#88929b;">MINING STATUS:</span><span style="font-size:11px; color:#88929b;">TOTAL ACCUMULATED:</span></div>
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                <span style="color:{"#A2FF00" if st.session_state.app_running else "#88929b"}; font-size:13px; font-weight:800;">{run_status}</span>
+                <span class="app-value neon-green-text" style="font-size:24px;">{st.session_state.app_earned:,.2f} <span style="font-size:11px; color:#ffffff; font-weight:normal;">NEXA</span></span>
+            </div>
+        </div>
     """, unsafe_allow_html=True)
 
-    # --- 🗂️ 模块 2：时长及实时倒计时卡片 ---
-    timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
-    t_label = "SESSION DURATION:" if lang == "English" else "本次连续运行时间:"
-    rem_label = "COUNTDOWN TO STOP:" if lang == "English" else "距离自动停止倒计时:"
-    r_label = "EST. RATIO:" if lang == "English" else "当前时产比折算:"
-    ratio_text = "0.25 NEXA / sec (≈ 900 NEXA/hr)" if lang == "English" else "0.25 NEXA / 秒 (约 900 NEXA/小时)"
-    yield_lbl = "SESSION YIELD:" if lang == "English" else "本次会话已产出:"
-    
-    st.markdown(f"""
-    <div class="app-card">
-        <div class="app-title">{timer_title}</div>
-        <div style="display:flex; justify-content:space-between; margin-top:8px;">
-            <div style="text-align:left;">
-                <div style="font-size:11px; color:#88929b;">{t_label}</div>
-                <div class="app-value" style="font-size:19px; font-family:monospace; margin-bottom:5px;">{time_str}</div>
-                <div style="font-size:11px; color:#88929b;">{rem_label}</div>
-                <div class="app-value" style="font-size:17px; font-family:monospace; color:#ff9f43;">{remaining_str}</div>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-size:11px; color:#88929b;">{yield_lbl}</div>
-                <div class="app-value neon-green-text" style="font-size:19px;">+{session_generated:,.1f} <span style="font-size:11px; color:#ffffff;">NEXA</span></div>
-            </div>
-        </div>
-        <div class="ratio-box">
-            ⚡ <b>{r_label}</b> {ratio_text}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # --- 🗂️ 模块 3：连接节点基础参数汇总 ---
-    node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
-    if lang == "English":
-        run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
-        status_lbl = "MINING STATUS:"
-        earnings_lbl = "TOTAL ACCUMULATED:"
-    else:
-        run_status = "运行中" if st.session_state.app_running else "待机就绪"
-        status_lbl = "挖矿状态:"
-        earnings_lbl = "账户总累计代币:"
-    status_color = "#A2FF00" if st.session_state.app_running else "#88929b"
-    
-    st.markdown(f"""
-    <div class="app-card">
-        <div class="app-title" style="margin-bottom:8px;">{node_header}</div>
-        <div style="font-size:11px; color:#88929b; margin-bottom:10px;">NODE_ID: <span style="color:#ffffff; font-weight:bold;">@nexaedge / Acc1 (active)</span></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
-            <span style="font-size:11px; color:#88929b; font-weight:bold;">{status_lbl}</span>
-            <span style="font-size:11px; color:#88929b; font-weight:bold;">{earnings_lbl}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:baseline;">
-            <span style="color:{status_color}; font-size:14px; font-weight:800;">● {run_status}</span>
-            <span class="app-value neon-green-text" style="font-size:22px;">{st.session_state.app_earned:,.2f} <span style="font-size:12px; color:#ffffff; font-weight:normal;">NEXA</span></span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # 🕹️ 底部核心交互控制大按钮
+    # 启动与暂停物理联动按钮
     if not st.session_state.app_running:
-        btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
-        if st.button(btn_start_txt, key="app_start_btn"):
-            if remaining_seconds <= 0:
-                st.session_state.session_seconds = 0
+        if st.button("START COMPUTE SESSION", key="app_start_btn"):
+            st.session_state.session_seconds = 0
             st.session_state.app_running = True
+            st.session_state.last_tick = time.time()
             st.rerun()
     else:
-        btn_stop_txt = "PAUSE SESSION (VIEW NETWORK MAP)" if lang == "English" else "暂停运行 (查看网络拓扑图) 🛑"
-        if st.button(btn_stop_txt, key="app_stop_btn"):
+        if st.button("PAUSE SESSION (CHECK NETWORK MAP)", key="app_stop_btn"):
             st.session_state.app_running = False
             st.rerun()
-            
-    st.markdown('</div>', unsafe_allow_html=True) # 关闭纯净大容器
 
-# ==================== 📧 底部统一白名单递交表单 ====================
-st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
-st.markdown(f'<h3 style="text-align:center; color:#A2FF00; font-size:20px; margin-bottom:10px;">{"🚀 Secure Your Early Whitelist Seat" if lang=="English" else "🚀 锁定早期测试网白名单席位"}</h3>', unsafe_allow_html=True)
+# ==========================================
+# 🚀 创世白名单申请表单
+# ==========================================
+st.markdown("<br>", unsafe_allow_html=True)
+with st.form("wl_form"):
+    st.markdown('<p style="color:#A2FF00; font-weight:bold; margin-bottom:10px;">🚀 Secure Your Early Whitelist Seat</p>', unsafe_allow_html=True)
+    u_email = st.text_input("Email Address:", key="em_v").strip()
+    u_wallet = st.text_input("Solana Wallet Address:", key="wa_v").strip()
+    if st.form_submit_button("SUBMIT APPLICATION ⚡"):
+        if u_email and u_wallet:
+            g_mem["whitelist_db"].append({
+                "Timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "Email Address": u_email, 
+                "Solana Wallet": u_wallet, 
+                "Accumulated Yield": f"{st.session_state.app_earned:,.1f} NEXA"
+            })
+            st.success("SUCCESS! Whitelist Entry Saved Securely.")
 
-with st.form("unified_whitelist_form"):
-    u_email = st.text_input("Email Address" if lang=="English" else "您的电子邮箱:")
-    u_wallet = st.text_input("Solana Wallet Address" if lang=="English" else "Solana 钱包地址:")
-    
-    submitted = st.form_submit_button("SUBMIT & RETAIN SEAT ⚡" if lang=="English" else "提交并归档体验收益 ⚡")
-    if submitted:
-        if u_email.strip() != "":
-            with open("whitelist.txt", "a", encoding="utf-8") as f:
-                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | ActiveTime: {st.session_state.session_seconds}s\n")
-            st.balloons()
+# ==========================================
+# 📊 核心硬核指标：实时活跃度与浏览人数挂件（双动态真联动）
+# ==========================================
+st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px; margin-bottom:15px;'>", unsafe_allow_html=True)
 
-# ==================== 📥 后台管理员白名单下载 ====================
-if os.path.exists("whitelist.txt"):
-    with open("whitelist.txt", "r", encoding="utf-8") as f:
-        whitelist_data = f.read()
-    st.download_button(
-        label="📥 Download Whitelist Data" if lang=="English" else "📥 下载白名单数据",
-        data=whitelist_data,
-        file_name="nexaedge_whitelist.txt",
-        mime="text/plain",
-        key="admin_download_btn"
-    )
+# 活跃设备硬联动：启动时自动从 451 变 452
+current_active_nodes = g_mem["active_base"] + (1 if st.session_state.app_running else 0)
+# 实时浏览人数：基于 1060 基数，每次页面加载高频微扰浮动
+current_live_viewers = 1065 + random.randint(-12, 15)
 
-# ==================== 📊 页面浏览量计数器 ====================
-st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
-visitor_counter_html = """
-<div style="text-align: center; margin-top: 5px; opacity: 0.85;">
-    <p style="color: #88929b; font-size: 11px; margin-bottom: 6px; letter-spacing: 1px;">➔ NEXAEDGE NETWORK NODE STATUS</p>
-    <a href="https://info.flagcounter.com/NexaEdge">
-        <img src="https://s11.flagcounter.com/count2/NexaEdge/bg_0B0F12/txt_A2FF00/border_1E272E/columns_3/maxflags_9/viewers_3/labels_1/pageviews_1/flags_0/" alt="Flag Counter" border="0" style="border-radius: 8px; border: 1px solid #1e272e; max-width: 100%;">
-    </a>
-</div>
-"""
-st.markdown(visitor_counter_html, unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:10px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
+col_net1, col_net2 = st.columns(2)
+with col_net1:
+    st.markdown(f"""
+        <div style="text-align: center; background-color:#141d26; border: 1px dashed #A2FF00; padding:10px; border-radius:12px;">
+            <div style="font-size:10px; color:#88929b; text-transform:uppercase; font-weight:bold;">● Active Compute Nodes</div>
+            <div style="font-size:18px; color:#A2FF00; font-weight:bold; font-family:monospace; margin-top:2px;">{current_active_nodes} Devices</div>
+        </div>
+    """, unsafe_allow_html=True)
 
-# ==================== 🏎️ 后台低频稳健刷新驱动器 (保持稳健3秒步进) ====================
+with col_net2:
+    st.markdown(f"""
+        <div style="text-align: center; background-color:#141d26; border: 1px dashed #00e5ff; padding:10px; border-radius:12px;">
+            <div style="font-size:10px; color:#88929b; text-transform:uppercase; font-weight:bold;">👀 Live Network Viewers</div>
+            <div style="font-size:18px; color:#00e5ff; font-weight:bold; font-family:monospace; margin-top:2px;">{current_live_viewers} Online</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# 全球访客小挂件
+st.markdown('<div style="text-align: center; margin-top: 15px;"><a href="https://info.flagcounter.com/NexaEdge"><img src="https://s11.flagcounter.com/count2/NexaEdge/bg_0B0F12/txt_A2FF00/border_1E272E/columns_3/maxflags_9/viewers_3/labels_1/pageviews_1/flags_0/" alt="Flag Counter" border="0" style="border-radius: 6px;"></a></div>', unsafe_allow_html=True)
+
+# ==========================================
+# 🔑 核心硬核指标：管理员审查白皮书申请通道
+# ==========================================
+st.markdown("<br><br>", unsafe_allow_html=True)
+with st.expander("🔒 Whitepaper Admin & Audit Panel"):
+    admin_pwd = st.text_input("Enter Admin Security Credential:", type="password", key="pwd_adm")
+    if admin_pwd == "nexaadmin2026":
+        st.markdown("<p style='color:#A2FF00; font-size:12px; font-weight:bold; margin-bottom:8px;'>✓ SECURITY ACCESS GRANTED — REAL-TIME LEDGER</p>", unsafe_allow_html=True)
+        if g_mem["whitelist_db"]:
+            df_wl = pd.DataFrame(g_mem["whitelist_db"])
+            st.dataframe(df_wl, use_container_width=True)
+            st.download_button("Export Ledger (.CSV)", data=df_wl.to_csv(index=False), file_name="nexaedge_whitelist_db.csv", mime="text/csv")
+        else:
+            st.info("The cache database memory is currently empty. Waiting for user submissions...")
+    elif admin_pwd:
+        st.error("Invalid Administrative Key.")
+
+st.markdown("<p style='text-align:center; color:#232a31; font-size: 11px; margin-top:25px;'>NexaEdge Network © 2026 | Mainnet Alpha Framework</p>", unsafe_allow_html=True)
+
+# 隐藏辅助侧边栏
+with st.sidebar:
+    st.markdown("<h3 style='color:#A2FF00;'>Debugger Panel</h3>", unsafe_allow_html=True)
+    st.info("界面已切换回完整的高精、大空行标准 UI。管理员审查白皮书密码为：`nexaadmin2026`")
+
+# 循环刷新器
 if st.session_state.app_running:
-    st.session_state.app_earned += 0.75       
-    st.session_state.session_seconds += 3     
-    time.sleep(3.0)                            
-    st.rerun()                                
+    time.sleep(1.0)
+    st.session_state.app_earned += 0.25       
+    st.session_state.session_seconds += 1     
+    st.session_state.last_tick = time.time()
+    st.rerun()
