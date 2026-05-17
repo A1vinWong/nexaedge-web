@@ -23,19 +23,14 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 极客黑绿科技风 1:1 还原 CSS 样式 ---
+# --- 🟢 极客黑绿科技风 CSS 样式 ---
 st.markdown("""
     <style>
-    /* 全局去暗灰背景 */
     .stApp { background-color: #0b0f12; }
-    
-    /* 彻底隐藏顶部无用白条及右下角开发者管理小标签 */
     #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"], 
     header, [data-testid="stHeader"] {
         display: none !important;
     }
-    
-    /* 模块样式 */
     .feature-box {
         background-color: #11171d; 
         padding: 20px; 
@@ -43,8 +38,6 @@ st.markdown("""
         border-left: 5px solid #A2FF00; 
         margin-bottom: 20px;
     }
-    
-    /* 优化原生 st.container 卡片的背景色与边框 */
     [data-testid="stContainer"] {
         background-color: #161c23 !important;
         border: 1px solid #252e38 !important;
@@ -52,12 +45,9 @@ st.markdown("""
         padding: 18px !important;
         margin-bottom: 15px !important;
     }
-    
     .app-title { font-size: 14px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 26px; font-weight: 700; }
     .neon-green-text { color: #A2FF00 !important; }
-    
-    /* 优化温度计：改成 flex 轴线对齐，并整体向上微调 */
     .temp-section {
         display: flex;
         align-items: center;
@@ -68,8 +58,6 @@ st.markdown("""
         margin-top: 5px;
         margin-bottom: 2px;
     }
-    
-    /* 优化时产虚线框：向上提一点，更工整 */
     .ratio-box {
         background-color: #11171d;
         border: 1px dashed #252e38;
@@ -80,7 +68,6 @@ st.markdown("""
         font-size: 12px;
         color: #88929b;
     }
-    
     .stTabs [data-baseweb="tab-list"] { gap: 10px; justify-content: center; }
     .stTabs [data-baseweb="tab"] {
         background-color: #11171d !important;
@@ -90,8 +77,6 @@ st.markdown("""
         font-weight: 700 !important;
     }
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; border-bottom-color: #A2FF00 !important; }
-    
-    /* 按钮基础样式 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
@@ -138,69 +123,31 @@ with tab1:
 
     if lang == "English":
         st.markdown('<p style="font-size: 19px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 15px; margin-bottom: 25px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
-        
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue Flow")
         with c2: st.metric(label="Safety Threshold", value="39°C", delta="Device Safety Lock", delta_color="inverse")
         with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / High TPS")
-
         st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
-
         st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
         hours = st.slider("Estimated Overnight Duration (Hours/Day):", min_value=1, max_value=12, value=6)
         device_os = st.radio("Operating System:", ["iOS (iPhone)", "Android"], horizontal=True, key="os_en")
         monthly_est = hours * 0.35 * 30
         st.success(f"🎉 Estimated Monthly Yield: {monthly_est:.2f} USDT")
-
-        st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:20px;">⚡ Key Pillars</h2>', unsafe_allow_html=True)
-        st.markdown("""
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:17px;">📱 Passive Income via Charging</h4>
-            <p style="color:#bdc3c7; font-size:13px;">Earn ~0.35 USDT/hr. Just plug in, connect Wi-Fi, and lock your screen. Our lightweight WASM Sandbox cleans AI datasets silently in the background.</p>
-        </div>
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:17px;">🔥 39°C Thermal Guard</h4>
-            <p style="color:#bdc3c7; font-size:13px;">Total hardware protection. System auto-throttles computing loads instantly if the battery touches 39°C. Zero degradation anxiety.</p>
-        </div>
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:17px;">🤝 2:1 Anti-Cheat Verification</h4>
-            <p style="color:#bdc3c7; font-size:13px;">Decentralized majority-voting consensus. We segment raw data across 3 independent nodes to deliver 100% verified datasets to AI clients.</p>
-        </div>
-        """, unsafe_allow_html=True)
     else:
         st.markdown('<p style="font-size: 19px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 15px; margin-bottom: 25px;">让全球 50 亿部闲置手机，成为 AI 时代的高纯度语料燃料工厂</p>', unsafe_allow_html=True)
-
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="平台技术抽成", value="20%", delta="纯现金流造血")
         with c2: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c3: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-
         st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
-
         st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:15px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
         hours = st.slider("预估每日夜间闲置充电时长 (小时/天):", min_value=1, max_value=12, value=6)
         device_os = st.radio("操作系统类型:", ["iOS (iPhone)", "Android"], horizontal=True, key="os_zh")
         monthly_est = hours * 0.35 * 30
         st.success(f"🎉 预计每月可为您带来收益约: {monthly_est:.2f} USDT")
 
-        st.markdown('<h2 style="color:#A2FF00; font-size:24px; margin-top:20px;">⚡ 核心壁垒</h2>', unsafe_allow_html=True)
-        st.markdown("""
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:17px;">📱 锁屏充电·睡后收入 (零门槛)</h4>
-            <p style="color:#bdc3c7; font-size:13px;">每小时赚取约 0.35 USDT。用户只需在夜间充电、连接 Wi-Fi 并锁屏，NexaEdge 的轻量级 WASM 沙盒便会在后台静默运行清洗 AI 语料。</p>
-        </div>
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:17px;">🔥 独创：39°C 智能温控风控屏障</h4>
-            <p style="color:#bdc3c7; font-size:13px;">坚守绝不伤机的底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，彻底打消硬件损耗焦虑。</p>
-        </div>
-        <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:17px;">🤝 2:1 拜占庭冗余反作弊校验</h4>
-            <p style="color:#bdc3c7; font-size:13px;">去中心化多数投票共识。我们将原始语料切片分发至 3 个完全独立的边缘节点进行交叉校验，确保向 AI 客户交付 100% 真实、未被污染的高纯度数据集。</p>
-        </div>
-        """, unsafe_allow_html=True)
-
 # =========================================================================
-# 📱 第二页：边缘节点控制台
+# 📱 第二页：边缘节点控制台（解决频繁刷新连接报错问题）
 # =========================================================================
 with tab2:
     if target_image:
@@ -208,39 +155,33 @@ with tab2:
         
     st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
     
+    # 动态数值更新
+    current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
+    if st.session_state.app_running:
+        st.session_state.chart_history.pop(0)
+        st.session_state.chart_history.append(current_hash)
+    chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
+    
+    current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
+    
+    # ------ 🔥 安全过热检测熔断 ------
+    if st.session_state.app_running and current_temp >= 39.0:
+        st.toast("🔥 OVERHEAT WARNING DETECTED!" if lang == "English" else "🔥 检测到硬件核心过热警告！", icon="⚠️")
+        st.error("⚠️ EMERGENCY STOP: Device temperature hit {:.1f}°C!".format(current_temp) if lang == "English" else "⚠️ 紧急停机：设备温度已达 {:.1f}°C！熔断控温机制已强制启动。".format(current_temp))
+        st.session_state.app_running = False
+        st.rerun()
+
     # --- 📊 模块 1：控制面板 ---
     with st.container(border=True):
         panel_title = "DASHBOARD" if lang == "English" else "控制面板"
         st.markdown(f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span class="app-title">{panel_title}</span><span style="color:#88929b; font-size:14px;">⚙️</span></div>', unsafe_allow_html=True)
         
-        current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
         hash_label = "NETWORK HASH RATE" if lang == "English" else "当前节点算力"
         st.markdown(f'<div style="font-size:11px; color:#88929b; margin-bottom:5px;">{hash_label} (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div>', unsafe_allow_html=True)
         
-        if st.session_state.app_running:
-            st.session_state.chart_history.pop(0)
-            st.session_state.chart_history.append(current_hash)
-        chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
         st.line_chart(chart_df, height=105, use_container_width=True)
         
-        # 🟢 基础模拟温度生成
-        current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
-        
-        # ------ 🔥 【新增功能】系统级过热检测机制 ------
-        # 注：若要测试弹窗效果，可以临时把 39.0 改成 36.6 
-        if st.session_state.app_running and current_temp >= 39.0:
-            # 1. 弹出系统级 Toast 气泡
-            st.toast("🔥 OVERHEAT WARNING DETECTED!" if lang == "English" else "🔥 检测到硬件核心过热警告！", icon="⚠️")
-            # 2. 顶部红色强力系统警告横幅
-            st.error("⚠️ EMERGENCY STOP: Device temperature hit {:.1f}°C! Auto-throttling activated.".format(current_temp) if lang == "English" else "⚠️ 紧急停机：设备温度已达 {:.1f}°C！熔断控温机制已强制启动。".format(current_temp))
-            # 3. 强制关停节点，防止损坏
-            st.session_state.app_running = False
-            time.sleep(1.0)
-            st.rerun()
-        # ---------------------------------------------
-        
         status_tag = "SAFE" if lang == "English" else "安全控温中"
-        
         st.markdown(f"""
         <div class="temp-section">
             <div style="display:flex; align-items:center; line-height:1;"><span style="font-size:22px; margin-right:8px; display:inline-block; vertical-align:middle;">🌡️</span><span class="app-value" style="font-size:22px; display:inline-block; vertical-align:middle;">{current_temp:.1f}°C</span></div>
@@ -306,7 +247,7 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
 
-    # 🕹️ 核心控制大按钮
+    # 🕹️ 控制大按钮
     if not st.session_state.app_running:
         btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
         if st.button(btn_start_txt, key="app_start_btn"):
@@ -318,11 +259,11 @@ with tab2:
             st.session_state.app_running = False
             st.rerun()
             
-    # 实时刷新时钟动画渲染
+    # 🏎️ 优化核心高频刷新机制，阻断 Websocket 数据挤压越界
     if st.session_state.app_running:
         st.session_state.app_earned += 0.25       
         st.session_state.session_seconds += 1     
-        time.sleep(1.0)                            
+        time.sleep(1.2)  # 👈 从 1.0 上调至 1.2 秒，增加前端浏览器数据处理缓冲时间
         st.rerun()
 
 # ==================== 📧 底部统一白名单递交表单 ====================
@@ -338,37 +279,27 @@ with st.form("unified_whitelist_form"):
             with open("whitelist.txt", "a", encoding="utf-8") as f:
                 f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | ActiveTime: {st.session_state.session_seconds}s\n")
             st.balloons()
-            st.success(f"🎯 Saved successfully with {st.session_state.app_earned:,.1f} $NEXA score!")
 
-# ==================== 📥 后台管理员白名单下载 ====================
 if os.path.exists("whitelist.txt"):
     with open("whitelist.txt", "r", encoding="utf-8") as f:
         whitelist_data = f.read()
-    
     st.download_button(
-        label="📥 Download Whitelist Data (Admin Only)" if lang=="English" else "📥 下载白名单数据 (管理员专用)",
+        label="📥 Download Whitelist Data" if lang=="English" else "📥 下载白名单数据",
         data=whitelist_data,
         file_name="nexaedge_whitelist.txt",
         mime="text/plain",
         key="admin_download_btn"
     )
-else:
-    st.markdown("<p style='text-align:center; color:#555; font-size:12px; margin-top:15px;'>暂无白名单数据提交 / No data submitted yet</p>", unsafe_allow_html=True)
 
 # ==================== 📊 访客计数器展示 ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:25px;'>", unsafe_allow_html=True)
 visitor_counter_html = """
 <div style="text-align: center; margin-top: 5px; opacity: 0.85;">
-    <p style="color: #88929b; font-size: 11px; margin-bottom: 8px; letter-spacing: 1px;">
-        ➔ NEXAEDGE NETWORK NODE STATUS
-    </p>
+    <p style="color: #88929b; font-size: 11px; margin-bottom: 8px; letter-spacing: 1px;">➔ NEXAEDGE NETWORK NODE STATUS</p>
     <a href="https://info.flagcounter.com/NexaEdge">
-        <img src="https://s11.flagcounter.com/count2/NexaEdge/bg_0B0F12/txt_A2FF00/border_1E272E/columns_3/maxflags_9/viewers_3/labels_1/pageviews_1/flags_0/" 
-             alt="Flag Counter" border="0" style="border-radius: 8px; border: 1px solid #1e272e; max-width: 100%;">
+        <img src="https://s11.flagcounter.com/count2/NexaEdge/bg_0B0F12/txt_A2FF00/border_1E272E/columns_3/maxflags_9/viewers_3/labels_1/pageviews_1/flags_0/" alt="Flag Counter" border="0" style="border-radius: 8px; border: 1px solid #1e272e; max-width: 100%;">
     </a>
 </div>
 """
 st.markdown(visitor_counter_html, unsafe_allow_html=True)
-
-# 页脚版权
 st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:15px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
