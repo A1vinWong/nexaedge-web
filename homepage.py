@@ -180,7 +180,7 @@ if 'session_seconds' not in st.session_state: st.session_state.session_seconds =
 # 默认目标时长索引，2: 对应1小时
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 
-# 扩展映射字典：全新加入了 24小时 选项
+# 扩展映射字典
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours (Full-day)"]
 TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时 (全天连轴转)"]
 SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
@@ -277,7 +277,7 @@ with tab1:
 
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台
+# 📱 第二页：边缘节点控制台（纯净去电池版）
 # =========================================================================
 with tab2:
     st.markdown('<div class="app-container" style="margin-top:10px;">', unsafe_allow_html=True)
@@ -306,12 +306,6 @@ with tab2:
     # 数据状态动态生成
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
-    
-    # 【高保真动态电量逻辑】：运行中模拟缓慢掉电或充电饱和状态，待机时稳定在85%
-    if st.session_state.app_running:
-        current_battery = max(15, 85 - (st.session_state.session_seconds // 60))
-    else:
-        current_battery = 85
         
     s_sec = st.session_state.session_seconds
     
@@ -322,9 +316,8 @@ with tab2:
     rem_secs = remaining_seconds % 60
     remaining_str = f"{rem_hours:02d}:{rem_mins:02d}:{rem_secs:02d}"
     
-    # 本次连续跑满时长格式化 (由于3秒步进，这里精确体现)
+    # 本次连续跑满时长格式化
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
-    # 3秒步进下，对应每3秒产出 0.75 NEXA (保持 0.25 NEXA/秒 的基础速率不变)
     session_generated = s_sec * 0.25
     
     panel_title = "DASHBOARD" if lang == "English" else "控制面板"
@@ -351,13 +344,12 @@ with tab2:
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
     st.line_chart(chart_df, height=95, use_container_width=True)
     
-    # ⚡ 升级模块：温度 + 真实感手机电量双重展示条
+    # 🌡️ 纯净温控状态栏（移除电池图标与百分比，更严谨、更具欺骗性）
     st.markdown(f"""
     <div class="app-card" style="margin-top: -5px;">
         <div class="temp-section">
-            <div style="display:flex; align-items:center; gap: 15px;">
-                <span class="app-value" style="font-size:18px;">🌡️ {current_temp:.1f}°C</span>
-                <span class="app-value" style="font-size:18px; color: #10ac84;">🔋 {current_battery}%</span>
+            <div style="display:flex; align-items:center;">
+                <span class="app-value" style="font-size:20px;">🌡️ {current_temp:.1f}°C</span>
             </div>
             <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:4px 10px; border-radius:12px; border:1px solid #A2FF00;">{status_tag}</span>
         </div>
@@ -476,9 +468,8 @@ visitor_counter_html = """
 st.markdown(visitor_counter_html, unsafe_allow_html=True)
 st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:10px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
 
-# ==================== 🏎️ 后台低频稳健刷新驱动器 (防御 WebSocket 断连报错) ====================
+# ==================== 🏎️ 后台低频稳健刷新驱动器 (保持稳健3秒步进) ====================
 if st.session_state.app_running:
-    # 刷新间隔改为稳健的 3 秒。为了让收益和时长完美对齐，数据每次递增 3 秒的量
     st.session_state.app_earned += 0.75       
     st.session_state.session_seconds += 3     
     time.sleep(3.0)                            
