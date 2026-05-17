@@ -44,7 +44,7 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* 优化原生 st.container 卡片的背景色与边框，完美贴合暗黑科技风 */
+    /* 优化原生 st.container 卡片的背景色与边框 */
     [data-testid="stContainer"] {
         background-color: #161c23 !important;
         border: 1px solid #252e38 !important;
@@ -57,21 +57,26 @@ st.markdown("""
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 26px; font-weight: 700; }
     .neon-green-text { color: #A2FF00 !important; }
     
+    /* ✨ 优化温度计：改成 flex 轴线对齐，并整体向上微调，使其与右侧标签完全在一条线上 */
     .temp-section {
         display: flex;
         align-items: center;
         justify-content: space-between;
         background: #11171d;
-        padding: 10px 15px;
+        padding: 12px 15px;
         border-radius: 12px;
-        margin-top: 10px;
+        margin-top: 5px;
+        margin-bottom: 2px;
     }
+    
+    /* ✨ 优化时产虚线框：向上提一点，并调整底部外边距，让整个卡片内部空间更工整 */
     .ratio-box {
         background-color: #11171d;
         border: 1px dashed #252e38;
         border-radius: 8px;
-        padding: 8px 12px;
-        margin-top: 8px;
+        padding: 10px 12px;
+        margin-top: -2px;
+        margin-bottom: 5px;
         font-size: 12px;
         color: #88929b;
     }
@@ -137,7 +142,7 @@ with tab1:
         c1, c2, c3 = st.columns(3)
         with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue Flow")
         with c2: st.metric(label="Safety Threshold", value="39°C", delta="Device Safety Lock", delta_color="inverse")
-        with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / High TPS")
+        with c3: st.metric(label="Settlement Base", value="Solana Solana", delta="Low Gas / High TPS")
 
         st.markdown("<hr style='border:1px solid #1e272e;'>", unsafe_allow_html=True)
 
@@ -195,7 +200,7 @@ with tab1:
         """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台（改用原生 Container，完美消灭空格）
+# 📱 第二页：边缘节点控制台（精确调节间距与对齐）
 # =========================================================================
 with tab2:
     if target_image:
@@ -203,7 +208,7 @@ with tab2:
         
     st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
     
-    # --- 📊 模块 1：控制面板 (原生容器包装) ---
+    # --- 📊 模块 1：控制面板 ---
     with st.container(border=True):
         panel_title = "DASHBOARD" if lang == "English" else "控制面板"
         st.markdown(f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span class="app-title">{panel_title}</span><span style="color:#88929b; font-size:14px;">⚙️</span></div>', unsafe_allow_html=True)
@@ -221,14 +226,15 @@ with tab2:
         current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
         status_tag = "SAFE" if lang == "English" else "安全控温中"
         
+        # 💡 这里通过 CSS Flex 完全对齐线，消除了温度计下方的空隙
         st.markdown(f"""
         <div class="temp-section">
-            <div style="display:flex; align-items:center;"><span style="font-size:24px; margin-right:8px;">🌡️</span><span class="app-value" style="font-size:22px;">{current_temp:.1f}°C</span></div>
-            <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:4px 10px; border-radius:12px; border:1px solid #A2FF00;">{status_tag}</span>
+            <div style="display:flex; align-items:center; line-height:1;"><span style="font-size:22px; margin-right:8px; display:inline-block; vertical-align:middle;">🌡️</span><span class="app-value" style="font-size:22px; display:inline-block; vertical-align:middle;">{current_temp:.1f}°C</span></div>
+            <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:5px 12px; border-radius:12px; border:1px solid #A2FF00; line-height:1;">{status_tag}</span>
         </div>
         """, unsafe_allow_html=True)
     
-    # --- ⏱️ 模块 2：运行时长与收益比面板 (原生容器包装) ---
+    # --- ⏱️ 模块 2：运行时长与收益比面板 ---
     with st.container(border=True):
         timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
         st.markdown(f'<div class="app-title">{timer_title}</div>', unsafe_allow_html=True)
@@ -243,13 +249,13 @@ with tab2:
         yield_lbl = "SESSION YIELD:" if lang == "English" else "本次会话已产出:"
         
         st.markdown(f"""
-        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+        <div style="display:flex; justify-content:space-between; margin-top:8px; margin-bottom:12px;">
             <div style="text-align:left;">
-                <div style="font-size:11px; color:#88929b;">{t_label}</div>
+                <div style="font-size:11px; color:#88929b; margin-bottom:2px;">{t_label}</div>
                 <div class="app-value" style="font-size:20px; color:#ffffff; font-family:monospace;">{time_str}</div>
             </div>
             <div style="text-align:right;">
-                <div style="font-size:11px; color:#88929b;">{yield_lbl}</div>
+                <div style="font-size:11px; color:#88929b; margin-bottom:2px;">{yield_lbl}</div>
                 <div class="app-value neon-green-text" style="font-size:20px;">+{session_generated:,.1f} <span style="font-size:11px; color:#ffffff;">NEXA</span></div>
             </div>
         </div>
@@ -258,7 +264,7 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
     
-    # --- 🟢 模块 3：节点全局总详情 (原生容器包装) ---
+    # --- 🟢 模块 3：节点全局总详情 ---
     with st.container(border=True):
         node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
         st.markdown(f'<div class="app-title" style="margin-bottom:12px;">{node_header}</div>', unsafe_allow_html=True)
