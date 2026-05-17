@@ -42,7 +42,6 @@ target_image = get_project_image()
 
 # --- 🛠️ 推荐码工具函数 ---
 def generate_referral_code(wallet_str):
-    """根据钱包地址前几位和哈希生成一个简短唯一的推荐码"""
     if not wallet_str:
         return ""
     hasher = hashlib.md5(wallet_str.encode('utf-8')).hexdigest().upper()
@@ -180,7 +179,6 @@ st.markdown("""
     .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; transform: scale(0.95); }
     .mini-stat-value { font-size: 13px !important; font-weight: bold; font-family: monospace; margin-top: 2px; white-space: nowrap; }
     
-    /* 社交媒体按钮行布局 */
     .social-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
@@ -245,13 +243,11 @@ st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:34px; font-w
 lang = st.selectbox("🌐 Language", ["English", "中文"], index=0, label_visibility="collapsed")
 current_options = TIME_OPTIONS_EN if lang == "English" else TIME_OPTIONS_ZH
 
-# 强制置顶且保持原尺寸(18px)的三行核心亮点
 if lang == "English":
     st.markdown('<p style="font-size: 18px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 12px; line-height: 1.4;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
 else:
     st.markdown('<p style="font-size: 18px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 12px; line-height: 1.4;">让全球 50 亿部闲置手机，成为 AI 时代的高纯度语料燃料工厂</p>', unsafe_allow_html=True)
 
-# 智能检索出的项目核心图置顶渲染
 if target_image:
     st.image(target_image, caption="NexaEdge Official Gateway" if lang=="English" else "NexaEdge 官方主网网关", use_container_width=True)
 
@@ -333,7 +329,6 @@ with tab1:
 with tab2:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
     
-    # --- ⏰ 定时自动停止计算器组件 ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
     calc_title = "⏳ COMPUTE TIMER (AUTO-STOP)" if lang == "English" else "⏳ 算力定时器 (到时自动停止)"
     st.markdown(f'<div class="app-title">{calc_title}</div>', unsafe_allow_html=True)
@@ -350,7 +345,6 @@ with tab2:
         st.toast("⏰ Timer Finished!" if lang == "English" else "⏰ 设定运行时间已满！节点已安全切回待机。")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 数据状态动态生成
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
     s_sec = st.session_state.session_seconds
@@ -376,13 +370,11 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     
-    # 折线图
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
     st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"]), height=90, use_container_width=True)
     
-    # 温控状态栏
     st.markdown(f"""
     <div class="app-card" style="margin-top: -5px;">
         <div class="temp-section">
@@ -392,7 +384,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 时长及实时产出
     t_label = "DURATION:" if lang == "English" else "本次连续运行时间:"
     yield_lbl = "EST. RATIO: 0.25 NEXA / sec" if lang == "English" else "已为您实时产出代币:"
     st.markdown(f"""
@@ -404,7 +395,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     
-    # 节点基础参数
     node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
     run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
     status_color = "#A2FF00" if st.session_state.app_running else "#88929b"
@@ -419,7 +409,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 大按钮控制交互
     if not st.session_state.app_running:
         if st.button("START COMPUTE SESSION" if lang == "English" else "启动边缘算力集群", key="app_start_btn"):
             if remaining_seconds <= 0: st.session_state.session_seconds = 0
@@ -439,23 +428,36 @@ with tab2:
 # ==================== 📧 底部白名单与社交推荐奖励表单 ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 
-# 显示用户自己生成的专属邀请码
 if st.session_state.my_referral_code:
-    st.markdown(f"""
-    <div class="app-card" style="border: 1px solid #A2FF00; text-align:center;">
-        <span style="font-size:12px; color:#88929b;">🎯 YOUR REFERRAL CODE / 你的专属邀请码:</span><br>
-        <span style="font-size:20px; font-weight:bold; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span><br>
-        <p style="font-size:11px; color:#bdc3c7; margin-top:5px; margin-bottom:0;">
-            Share this code! Earn <b>+500 NEXA</b> for every user who registers and follows our socials (even without an airdrop whitelist match!)
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    if lang == "English":
+        st.markdown(f"""
+        <div class="app-card" style="border: 1px solid #A2FF00; text-align:center;">
+            <span style="font-size:12px; color:#88929b;">🎯 YOUR REFERRAL CODE:</span><br>
+            <span style="font-size:20px; font-weight:bold; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span><br>
+            <p style="font-size:11px; color:#bdc3c7; margin-top:5px; margin-bottom:0;">
+                Share this code! Earn <b>+500 NEXA</b> for every user who registers and follows our socials (even without an airdrop whitelist match!)
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div class="app-card" style="border: 1px solid #A2FF00; text-align:center;">
+            <span style="font-size:12px; color:#88929b;">🎯 你的专属邀请码:</span><br>
+            <span style="font-size:20px; font-weight:bold; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span><br>
+            <p style="font-size:11px; color:#bdc3c7; margin-top:5px; margin-bottom:0;">
+                分享此邀请码！每成功推荐一位新用户注册并关注官方社媒，即可稳拿 <b>+500 NEXA</b> 额外代币奖励（无论对方最终是否命中白名单空投）！
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 with st.form("unified_whitelist_form"):
-    st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:5px;">🚀 {"Secure Whitelist Seat & Referral Program" if lang=="English" else "🚀 锁定创世白名单席位与推荐裂变奖励"}</div>', unsafe_allow_html=True)
-    
-    # 5大社交平台直达任务区
-    st.markdown(f'<p style="font-size:11px; color:#88929b; margin-bottom: 2px;">⚡ STEP 1: Follow & Share our Social Pages / 关注并分享官方社媒</p>', unsafe_allow_html=True)
+    if lang == "English":
+        st.markdown('<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:5px;">🚀 Secure Whitelist Seat & Referral Program</div>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size:11px; color:#88929b; margin-bottom: 2px;">⚡ STEP 1: Follow & Share our Social Pages to qualify for the referral reward</p>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:5px;">🚀 锁定创世白名单席位与推荐裂变奖励</div>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size:11px; color:#88929b; margin-bottom: 2px;">⚡ STEP 1: 必须关注并分享以下官方社媒页以激活推荐奖励资格</p>', unsafe_allow_html=True)
+        
     st.markdown("""
     <div class="social-grid">
         <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
@@ -466,18 +468,28 @@ with st.form("unified_whitelist_form"):
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown(f'<p style="font-size:11px; color:#88929b; margin-top:10px; margin-bottom: 2px;">📝 STEP 2: Fill in Details / 填写申领基础资料</p>', unsafe_allow_html=True)
-    u_email = st.text_input("Email Address:" if lang=="English" else "电子邮箱地址:").strip()
-    u_wallet = st.text_input("Solana Wallet Address:" if lang=="English" else "Solana 钱包接收地址:").strip()
-    u_ref_input = st.text_input("Referral Code (Optional):" if lang=="English" else "推荐人邀请码 (选填):").strip()
+    if lang == "English":
+        st.markdown('<p style="font-size:11px; color:#88929b; margin-top:10px; margin-bottom: 2px;">📝 STEP 2: Fill in Details</p>', unsafe_allow_html=True)
+        u_email = st.text_input("Email Address:").strip()
+        u_wallet = st.text_input("Solana Wallet Address:").strip()
+        u_ref_input = st.text_input("Referral Code (Optional):").strip()
+        submit_btn_text = "SUBMIT SEAT & ACTIVATE CODE ⚡"
+    else:
+        st.markdown('<p style="font-size:11px; color:#88929b; margin-top:10px; margin-bottom: 2px;">📝 STEP 2: 填写申领基础资料</p>', unsafe_allow_html=True)
+        u_email = st.text_input("电子邮箱地址:").strip()
+        u_wallet = st.text_input("Solana 钱包接收地址:").strip()
+        u_ref_input = st.text_input("推荐人邀请码 (选填):").strip()
+        submit_btn_text = "提交席位并激活推荐码 ⚡"
     
-    if st.form_submit_button("SUBMIT SEAT & ACTIVATE CODE ⚡" if lang=="English" else "提交席位并激活推荐码 ⚡"):
+    if st.form_submit_button(submit_btn_text):
         if u_email == "" or u_wallet == "":
-            st.error("❌ Please fill in both fields! / 请完整填写邮箱和钱包地址！")
+            if lang == "English":
+                st.error("❌ Please fill in both email and wallet fields!")
+            else:
+                st.error("❌ 请完整填写邮箱和钱包地址！")
         else:
             is_duplicate = False
             
-            # 高效精确读盘去重检索
             if os.path.exists("whitelist.txt"):
                 with open("whitelist.txt", "r", encoding="utf-8") as f:
                     lines = f.readlines()
@@ -495,22 +507,46 @@ with st.form("unified_whitelist_form"):
                 else:
                     st.error("⚠️ 提交失败！该邮箱地址或 Solana 钱包已被注册，每个账户仅限申领一次白名单。")
             else:
-                # 动态派生此用户的专属推荐码
                 generated_code = generate_referral_code(u_wallet)
                 st.session_state.my_referral_code = generated_code
                 
-                # 写入本地白名单库（结构包含：邮箱、钱包、算力、专属码、推荐人码）
                 ref_by = u_ref_input if u_ref_input else "NONE"
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | RefCode: {generated_code} | ReferredBy: {ref_by}\n")
                 
                 st.balloons()
-                st.success("🎉 Registration Successful! Your referral code is now activated. / 资格锁定成功！您的专属邀请码已成功激活。")
+                if lang == "English":
+                    st.success("🎉 Registration Successful! Your referral code is now activated.")
+                else:
+                    st.success("🎉 资格锁定成功！您的专属邀请码已成功激活。")
                 st.rerun()
 
-if os.path.exists("whitelist.txt"):
-    with open("whitelist.txt", "r", encoding="utf-8") as f: whitelist_data = f.read()
-    st.download_button(label="📥 Download Whitelist" if lang=="English" else "📥 下载白名单数据", data=whitelist_data, file_name="nexaedge_whitelist.txt", mime="text/plain")
+# =========================================================================
+# 🛡️ 管理员鉴权控制台 (🔒 下载权限完全隔离，仅 Admin 可见)
+# =========================================================================
+st.markdown("<br>", unsafe_allow_html=True)
+admin_label = "🛡️ Admin Access Console" if lang == "English" else "🛡️ 后台数据管理控制台"
+with st.expander(admin_label, expanded=False):
+    pwd_placeholder = "Enter Admin Password to Unlock Whitelist Downloads" if lang == "English" else "请输入管理员密码解密并载入数据"
+    admin_password = st.text_input("Admin Key", type="password", label_visibility="collapsed", placeholder=pwd_placeholder)
+    
+    # 设定安全的系统管理密钥
+    if admin_password == "NexaAdmin2026":
+        if os.path.exists("whitelist.txt"):
+            with open("whitelist.txt", "r", encoding="utf-8") as f: 
+                whitelist_data = f.read()
+            dl_label = "📥 Download Whitelist Database (.txt)" if lang == "English" else "📥 导出下载全量白名单数据 (.txt)"
+            st.download_button(label=dl_label, data=whitelist_data, file_name="nexaedge_whitelist.txt", mime="text/plain")
+        else:
+            if lang == "English":
+                st.info("No records inside the database yet.")
+            else:
+                st.info("当前白名单数据库中暂无有效数据记录。")
+    elif admin_password != "":
+        if lang == "English":
+            st.error("Invalid Secret Key. Access Denied.")
+        else:
+            st.error("管理密码错误，无访问或导出权限。")
 
 # =========================================================================
 # 📊 【全网绝对真实大盘】：完全替换为真实统计，极小字体不换行适配窄屏
