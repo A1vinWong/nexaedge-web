@@ -219,11 +219,11 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 物理时间防锁屏补算逻辑
+# 🔄 【核心调整】物理时间防挂起补算逻辑：由3秒判定改写为精确至1秒
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap_seconds = int(current_unix - st.session_state.last_tick_time)
-    if elapsed_gap_seconds >= 3:
+    if elapsed_gap_seconds >= 1:
         st.session_state.session_seconds += elapsed_gap_seconds
         st.session_state.app_earned += elapsed_gap_seconds * 0.25
         st.session_state.last_tick_time = current_unix
@@ -522,7 +522,7 @@ with st.form("unified_whitelist_form"):
                 st.rerun()
 
 # =========================================================================
-# 🛡️ 管理员鉴权控制台 (🔒 下载权限完全隔离，仅 Admin 可见)
+# 🛡️ 管理员端：权限加密隔离下载
 # =========================================================================
 st.markdown("<br>", unsafe_allow_html=True)
 admin_label = "🛡️ Admin Access Console" if lang == "English" else "🛡️ 后台数据管理控制台"
@@ -530,7 +530,6 @@ with st.expander(admin_label, expanded=False):
     pwd_placeholder = "Enter Admin Password to Unlock Whitelist Downloads" if lang == "English" else "请输入管理员密码解密并载入数据"
     admin_password = st.text_input("Admin Key", type="password", label_visibility="collapsed", placeholder=pwd_placeholder)
     
-    # 设定安全的系统管理密钥
     if admin_password == "NexaAdmin2026":
         if os.path.exists("whitelist.txt"):
             with open("whitelist.txt", "r", encoding="utf-8") as f: 
@@ -580,10 +579,10 @@ with col_net2:
 
 st.markdown("<p style='text-align:center; color:#445; font-size: 10px; margin-top:12px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
 
-# ==================== 🏎️ 驱动刷新机制 ====================
+# ==================== 🏎️ 【秒级高频驱动内核】 ====================
 if st.session_state.app_running:
-    st.session_state.app_earned += 0.75       
-    st.session_state.session_seconds += 3     
+    st.session_state.app_earned += 0.25        # 每秒产生 0.25 代币
+    st.session_state.session_seconds += 1      # 增加一秒
     st.session_state.last_tick_time = time.time()
-    time.sleep(3.0)                            
+    time.sleep(1.0)                            # 精确阻塞一秒
     st.rerun()
