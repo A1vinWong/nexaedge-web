@@ -15,7 +15,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 💾 全局多用户数据对账（纯底层逻辑，不影响前端半点排版） ---
+# --- 💾 全局多用户活跃状态同步系统 ---
 STATUS_FILE = "global_network_status.json"
 
 def load_global_status():
@@ -47,7 +47,7 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 极客黑绿科技风 CSS 样式表（一比一高度还原你的精美 UI） ---
+# --- 🟢 极客黑绿科技风 CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
@@ -103,19 +103,17 @@ st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:36px; font-w
 tab1, tab2 = st.tabs(["🌐 Overview & Pillars", "📱 Node Dashboard (Live)"])
 
 # =========================================================================
-# 🏠 第一页：Overview 介绍页（完全找回你原本最精致的结构）
+# 🏠 第一页：Overview 介绍页（复原最完美的初始版本）
 # =========================================================================
 with tab1:
     if target_image: st.image(target_image, caption="NexaEdge Official Gateway", use_container_width=True)
     
     st.markdown('<p style="font-size: 16px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 25px;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
     
-    # --- 1. Settlement Base 区域 ---
     st.markdown('<p style="font-size:13px; color:#88929b; font-weight:bold; margin-bottom:2px; text-transform:uppercase;">Settlement Base</p>', unsafe_allow_html=True)
     st.markdown('<h2 style="color:#ffffff; font-size:32px; font-weight:700; margin-top:0; margin-bottom:4px;">Solana SPL</h2>', unsafe_allow_html=True)
     st.markdown('<div style="margin-bottom:25px;"><span style="background-color:#141d26; color:#A2FF00; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:12px; border: 1px solid #1e272e;">↑ Low Gas / High TPS</span></div>', unsafe_allow_html=True)
     
-    # --- 2. 三大核心指标排版（精准套用你的格式，让人数在这里变活） ---
     st.markdown('<div class="app-title">Network Fee</div>', unsafe_allow_html=True)
     st.markdown('<div class="app-value" style="font-size:32px; margin-bottom:2px;">20%</div>', unsafe_allow_html=True)
     st.markdown('<div class="neon-green-text" style="font-size:12px; font-weight:bold; margin-bottom:20px;">↑ Pure Revenue Flow</div>', unsafe_allow_html=True)
@@ -124,14 +122,13 @@ with tab1:
     st.markdown('<div class="app-value" style="font-size:32px; margin-bottom:2px;">39°C</div>', unsafe_allow_html=True)
     st.markdown('<div style="color:#ff6b6b; font-size:12px; font-weight:bold; margin-bottom:20px;">↑ Device Safety Lock</div>', unsafe_allow_html=True)
     
-    # ⚡ 核心实现：这里的 1 Devices 完美连上了第二页的 Active 按钮状态
+    # ⚡ 活数据无缝注入！
     st.markdown('<div class="app-title">Global Active Nodes</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="app-value" style="font-size:32px; margin-bottom:2px;">{live_nodes_count} Devices</div>', unsafe_allow_html=True)
     st.markdown('<div class="neon-green-text" style="font-size:12px; font-weight:bold; margin-bottom:25px;">↑ Live Infrastructure</div>', unsafe_allow_html=True)
     
     st.markdown("<hr style='border:1px solid #1e272e; margin: 20px 0;'>", unsafe_allow_html=True)
     
-    # --- 3. Device Revenue Calculator 区域 ---
     st.markdown('<h3 style="color:#A2FF00; font-size:20px; font-weight:700;"><span style="font-size:18px;">💰</span> Device Revenue Calculator</h3>', unsafe_allow_html=True)
     selected_time_tab1 = st.selectbox("Select Daily Session Duration Pattern:", TIME_OPTIONS_EN, index=st.session_state.target_time_index, key="time_select_tab1")
     st.session_state.target_time_index = TIME_OPTIONS_EN.index(selected_time_tab1)
@@ -141,7 +138,6 @@ with tab1:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # --- 4. Key Pillars 区域（完美复原带淡绿色左边框的极客卡片） ---
     st.markdown('<h3 style="color:#A2FF00; font-size:20px; font-weight:700;"><span style="font-size:18px;">⚡</span> Key Pillars</h3>', unsafe_allow_html=True)
     
     st.markdown("""
@@ -160,7 +156,7 @@ with tab1:
     """, unsafe_allow_html=True)
 
 # =========================================================================
-# 📱 第二页：Node Dashboard 控制台页（丝滑的一秒级步进）
+# 📱 第二页：Node Dashboard 控制台页（还原最纯净的控制面板）
 # =========================================================================
 with tab2:
     st.markdown('<div class="app-container" style="margin-top:10px;">', unsafe_allow_html=True)
@@ -173,7 +169,7 @@ with tab2:
     
     if st.session_state.app_running and st.session_state.session_seconds >= target_total_seconds:
         st.session_state.app_running = False
-        update_global_active(-1) # 自然到期，全局活跃数 -1
+        update_global_active(-1)
         st.toast("⏰ Timer Finished! Node has been stopped safely.")
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -206,7 +202,7 @@ with tab2:
     st.markdown(f"""
     <div class="app-card" style="margin-top: -5px;">
         <div class="temp-section">
-            <span class="app-value" style="font-size:20px;">🌡️ {current_temp:.1f}°C  🔋 85%</span>
+            <span class="app-value" style="font-size:20px;">🌡️ {current_temp:.1f}°C</span>
             <span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:4px 10px; border-radius:12px; border:1px solid #A2FF00;">SAFE</span>
         </div>
     </div>
@@ -247,17 +243,16 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 🕹️ 核心大按钮（增加计数器原子加减）
     if not st.session_state.app_running:
         if st.button("START COMPUTE SESSION", key="app_start_btn"):
             if remaining_seconds <= 0: st.session_state.session_seconds = 0
             st.session_state.app_running = True
-            update_global_active(1) # 点击启动，全网人数 +1
+            update_global_active(1)
             st.rerun()
     else:
         if st.button("PAUSE SESSION (VIEW NETWORK MAP)", key="app_stop_btn"):
             st.session_state.app_running = False
-            update_global_active(-1) # 点击暂停，全网人数 -1
+            update_global_active(-1)
             st.rerun()
             
     st.markdown('</div>', unsafe_allow_html=True)
@@ -276,7 +271,7 @@ with st.form("unified_whitelist_form"):
                 f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | ActiveTime: {st.session_state.session_seconds}s\n")
             st.balloons()
 
-# ==================== 🛠️ 管理员隐藏大屏后台（输入 admin666 即可查看） ====================
+# 后台模式
 if u_email.strip() == "admin666":
     st.markdown('<div class="admin-box">', unsafe_allow_html=True)
     st.markdown('<h2 style="color:#A2FF00; margin-top:0;">📊 NexaEdge 全局监控后台 (管理员模式)</h2>', unsafe_allow_html=True)
@@ -288,7 +283,7 @@ if u_email.strip() == "admin666":
         for l in lines: st.text(l.strip())
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 页脚声明
+# 页脚
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 st.markdown("""
 <div style="text-align: center; margin-top: 5px; opacity: 0.85;">
@@ -300,7 +295,7 @@ st.markdown("""
 st.markdown("<p style='text-align:center; color:#445; font-size: 11px; margin-top:10px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
 
 # ==========================================
-# 🏎️ 异步高频时钟（精确按1秒频率推进刷新）
+# 🏎️ 异步高频时钟
 # ==========================================
 if st.session_state.app_running:
     st.session_state.app_earned += 0.25       
