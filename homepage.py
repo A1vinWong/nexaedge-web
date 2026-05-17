@@ -270,7 +270,7 @@ with tab1:
         st.markdown("""
         <div class="feature-box">
             <h4 style="color:white; margin-top:0; font-size:15px;">📱 Passive Income via Charging</h4>
-            <p style="color:#bdc3c7; font-size:13px;">Earn ~0.35 USDT/hr. Just plug in, connect Wi-Fi, and lock your screen. Our lightweight WASM Sandbox cleans AI datasets silently in the background.</p>
+            <p style="color:#bdc3c7; font-size:13px;">Earn ~0.35 USDT/hr. Just plug in, connect Wi-Fi, and let it compute. Our lightweight WASM Sandbox cleans AI datasets silently in the background.</p>
         </div>
         <div class="feature-box">
             <h4 style="color:white; margin-top:0; font-size:15px;">🔥 39°C Thermal Guard</h4>
@@ -300,8 +300,8 @@ with tab1:
         st.markdown('<h2 style="color:#A2FF00; font-size:20px; margin-top:15px;">⚡ 核心壁垒</h2>', unsafe_allow_html=True)
         st.markdown("""
         <div class="feature-box">
-            <h4 style="color:white; margin-top:0; font-size:15px;">📱 锁屏充电·睡后收入 (零门槛)</h4>
-            <p style="color:#bdc3c7; font-size:13px;">每小时赚取约 0.35 USDT。用户只需在夜间充电、连接 Wi-Fi 并锁屏，NexaEdge 的轻量级 WASM 沙盒便会在后台静默运行清洗 AI 语料。</p>
+            <h4 style="color:white; margin-top:0; font-size:15px;">📱 充电即赚·睡后收入 (零门槛)</h4>
+            <p style="color:#bdc3c7; font-size:13px;">每小时赚取约 0.35 USDT。用户只需在夜间充电并连接 Wi-Fi，NexaEdge 的轻量级 WASM 沙盒便会在后台静默运行清洗 AI 语料。</p>
         </div>
         <div class="feature-box">
             <h4 style="color:white; margin-top:0; font-size:15px;">🔥 独创：39°C 智能温控风控屏障</h4>
@@ -433,7 +433,6 @@ with st.form("unified_whitelist_form"):
         if u_email == "" or u_wallet == "":
             st.error("❌ Please fill in both fields! / 请完整填写邮箱和钱包地址！")
         else:
-            # 建立默认存储逻辑以防读取报错
             is_duplicate = False
             
             # 高效精确读盘去重检索
@@ -441,7 +440,6 @@ with st.form("unified_whitelist_form"):
                 with open("whitelist.txt", "r", encoding="utf-8") as f:
                     lines = f.readlines()
                 for line in lines:
-                    # 强效切割并做大小写不敏感匹配验证
                     if f"Email: {u_email} |" in line or f"Email: {u_email.lower()} |" in line:
                         is_duplicate = True
                         break
@@ -455,7 +453,6 @@ with st.form("unified_whitelist_form"):
                 else:
                     st.error("⚠️ 提交失败！该邮箱地址或 Solana 钱包已被注册，每个账户仅限申领一次白名单。")
             else:
-                # 校验安全后写入本地白名单库
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f}\n")
                 st.balloons()
