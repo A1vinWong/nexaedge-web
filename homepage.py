@@ -155,6 +155,13 @@ st.markdown("""
         margin-top: 25px !important;
     }
     
+    /* 优化单选组件 Selectbox/Radio 在黑绿风格下的展现 */
+    div[data-testid="stSelectbox"] label, div[data-testid="stRadio"] label {
+        color: #88929b !important;
+        font-size: 13px !important;
+        font-weight: bold !important;
+    }
+    
     .feature-box {
         background-color: #11171d; 
         padding: 18px; 
@@ -170,13 +177,23 @@ if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
-if 'target_runtime_hours' not in st.session_state: st.session_state.target_runtime_hours = 6
+# 默认目标时长索引，0: 15分钟, 1: 30分钟, 2: 1小时
+if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
+
+# 映射字典：选项名称 -> 对应的秒数与小时换算
+TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour"]
+TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时"]
+SECONDS_MAP = [900, 1800, 3600]
+HOURS_MAP = [0.25, 0.5, 1.0]
 
 # 顶栏主标题
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:36px; font-weight:800; margin-top:5px; margin-bottom:5px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
 # 双语切换选择器
 lang = st.selectbox("🌐 Choose Language / 选择语言", ["English", "中文"], index=0)
+
+# 依据语言确定选项显示
+current_options = TIME_OPTIONS_EN if lang == "English" else TIME_OPTIONS_ZH
 
 # 双 Tabs：左和右
 tab1_title = "🌐 Overview & Pillars" if lang == "English" else "🌐 项目通识与壁垒"
@@ -185,7 +202,7 @@ tab2_title = "📱 Node Dashboard (Live)" if lang == "English" else "📱 边缘
 tab1, tab2 = st.tabs([tab1_title, tab2_title])
 
 # =========================================================================
-# 🏠 第一页：项目介绍与通识壁垒（完美找回三个卡片介绍）
+# 🏠 第一页：项目介绍与通识壁垒
 # =========================================================================
 with tab1:
     if target_image:
@@ -202,10 +219,14 @@ with tab1:
         st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0;'>", unsafe_allow_html=True)
 
         st.markdown('<h2 style="color:#A2FF00; font-size:22px;">💰 Device Revenue Calculator</h2>', unsafe_allow_html=True)
-        hours_input1 = st.slider("Estimated Overnight Duration (Hours/Day):", min_value=1, max_value=12, value=int(st.session_state.target_runtime_hours), key="slider_tab1")
-        st.session_state.target_runtime_hours = hours_input1
-        monthly_est = hours_input1 * 0.35 * 30
-        st.success(f"🎉 Estimated Monthly Yield: {monthly_est:.2f} USDT")
+        # 用定长档位替代滑块
+        selected_time_tab1 = st.selectbox("Select Daily Session Duration Pattern:", current_options, index=st.session_state.target_time_index, key="time_select_tab1")
+        st.session_state.target_time_index = current_options.index(selected_time_tab1)
+        
+        # 计算预期月收益 (时产0.35加密币 * 选定小时 * 30天)
+        chosen_hours = HOURS_MAP[st.session_state.target_time_index]
+        monthly_est = chosen_hours * 0.35 * 30
+        st.success(f"🎉 Estimated Monthly Yield (Based on {selected_time_tab1}/day): {monthly_est:.2f} USDT")
 
         st.markdown('<h2 style="color:#A2FF00; font-size:22px; margin-top:15px;">⚡ Key Pillars</h2>', unsafe_allow_html=True)
         st.markdown("""
@@ -233,10 +254,13 @@ with tab1:
         st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0;'>", unsafe_allow_html=True)
 
         st.markdown('<h2 style="color:#A2FF00; font-size:22px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
-        hours_input2 = st.slider("预估每日夜间闲置充电时长 (小时/天):", min_value=1, max_value=12, value=int(st.session_state.target_runtime_hours), key="slider_tab1_zh")
-        st.session_state.target_runtime_hours = hours_input2
-        monthly_est = hours_input2 * 0.35 * 30
-        st.success(f"🎉 预计每月可为您带来收益约: {monthly_est:.2f} USDT")
+        # 用定长档位替代滑块
+        selected_time_tab1_zh = st.selectbox("选择每日预估闲置运行时间档位:", current_options, index=st.session_state.target_time_index, key="time_select_tab1_zh")
+        st.session_state.target_time_index = current_options.index(selected_time_tab1_zh)
+        
+        chosen_hours = HOURS_MAP[st.session_state.target_time_index]
+        monthly_est = chosen_hours * 0.35 * 30
+        st.success(f"🎉 预计每月可为您带来收益约 (按每日持续运行 【{selected_time_tab1_zh}】 计算): {monthly_est:.2f} USDT")
 
         st.markdown('<h2 style="color:#A2FF00; font-size:22px; margin-top:15px;">⚡ 核心壁垒</h2>', unsafe_allow_html=True)
         st.markdown("""
@@ -256,7 +280,7 @@ with tab1:
 
 
 # =========================================================================
-# 📱 第二页：边缘节点控制台 (移除电池，加入运行时间自动停止计算器)
+# 📱 第二页：边缘节点控制台 (完美剔除电池，配置 15分/30分/1小时 定时自动停止)
 # =========================================================================
 with tab2:
     st.markdown('<div class="app-container" style="margin-top:10px;">', unsafe_allow_html=True)
@@ -264,39 +288,38 @@ with tab2:
     if target_image:
         st.image(target_image, use_container_width=True)
     
-    # --- ⏰ 新增：定时停止调节计算器组件 ---
+    # --- ⏰ 定时自动停止计算器组件（修改为 15分钟 / 30分钟 / 1小时 档位选择） ---
     st.markdown('<div class="app-card">', unsafe_allow_html=True)
-    calc_title = "⏳ TIME SETTING (AUTO-STOP)" if lang == "English" else "⏳ 运行时间配置 (到时自动停止)"
+    calc_title = "⏳ COMPUTE TIMER (AUTO-STOP)" if lang == "English" else "⏳ 算力定时器 (到时自动停止)"
     st.markdown(f'<div class="app-title">{calc_title}</div>', unsafe_allow_html=True)
     
-    # 允许用户在第二页直接调节计划运行几小时
-    label_slider = "Set target runtime (Hours):" if lang == "English" else "设置本次计划运行时间 (小时):"
-    hours_input_tab2 = st.slider(label_slider, min_value=1, max_value=12, value=int(st.session_state.target_runtime_hours), key="slider_tab2")
-    st.session_state.target_runtime_hours = hours_input_tab2
+    label_select = "Set target runtime for this session:" if lang == "English" else "配置本次节点运行时间:"
+    selected_time_tab2 = st.selectbox(label_select, current_options, index=st.session_state.target_time_index, key="time_select_tab2")
+    st.session_state.target_time_index = current_options.index(selected_time_tab2)
     
-    # 计算目标总秒数
-    target_total_seconds = int(st.session_state.target_runtime_hours * 3600)
+    # 根据用户选择的档位，获取精确的目标截止总秒数
+    target_total_seconds = SECONDS_MAP[st.session_state.target_time_index]
     
-    # 检测是否达到时间自动停止
+    # 逻辑检测：如果正在运行且时间走满了，执行自动强制停止
     if st.session_state.app_running and st.session_state.session_seconds >= target_total_seconds:
         st.session_state.app_running = False
-        st.toast("⏰ Time reached! Node stopped automatically." if lang == "English" else "⏰ 已达到设定时间！节点已自动安全停止。")
+        st.toast("⏰ Timer Finished! Node has been stopped safely." if lang == "English" else "⏰ 设定运行时间已满！节点已自动平稳切回待机。")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 计算动态数值
+    # 核心数据流逻辑构建
     current_hash = random.uniform(45.5, 49.8) if st.session_state.app_running else 0.0
     current_temp = random.uniform(36.4, 36.9) if st.session_state.app_running else 31.2
     s_sec = st.session_state.session_seconds
     
-    # 计算剩余时间
+    # 计算实时剩余倒计时
     remaining_seconds = max(0, target_total_seconds - s_sec)
     rem_hours = remaining_seconds // 3600
     rem_mins = (remaining_seconds % 3600) // 60
     rem_secs = remaining_seconds % 60
     remaining_str = f"{rem_hours:02d}:{rem_mins:02d}:{rem_secs:02d}"
     
-    # 本次已运行时间
+    # 本次已跑时长格式化
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     session_generated = s_sec * 0.25
     
@@ -304,7 +327,7 @@ with tab2:
     hash_label = "NETWORK HASH RATE" if lang == "English" else "当前节点算力"
     status_tag = "SAFE" if lang == "English" else "安全控温中"
 
-    # --- 🗂️ 模块 1：控制面板（干净包装，无电池百分比） ---
+    # --- 🗂️ 模块 1：控制面板面板组件 ---
     st.markdown(f"""
     <div class="app-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -317,14 +340,14 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     
-    # 折线图
+    # 折线图渲染挂接
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
     chart_df = pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"])
     st.line_chart(chart_df, height=95, use_container_width=True)
     
-    # 温度显示（彻底移除电池百分比图标，保持清爽）
+    # 温度显控栏（彻底剔除原有的 🔋 电池百分比标记，保持极致精简）
     st.markdown(f"""
     <div class="app-card" style="margin-top: -5px;">
         <div class="temp-section">
@@ -336,7 +359,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- 🗂️ 模块 2：时长与收益比（集成倒计时显示） ---
+    # --- 🗂️ 模块 2：运行时长与倒计时比对卡片 ---
     timer_title = "COMPUTE TIME & RATIO" if lang == "English" else "算力运行时长与收益比"
     t_label = "SESSION DURATION:" if lang == "English" else "本次连续运行时间:"
     rem_label = "COUNTDOWN TO STOP:" if lang == "English" else "距离自动停止倒计时:"
@@ -365,7 +388,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     
-    # --- 🗂️ 模块 3：当前节点全局汇总详情 ---
+    # --- 🗂️ 模块 3：连接节点及全局数据汇总 ---
     node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
     if lang == "English":
         run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
@@ -392,11 +415,11 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 🕹️ 核心控制大按钮
+    # 🕹️ 底部核心动能大按钮
     if not st.session_state.app_running:
         btn_start_txt = "START COMPUTE SESSION" if lang == "English" else "启动边缘算力节点 🟢"
         if st.button(btn_start_txt, key="app_start_btn"):
-            # 如果刚好倒计时走完了重新点启动，重置一下时间
+            # 如果上一次倒计时正好走完，重新点启动时自动把秒数归零重计
             if remaining_seconds <= 0:
                 st.session_state.session_seconds = 0
             st.session_state.app_running = True
