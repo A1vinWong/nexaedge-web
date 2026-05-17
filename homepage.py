@@ -34,6 +34,8 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
+    .logo-container { text-align: center; padding: 25px 10px; background: radial-gradient(circle, rgba(162,255,0,0.08) 0%, rgba(11,15,18,0) 70%); border-radius: 20px; margin-bottom: 15px; }
+    .logo-text { color: #A2FF00; font-size: 38px; font-weight: 900; letter-spacing: -1px; text-shadow: 0 0 20px rgba(162, 255, 0, 0.4); margin: 0; }
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 15px; margin-bottom: 12px; }
     .app-title { font-size: 13px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 32px; font-weight: 700; }
@@ -46,7 +48,6 @@ st.markdown("""
     }
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #252e38 !important; box-shadow: none !important; }
     [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 20px !important; margin-top: 25px !important; }
-    .admin-box { background-color: #1c232c; border: 2px dashed #A2FF00; padding: 20px; border-radius: 14px; margin-top: 30px; }
     </style>
 """, unsafe_allow_html=True)
 col_pad, col_lang = st.columns([4, 1])
@@ -59,8 +60,8 @@ TIME_OPTIONS = TIME_OPTIONS_EN if lang == "English" else TIME_OPTIONS_ZH
 SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
 HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
 
-st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:36px; font-weight:800; margin-bottom:12px;">NexaEdge Network</h1>', unsafe_allow_html=True)
-st.image("image.png", use_container_width=True)
+# 用纯 HTML/CSS 科技发光艺术字替代图片，彻底解决 st.image 崩溃
+st.markdown('<div class="logo-container"><p class="logo-text">NexaEdge Network</p></div>', unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["🌐 Overview", "📱 Dashboard"])
 
