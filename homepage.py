@@ -72,7 +72,7 @@ def sync_data_from_source():
 sync_data_from_source()
 
 if "session_id" not in st.session_state:
-    st.session_state.session_id = f"node_{dev_id}_{random.randint(1000, 9999)}"
+    st.session_id = f"node_{dev_id}_{random.randint(1000, 9999)}"
     global_server["total_online_viewers"] += 1
 
 if 'app_running' not in st.session_state: st.session_state.app_running = False
@@ -162,7 +162,9 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
 
 # --- 顶栏渲染 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:32px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
-lang = st.selectbox("🌐 Language", ["中文", "English"], index=0, label_visibility="collapsed")
+
+# 👑 默认以英文为主页 (index=1)
+lang = st.selectbox("🌐 Language", ["中文", "English"], index=1, label_visibility="collapsed")
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
 TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"]
@@ -176,7 +178,7 @@ else:
     st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
 # ==========================================
-# 👑 2:1 经典分栏结构
+# 👑 2:1 经典左右分栏结构
 # ==========================================
 intro_left, intro_right = st.columns([2, 1])
 
@@ -207,28 +209,29 @@ with intro_right:
 
 # --- 导航选项卡 ---
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🌐 项目通识" if lang=="中文" else "🌐 Overview", 
-    "📱 算力控制台" if lang=="中文" else "📱 Dashboard", 
-    "🔑 账户注册/登录" if lang=="中文" else "🔑 Auth Portal",
-    "🛡️ 节点内网管理" if lang=="中文" else "🛡️ Admin Panel"
+    "🌐 Overview" if lang=="English" else "🌐 项目通识", 
+    "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
+    "🔑 Auth Portal" if lang=="English" else "🔑 账户注册/登录",
+    "🛡️ Admin Panel" if lang=="English" else "🛡️ 节点内网管理"
 ])
 
 # ==========================================
-# TAB 1: 项目通识
+# TAB 1: 项目通识 (默认首页视图)
 # ==========================================
 with tab1:
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
-        with c1: st.metric(label="平台技术抽成", value="20%", delta="纯现金流造血")
-        with c2: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
-        with c3: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+        # ⭐ 第三行修正为“智能防作弊风控”
+        with c1: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
+        with c2: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+        with c3: st.metric(label="智能防作弊风控", value="Sybil-Shield", delta="防刷单多开机制")
         
         st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
         selected_time_tab1 = st.selectbox("选择运行时间档位:", current_options, index=st.session_state.target_time_index, key="calc_box_zh")
         st.session_state.target_time_index = current_options.index(selected_time_tab1)
         st.success(f"🎉 预计每月可带来收益: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
         
-        # ⭐ 完美补回中文三个完整的介绍框：
+        # ⭐ 完美对齐的三个介绍框（含防作弊更新）
         st.markdown("""
         <div class="feature-box">
             <h4 style="color:white; margin:0; font-size:14px;">📱 充电即赚 · 睡后收入</h4>
@@ -239,14 +242,15 @@ with tab1:
             <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p>
         </div>
         <div class="feature-box">
-            <h4 style="color:white; margin:0; font-size:14px;">⚡ 20% 平台抽成造血</h4>
-            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">公开透明的生态分润模型。平台仅提取 20% 服务费维持日常检索，其余收益全部向提供节点的硬件终端倾斜。</p>
+            <h4 style="color:white; margin:0; font-size:14px;">🛡️ 设备级强效防作弊</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">内置独家硬件级指纹校验，实时阻断模拟器挂机、脚本多开刷单等恶意作弊行为，确保纯净、真实的分布式物理网络状态。</p>
         </div>
         """, unsafe_allow_html=True)
     else:
-        with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue")
-        with c2: st.metric(label="Safety Lock", value="39°C", delta="Device Safety", delta_color="inverse")
-        with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / TPS")
+        # ⭐ 英文排版：第三项更改为 Anti-Cheat System
+        with c1: st.metric(label="Safety Guard Lock", value="39°C", delta="Device Safety Barrier", delta_color="inverse")
+        with c2: st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
+        with c3: st.metric(label="Anti-Cheat Control", value="Sybil-Shield", delta="Enforces Fair Mining")
         
         st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
         selected_time_tab1 = st.selectbox("Select Session Pattern:", current_options, index=st.session_state.target_time_index, key="calc_box_en")
@@ -263,12 +267,12 @@ with tab1:
             <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">Total hardware protection. System auto-throttles load instantly if battery hits 39°C. Zero hardware degradation anxiety.</p>
         </div>
         <div class="feature-box">
-            <h4 style="color:white; margin:0; font-size:14px;">⚡ 20% Pure Ecosystem Revenue</h4>
-            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">Transparent business loop. The platform retains only 20% to support basic operations, driving maximum profits to global miners.</p>
+            <h4 style="color:white; margin:0; font-size:14px;">🛡️ Anti-Cheat & Sybil Shield</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">Embedded hardware fingerprint audits block emulators or multi-accounting exploits, preserving transparency for all miners.</p>
         </div>
         """, unsafe_allow_html=True)
 
-    # 申领创世白名单
+    # 外部社媒白名单系统
     st.markdown("<br>", unsafe_allow_html=True)
     with st.form("unified_whitelist_form"):
         wl_title = "🎁 申领创世白名单与社媒双倍奖励" if lang=="中文" else "🎁 Genesis Whitelist & Referral Boosters"
@@ -284,7 +288,7 @@ with tab1:
         """, unsafe_allow_html=True)
         
         u_email = st.text_input("申请邮箱 / Email:", key="wl_mail").strip()
-        u_wallet = st.text_input("绑定的 Solana 钱包接收地址 / Solana Wallet:", key="wl_wall").strip()
+        u_wallet = st.text_input("绑定的 Solana 钱包接收地址 / Solana Wallet Address:", key="wl_wall").strip()
         
         btn_wl = "锁定席位 ⚡" if lang=="中文" else "Lock Seating ⚡"
         if st.form_submit_button(btn_wl):
@@ -297,7 +301,7 @@ with tab1:
                 st.success("🎉 白名单锁定成功！" if lang=="中文" else "🎉 Whitelist locked!")
 
 # ==========================================
-# TAB 2: 算力控制台
+# TAB 2: 算力控制台 Dashboard
 # ==========================================
 with tab2:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
@@ -332,11 +336,9 @@ with tab2:
         st.session_state.chart_history.append(current_hash)
     st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"]), height=85, use_container_width=True)
     
-    # 温度计 🌡️
     lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
     st.markdown(f'<div class="app-card" style="margin-top: -5px;"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
-    # 电池图标 🔋
     lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
     lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
     st.markdown(f"""
@@ -355,7 +357,7 @@ with tab2:
     """, unsafe_allow_html=True)
 
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
-    lbl_d2 = "当前个体账户拥有的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
+    lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     st.markdown(f"""
     <div class="app-card">
         <div style="display:flex; justify-content:space-between;">
@@ -380,17 +382,17 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: 🔑 账户注册/登录 (纯净版：不需要 Solana 钱包)
+# TAB 3: 🔑 账户中心 (移除钱包字段，彻底解决乱窜显现)
 # ==========================================
 with tab3:
     if st.session_state.current_user:
         st.markdown('<div class="app-card" style="text-align:center; padding:20px 10px;">', unsafe_allow_html=True)
-        title_auth = "<b>智能网络已安全连接</b>" if lang=="中文" else "<b>Secure Network Node Engaged</b>"
+        title_auth = "<b>云端端点挂载就绪</b>" if lang=="中文" else "<b>Secure Network Node Engaged</b>"
         st.markdown(f"🎉 {title_auth}", unsafe_allow_html=True)
         lbl_id = f"当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>" if lang=="中文" else f"Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>"
         st.markdown(lbl_id, unsafe_allow_html=True)
         
-        box_txt = f"您账户绑定的全网总收益<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>" if lang=="中文" else f"Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>"
+        box_txt = f"全网同步累计代币池收益<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>" if lang=="中文" else f"Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>"
         st.markdown(f"<div style='margin:15px 0; background:#11171d; padding:10px; border-radius:10px;'>{box_txt}</div>", unsafe_allow_html=True)
         
         btn_logout = "安全退出当前登录账户" if lang=="中文" else "Logout Account Location"
@@ -405,13 +407,13 @@ with tab3:
         
         if auth_mode in ["注册新节点账户", "Register Node Account"]:
             with st.form("reg_form"):
-                form_title = "🚀 注册统一网络账户（自动继承并合并当前已有 NEXA 数量）" if lang=="中文" else "🚀 Register Unified Cloud Node"
+                form_title = "🚀 极简注册（自动继承并合并当前已有 NEXA 数量）" if lang=="中文" else "🚀 Quick Profile Registration"
                 st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:6px;">{form_title}</div>', unsafe_allow_html=True)
                 r_email = st.text_input("邮箱地址 / Email Address:", placeholder="example@nexa.com").strip()
                 r_pwd = st.text_input("设置密码 / Choose Password:", type="password", placeholder="Enter your secure password")
                 
-                # ⭐ 移除钱包选项，只通过邮箱密码注册
-                btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Node Profile ⚡"
+                # ⭐ 移除钱包地址项，注册只需要邮箱+密码，干净无负担
+                btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Profile ⚡"
                 if st.form_submit_button(btn_reg_txt):
                     if not r_email or not r_pwd:
                         st.error("❌ 邮箱和密码为必填项！" if lang=="中文" else "❌ Email and Password are mandatory!")
@@ -425,7 +427,7 @@ with tab3:
                             "reg_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                         }
                         st.session_state.current_user = r_email
-                        st.success("🎉 账户注册成功！本地数据已完美迁移同步。" if lang=="中文" else "🎉 Registration complete!")
+                        st.success("🎉 注册成功！已无缝迁移您在此台手机上跑出的全部收益。" if lang=="中文" else "🎉 Registration complete!")
                         time.sleep(0.5)
                         st.rerun()
         else:
@@ -441,14 +443,14 @@ with tab3:
                     if l_email in global_server["user_db"] and global_server["user_db"][l_email]["password_hash"] == p_hash:
                         st.session_state.current_user = l_email
                         st.session_state.app_earned = global_server["user_db"][l_email]["score"]
-                        st.success("⚡ 鉴权成功！已成功加载您的个人专属资产底盘。" if lang=="中文" else "⚡ Authentication verified!")
+                        st.success("⚡ 登录成功！历史算力账单资产已挂载完毕。" if lang=="中文" else "⚡ Authentication verified!")
                         time.sleep(0.5)
                         st.rerun()
                     else:
                         st.error("❌ 账号或密码输入有误，请重试！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# TAB 4: 🛡️ 节点内网管理面板 (彻底收纳：外部再也看不到核心锁)
+# TAB 4: 🛡️ 管理员内网审计面板 (彻底收纳，绝不乱外漏)
 # ==========================================
 with tab4:
     st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口审计</div>', unsafe_allow_html=True)
@@ -474,14 +476,14 @@ with tab4:
         st.error("❌ 密钥错误，鉴权被拒绝。")
 
 # ==========================================
-# 📊 宏观大盘网络底栏
+# 📊 宏观大盘全局物理底栏
 # ==========================================
 st.markdown("<br>", unsafe_allow_html=True)
 col_net1, col_net2 = st.columns(2)
 with col_net1: st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #A2FF00;"><div class="mini-stat-title">● NETWORK ACTIVE NODES</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
 with col_net2: st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #00e5ff;"><div class="mini-stat-title">👀 LIVE REAL VIEWERS</div><div class="mini-stat-value" style="color:#00e5ff;">{global_server["total_online_viewers"]} Online</div></div>', unsafe_allow_html=True)
 
-# ==================== 驱动核心 ====================
+# ==================== 后台实时高频刷新内核 ====================
 if st.session_state.app_running:
     st.session_state.app_earned += 0.01
     st.session_state.session_seconds += 1
