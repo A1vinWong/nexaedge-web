@@ -597,3 +597,16 @@ if st.session_state.app_running:
     st.session_state.last_tick_time = time.time()
     time.sleep(1.0)                            # 精确阻塞一秒
     st.rerun()
+
+import streamlit as st
+
+# ... 你的主页代码（NexaEdge的前端展示）...
+
+# 在页面最底部，放一个密码输入框
+with st.expander("🔑 节点系统维护"):
+    admin_password = st.text_input("请输入管理员授权码", type="password")
+    if admin_password == "你设置的超级密码nexa2026":
+        st.success("授权成功！")
+        # 把你的管理员控制台代码嵌套在这里
+        st.write("欢迎回来，开始管理 8 Devices / 85 Online 用户...")
+        # st.button("清空白名单数据") 等等...
