@@ -113,7 +113,7 @@ st.markdown("""
     .neon-blue-text { color: #00e5ff !important; }
     .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 6px 12px; border-radius: 10px; margin-top: 6px; }
     
-    /* 按钮全局高级定制 */
+    /* 按钮高级定制 */
     div.stButton > button:first-child { background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 14px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 10px 4px !important; box-shadow: 0 0 15px rgba(162, 255, 0, 0.3); transition: all 0.2s; }
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #f43f5e !important; box-shadow: none !important; }
     div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 4px 10px !important; font-size: 12px !important; width: auto !important; }
@@ -130,7 +130,6 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 4px; background-color: #11171d; border: 1px solid #252e38; border-radius: 6px; color: #bdc3c7 !important; font-size: 10px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; }
 
-    /* 管理员表格美化 */
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; color: #cdfaee; }
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
@@ -142,7 +141,7 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 🔄 防挂起补算
+# --- 防断线补算 ---
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap = int(current_unix - st.session_state.last_tick_time)
@@ -162,7 +161,7 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
 # --- 顶栏渲染 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:32px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-# 🌐 默认以英文（English）作为主页视图加载
+# 🌐 默认直接加载英文（English）主视图
 lang = st.selectbox("🌐 Language", ["中文", "English"], index=1, label_visibility="collapsed")
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
@@ -176,7 +175,7 @@ else:
     st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
 # ==========================================
-# 👑 2:1 经典左右分栏结构
+# 👑 2:1 左右主视觉分栏结构
 # ==========================================
 intro_left, intro_right = st.columns([2, 1])
 
@@ -214,12 +213,11 @@ tab1, tab2, tab3, tab4 = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: 项目通识 (默认首页视图)
+# TAB 1: 项目通识
 # ==========================================
 with tab1:
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
-        # ⭐ 第三项已校准为：自研轻量级拜占庭容错机制 (BFT Consensus)
         with c1: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
         with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
@@ -244,7 +242,6 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
     else:
-        # ⭐ 英文同步重构：BFT Consensus Engine 完美对齐
         with c1: st.metric(label="Thermal Guard Lock", value="39°C", delta="Device Protection Barrier", delta_color="inverse")
         with c2: st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
         with c3: st.metric(label="Network Consensus", value="Proprietary BFT", delta="2:1 Redundant Voting")
@@ -270,11 +267,10 @@ with tab1:
         """, unsafe_allow_html=True)
 
     # ==========================================
-    # 🌍 全球化白名单表单系统（彻底解决英文页面显示中文的问题）
+    # 🌍 全球化白名单表单系统（彻底解决语言显示错乱）
     # ==========================================
     st.markdown("<br>", unsafe_allow_html=True)
     with st.form("unified_whitelist_form"):
-        # 依据语言变量，实时切换对应的文案提示
         if lang == "中文":
             st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 申领创世白名单与社媒双倍加速奖励</div>', unsafe_allow_html=True)
             u_email_label = "申请电子邮箱地址:"
@@ -397,7 +393,7 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: 🔑 账户中心 (纯净轻量版注册)
+# TAB 3: 🔑 账户中心 (注册与登录)
 # ==========================================
 with tab3:
     if st.session_state.current_user:
