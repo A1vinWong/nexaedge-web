@@ -79,7 +79,6 @@ if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
-if 'registration_success' not in st.session_state: st.session_state.registration_success = False
 
 # --- 📸 自动图像注入器 ---
 def get_project_image():
@@ -143,7 +142,7 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 🔄 防挂起补算逻辑
+# 🔄 防挂起补算
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap = int(current_unix - st.session_state.last_tick_time)
@@ -163,12 +162,11 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
 # --- 顶栏渲染 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:32px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-# 👑 默认以英文为主页 (index=1)
+# 🌐 默认以英文（English）作为主页视图加载
 lang = st.selectbox("🌐 Language", ["中文", "English"], index=1, label_visibility="collapsed")
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
 TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"]
-SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
 HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
 current_options = TIME_OPTIONS_ZH if lang == "中文" else TIME_OPTIONS_EN
 
@@ -221,17 +219,16 @@ tab1, tab2, tab3, tab4 = st.tabs([
 with tab1:
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
-        # ⭐ 第三行修正为“智能防作弊风控”
+        # ⭐ 第三项已校准为：自研轻量级拜占庭容错机制 (BFT Consensus)
         with c1: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-        with c3: st.metric(label="智能防作弊风控", value="Sybil-Shield", delta="防刷单多开机制")
+        with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
         
         st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
         selected_time_tab1 = st.selectbox("选择运行时间档位:", current_options, index=st.session_state.target_time_index, key="calc_box_zh")
         st.session_state.target_time_index = current_options.index(selected_time_tab1)
         st.success(f"🎉 预计每月可带来收益: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
         
-        # ⭐ 完美对齐的三个介绍框（含防作弊更新）
         st.markdown("""
         <div class="feature-box">
             <h4 style="color:white; margin:0; font-size:14px;">📱 充电即赚 · 睡后收入</h4>
@@ -242,15 +239,15 @@ with tab1:
             <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p>
         </div>
         <div class="feature-box">
-            <h4 style="color:white; margin:0; font-size:14px;">🛡️ 设备级强效防作弊</h4>
-            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">内置独家硬件级指纹校验，实时阻断模拟器挂机、脚本多开刷单等恶意作弊行为，确保纯净、真实的分布式物理网络状态。</p>
+            <h4 style="color:white; margin:0; font-size:14px;">🛡️ 自研拜占庭容错机制（BFT）</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">针对边缘物理节点不可信、易遭遇逆向黑客攻击作弊的痛点，NexaEdge 创新引入 2:1 去中心化多数投票冗余验证，从数学算法底层彻底锁死任何虚假算力提交。</p>
         </div>
         """, unsafe_allow_html=True)
     else:
-        # ⭐ 英文排版：第三项更改为 Anti-Cheat System
-        with c1: st.metric(label="Safety Guard Lock", value="39°C", delta="Device Safety Barrier", delta_color="inverse")
+        # ⭐ 英文同步重构：BFT Consensus Engine 完美对齐
+        with c1: st.metric(label="Thermal Guard Lock", value="39°C", delta="Device Protection Barrier", delta_color="inverse")
         with c2: st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
-        with c3: st.metric(label="Anti-Cheat Control", value="Sybil-Shield", delta="Enforces Fair Mining")
+        with c3: st.metric(label="Network Consensus", value="Proprietary BFT", delta="2:1 Redundant Voting")
         
         st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
         selected_time_tab1 = st.selectbox("Select Session Pattern:", current_options, index=st.session_state.target_time_index, key="calc_box_en")
@@ -267,16 +264,36 @@ with tab1:
             <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">Total hardware protection. System auto-throttles load instantly if battery hits 39°C. Zero hardware degradation anxiety.</p>
         </div>
         <div class="feature-box">
-            <h4 style="color:white; margin:0; font-size:14px;">🛡️ Anti-Cheat & Sybil Shield</h4>
-            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">Embedded hardware fingerprint audits block emulators or multi-accounting exploits, preserving transparency for all miners.</p>
+            <h4 style="color:white; margin:0; font-size:14px;">🛡️ Proprietary Byzantine Fault Tolerance (BFT)</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">To combat untrusted edge environments and reverse-engineering exploits, NexaEdge utilizes a 2:1 decentralized majority voting redundant verification mechanism to eliminate fraudulent computation mathematically.</p>
         </div>
         """, unsafe_allow_html=True)
 
-    # 外部社媒白名单系统
+    # ==========================================
+    # 🌍 全球化白名单表单系统（彻底解决英文页面显示中文的问题）
+    # ==========================================
     st.markdown("<br>", unsafe_allow_html=True)
     with st.form("unified_whitelist_form"):
-        wl_title = "🎁 申领创世白名单与社媒双倍奖励" if lang=="中文" else "🎁 Genesis Whitelist & Referral Boosters"
-        st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">{wl_title}</div>', unsafe_allow_html=True)
+        # 依据语言变量，实时切换对应的文案提示
+        if lang == "中文":
+            st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 申领创世白名单与社媒双倍加速奖励</div>', unsafe_allow_html=True)
+            u_email_label = "申请电子邮箱地址:"
+            u_email_place = "请输入接收通知的邮箱"
+            u_wallet_label = "绑定的 Solana 钱包接收地址 (获取空投资产):"
+            u_wallet_place = "输入您的 Solana SPL 钱包公钥"
+            btn_wl_txt = "锁定创世空投席位 ⚡"
+            msg_empty = "❌ 请完整填写邮箱和钱包地址！"
+            msg_success = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
+        else:
+            st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 Claim Genesis Whitelist & Social Boosting Rewards</div>', unsafe_allow_html=True)
+            u_email_label = "Notification Email Address:"
+            u_email_place = "e.g., node_miner@gmail.com"
+            u_wallet_label = "Bound Solana Wallet Address (For Asset Air-drops):"
+            u_wallet_place = "Enter your Solana SPL public key address"
+            btn_wl_txt = "Lock Genesis Seating ⚡"
+            msg_empty = "❌ Email and Wallet fields cannot be empty!"
+            msg_success = "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot."
+
         st.markdown("""
         <div class="social-grid">
             <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
@@ -287,18 +304,16 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
         
-        u_email = st.text_input("申请邮箱 / Email:", key="wl_mail").strip()
-        u_wallet = st.text_input("绑定的 Solana 钱包接收地址 / Solana Wallet Address:", key="wl_wall").strip()
+        u_email = st.text_input(u_email_label, placeholder=u_email_place, key="wl_mail").strip()
+        u_wallet = st.text_input(u_wallet_label, placeholder=u_wallet_place, key="wl_wall").strip()
         
-        btn_wl = "锁定席位 ⚡" if lang=="中文" else "Lock Seating ⚡"
-        if st.form_submit_button(btn_wl):
+        if st.form_submit_button(btn_wl_txt):
             if not u_email or not u_wallet:
-                st.error("❌ 请完整填写表单！" if lang=="中文" else "❌ Form incomplete!")
+                st.error(msg_empty)
             else:
-                st.session_state.registration_success = True
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
-                    f.write(f"Email: {u_email} | Wallet: {u_wallet}\n")
-                st.success("🎉 白名单锁定成功！" if lang=="中文" else "🎉 Whitelist locked!")
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                st.success(msg_success)
 
 # ==========================================
 # TAB 2: 算力控制台 Dashboard
@@ -382,7 +397,7 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: 🔑 账户中心 (移除钱包字段，彻底解决乱窜显现)
+# TAB 3: 🔑 账户中心 (纯净轻量版注册)
 # ==========================================
 with tab3:
     if st.session_state.current_user:
@@ -412,7 +427,6 @@ with tab3:
                 r_email = st.text_input("邮箱地址 / Email Address:", placeholder="example@nexa.com").strip()
                 r_pwd = st.text_input("设置密码 / Choose Password:", type="password", placeholder="Enter your secure password")
                 
-                # ⭐ 移除钱包地址项，注册只需要邮箱+密码，干净无负担
                 btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Profile ⚡"
                 if st.form_submit_button(btn_reg_txt):
                     if not r_email or not r_pwd:
@@ -427,7 +441,7 @@ with tab3:
                             "reg_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                         }
                         st.session_state.current_user = r_email
-                        st.success("🎉 注册成功！已无缝迁移您在此台手机上跑出的全部收益。" if lang=="中文" else "🎉 Registration complete!")
+                        st.success("🎉 注册成功！" if lang=="中文" else "🎉 Registration complete!")
                         time.sleep(0.5)
                         st.rerun()
         else:
@@ -443,14 +457,14 @@ with tab3:
                     if l_email in global_server["user_db"] and global_server["user_db"][l_email]["password_hash"] == p_hash:
                         st.session_state.current_user = l_email
                         st.session_state.app_earned = global_server["user_db"][l_email]["score"]
-                        st.success("⚡ 登录成功！历史算力账单资产已挂载完毕。" if lang=="中文" else "⚡ Authentication verified!")
+                        st.success("⚡ 登录成功！" if lang=="中文" else "⚡ Authentication verified!")
                         time.sleep(0.5)
                         st.rerun()
                     else:
-                        st.error("❌ 账号或密码输入有误，请重试！" if lang=="中文" else "❌ Invalid combinations!")
+                        st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# TAB 4: 🛡️ 管理员内网审计面板 (彻底收纳，绝不乱外漏)
+# TAB 4: 🛡️ 管理员内网审计面板 
 # ==========================================
 with tab4:
     st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口审计</div>', unsafe_allow_html=True)
@@ -462,7 +476,6 @@ with tab4:
         with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">全网总注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Users</div></div>', unsafe_allow_html=True)
         with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">实时活跃节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
         
-        # 实时表格输出
         st.markdown("<p style='font-size:11px; font-weight:bold; margin-top:10px; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
         table_html = """
         <table class="admin-table">
