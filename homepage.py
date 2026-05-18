@@ -218,6 +218,7 @@ if 'session_seconds' not in st.session_state: st.session_state.session_seconds =
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 if 'my_referral_code' not in st.session_state: st.session_state.my_referral_code = ""
+if 'registration_success' not in st.session_state: st.session_state.registration_success = False
 
 # 真实同步全局状态到共享内存区
 if st.session_state.app_running:
@@ -434,28 +435,33 @@ with tab2:
 # ==================== 📧 底部白名单与社交推荐奖励表单 ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 
-if st.session_state.my_referral_code:
+# 1. 如果用户注册成功，高亮显示成功提示和专属邀请码（不刷新丢码）
+if st.session_state.registration_success or st.session_state.my_referral_code:
     if lang == "English":
+        st.success("🎉 Whitelist Seat Secured Successfully! Your Node Status has been Activated.")
         st.markdown(f"""
-        <div class="app-card" style="border: 1px solid #A2FF00; text-align:center;">
-            <span style="font-size:12px; color:#88929b;">🎯 YOUR REFERRAL CODE:</span><br>
-            <span style="font-size:20px; font-weight:bold; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span><br>
-            <p style="font-size:11px; color:#bdc3c7; margin-top:5px; margin-bottom:0;">
-                Share this code! Earn <b>+500 NEXA</b> for every user who registers and follows our socials!
+        <div class="app-card" style="border: 2px solid #A2FF00; text-align:center; background-color: #161c23; padding: 15px;">
+            <span style="font-size:13px; color:#88929b; font-weight:bold;">🎯 YOUR EXCLUSIVE REFERRAL CODE:</span><br>
+            <span style="font-size:24px; font-weight:800; color:#A2FF00; font-family:monospace; letter-spacing:1px;">{st.session_state.my_referral_code}</span><br>
+            <p style="font-size:12px; color:#bdc3c7; margin-top:8px; margin-bottom:0; line-height:1.4;">
+                <b>Copy and share your code!</b> You will receive an extra bonus of <b>+500 NEXA</b> for every user who registers through your link!
             </p>
         </div>
         """, unsafe_allow_html=True)
     else:
+        st.success("🎉 恭喜！创世白名单席位锁定成功，您的边缘节点资格已正式激活！")
         st.markdown(f"""
-        <div class="app-card" style="border: 1px solid #A2FF00; text-align:center;">
-            <span style="font-size:12px; color:#88929b;">🎯 你的专属邀请码:</span><br>
-            <span style="font-size:20px; font-weight:bold; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span><br>
-            <p style="font-size:11px; color:#bdc3c7; margin-top:5px; margin-bottom:0;">
-                分享此邀请码！每成功推荐一位新用户注册并关注官方社媒，即可稳拿 <b>+500 NEXA</b> 额外代币奖励！
+        <div class="app-card" style="border: 2px solid #A2FF00; text-align:center; background-color: #161c23; padding: 15px;">
+            <span style="font-size:13px; color:#88929b; font-weight:bold;">🎯 您的专属邀请裂变码:</span><br>
+            <span style="font-size:24px; font-weight:800; color:#A2FF00; font-family:monospace; letter-spacing:1px;">{st.session_state.my_referral_code}</span><br>
+            <p style="font-size:12px; color:#bdc3c7; margin-top:8px; margin-bottom:0; line-height:1.4;">
+                <b>请复制并保存好您的邀请码！</b> 每成功推荐一位好友加入并锁定席位，您都将额外躺赚 <b>+500 NEXA</b> 算力代币奖励！
             </p>
         </div>
         """, unsafe_allow_html=True)
+    st.balloons()
 
+# 2. 白名单注册输入表单
 with st.form("unified_whitelist_form"):
     if lang == "English":
         st.markdown('<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:5px;">🚀 Secure Whitelist Seat & Referral Program</div>', unsafe_allow_html=True)
@@ -476,15 +482,15 @@ with st.form("unified_whitelist_form"):
     
     if lang == "English":
         st.markdown('<p style="font-size:11px; color:#88929b; margin-top:10px; margin-bottom: 2px;">📝 STEP 2: Fill in Details</p>', unsafe_allow_html=True)
-        u_email = st.text_input("Email Address:").strip()
-        u_wallet = st.text_input("Solana Wallet Address:").strip()
-        u_ref_input = st.text_input("Referral Code (Optional):").strip()
+        u_email = st.text_input("Email Address:", key="input_email").strip()
+        u_wallet = st.text_input("Solana Wallet Address:", key="input_wallet").strip()
+        u_ref_input = st.text_input("Referral Code (Optional):", key="input_ref").strip()
         submit_btn_text = "SUBMIT SEAT & ACTIVATE CODE ⚡"
     else:
         st.markdown('<p style="font-size:11px; color:#88929b; margin-top:10px; margin-bottom: 2px;">📝 STEP 2: 填写申领基础资料</p>', unsafe_allow_html=True)
-        u_email = st.text_input("电子邮箱地址:").strip()
-        u_wallet = st.text_input("Solana 钱包接收地址:").strip()
-        u_ref_input = st.text_input("推荐人邀请码 (选填):").strip()
+        u_email = st.text_input("电子邮箱地址:", key="input_email").strip()
+        u_wallet = st.text_input("Solana 钱包接收地址:", key="input_wallet").strip()
+        u_ref_input = st.text_input("推荐人邀请码 (选填):", key="input_ref").strip()
         submit_btn_text = "提交席位并激活推荐码 ⚡"
     
     if st.form_submit_button(submit_btn_text):
@@ -508,14 +514,16 @@ with st.form("unified_whitelist_form"):
                 if lang == "English": st.error("⚠️ Submission Rejected! This Email or Solana Wallet has already claimed a whitelist allocation.")
                 else: st.error("⚠️ 提交失败！该邮箱地址或 Solana 钱包已被注册，每个账户仅限申领一次白名单。")
             else:
+                # 查重通过，存入本地，更新缓存变量控制前端卡片弹出
                 generated_code = generate_referral_code(u_wallet)
                 st.session_state.my_referral_code = generated_code
+                st.session_state.registration_success = True
+                
                 ref_by = u_ref_input if u_ref_input else "NONE"
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | RefCode: {generated_code} | ReferredBy: {ref_by}\n")
-                st.balloons()
-                if lang == "English": st.success("🎉 Registration Successful!")
-                else: st.success("🎉 资格锁定成功！您的专属邀请码已成功激活。")
+                
+                # 安全刷新：重构页面布局，展示刚刚在表单上方载入的奖励码卡片
                 st.rerun()
 
 # =========================================================================
@@ -541,7 +549,7 @@ if query_params.get("admin") == "nexa_gate":
             else:
                 st.info("No records inside the database yet." if lang == "English" else "当前白名单数据库中暂无有效数据记录。")
         elif admin_password != "":
-            st.error("Invalid Secret Key." if lang == "English" else "管理密码错误，无访问或导出权限。")
+            st.error("Invalid Secret Key." if lang == "English" else "管理密码错误，无访问 or 导出权限。")
 
 # =========================================================================
 # 📊 【全网绝对真实大盘】：极小字体不换行适配窄屏
