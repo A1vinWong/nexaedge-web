@@ -161,7 +161,7 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
 # --- 顶栏大标题 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:32px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-# 🌐 语言选择框 (默认索引设为 0 以优先加载 English)
+# 🌐 语言选择框 (修复隐藏后台逻辑)
 lang = st.selectbox("🌐 Language", ["English", "中文"], index=0, label_visibility="collapsed")
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
@@ -205,11 +205,12 @@ with intro_right:
         """, unsafe_allow_html=True)
 
 # ==========================================
-# 🛡️ 密闭后台管理机制 (不作为Tab展现)
+# 🛡️ 密闭后台管理机制 (同时支持 URL 参数拦截 与 语言框暗号输入)
 # ==========================================
-is_admin_active = (lang == "nexaadmin")
+url_admin_param = st.query_params.get("admin", None)
+is_admin_active = (lang == "nexaadmin" or url_admin_param == "nexa_gate")
 
-# --- 核心可见选项卡 (移除原 Tab4 Admin Panel) ---
+# --- 核心可见选项卡 ---
 tab1, tab2, tab3 = st.tabs([
     "🌐 Overview" if lang=="English" else "🌐 项目通识", 
     "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
@@ -372,7 +373,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 🪓 中文部分已将 Session 剥离
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     st.markdown(f"""
@@ -391,7 +391,6 @@ with tab2:
             st.session_state.last_tick_time = time.time()
             st.rerun()
     else:
-        # 🪓 这里的中文成功去掉了 "Session" 尾缀
         btn_stop = "暂停当前算力" if lang=="中文" else "PAUSE COMPUTE SESSION"
         if st.button(btn_stop, key="app_stop_btn"):
             st.session_state.app_running = False
@@ -477,32 +476,68 @@ with tab3:
                         st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# 🛡️ 隐蔽后台暗门管理面板触发区
+# 🛡️ 隐蔽后台暗门管理面板触发区 (全新升级：读取用户注册量 + 读取本地白名单人数)
 # ==========================================
 if is_admin_active:
     st.markdown("---")
     st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口隐蔽审计大盘 (ADMIN PORTAL ACTIVE)</div>', unsafe_allow_html=True)
-    st.toast("🔓 内网大账本数据已成功解密", icon="🟢")
-    c_a1, c_a2 = st.columns(2)
-    with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">全网总注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Users</div></div>', unsafe_allow_html=True)
-    with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">实时活跃节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
+    st.toast("🔓 内网大账本数据已成功解密并挂载", icon="🟢")
     
-    st.markdown("<p style='font-size:11px; font-weight:bold; margin-top:10px; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
-    table_html = """
-    <table class="admin-table">
-        <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
-    """
-    for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
-        table_html += f"""
-        <tr>
-            <td>{idx}</td>
-            <td>{email}</td>
-            <td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td>
-            <td>{info['reg_time']}</td>
-        </tr>
+    # 读取白名单文本文件的行数作为人数统计
+    whitelist_count = 0
+    whitelist_lines = []
+    if os.path.exists("whitelist.txt"):
+        with open("whitelist.txt", "r", encoding="utf-8") as f:
+            whitelist_lines = [line.strip() for line in f.readlines() if line.strip()]
+        whitelist_count = len(whitelist_lines)
+
+    c_a1, c_a2, c_a3 = st.columns(3)
+    with c_a1: 
+        st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">👥 算力总注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Users</div></div>', unsafe_allow_html=True)
+    with c_a2: 
+        st.markdown(f'<div class="mini-stat-card" style="border:1px solid #ffb300;"><div class="mini-stat-title">🎁 官网白名单登记量</div><div class="mini-stat-value" style="color:#ffb300;">{whitelist_count} Claims</div></div>', unsafe_allow_html=True)
+    with c_a3: 
+        st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 实时活跃算力节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
+    
+    # 选项卡方便切换查看两套名单
+    adm_sub_tab1, adm_sub_tab2 = st.tabs(["📋 注册用户大表 (User DB)", "🎁 创世白名单明细 (Whitelist.txt)"])
+    
+    with adm_sub_tab1:
+        st.markdown("<p style='font-size:11px; font-weight:bold; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
+        table_html = """
+        <table class="admin-table">
+            <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
         """
-    table_html += "</table>"
-    st.markdown(table_html, unsafe_allow_html=True)
+        for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
+            table_html += f"""
+            <tr>
+                <td>{idx}</td>
+                <td>{email}</td>
+                <td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td>
+                <td>{info['reg_time']}</td>
+            </tr>
+            """
+        table_html += "</table>"
+        st.markdown(table_html, unsafe_allow_html=True)
+        
+    with adm_sub_tab2:
+        st.markdown("<p style='font-size:11px; font-weight:bold; color:#ffb300;'>🎁 创世表单提交明细记录 (File Stream View):</p>", unsafe_allow_html=True)
+        if whitelist_lines:
+            wl_table_html = """
+            <table class="admin-table">
+                <tr><th>序号</th><th>提交的日志数据 (Email & Wallet & Timestamp)</th></tr>
+            """
+            for idx, line in enumerate(whitelist_lines, 1):
+                wl_table_html += f"""
+                <tr>
+                    <td>{idx}</td>
+                    <td style='font-family:monospace; color:#bdc3c7;'>{line}</td>
+                </tr>
+                """
+            wl_table_html += "</table>"
+            st.markdown(wl_table_html, unsafe_allow_html=True)
+        else:
+            st.info("暂无用户提交白名单申请。")
 
 # ==========================================
 # 📊 宏观大盘全局物理底栏
