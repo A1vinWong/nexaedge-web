@@ -236,10 +236,9 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
     elapsed_gap_seconds = int(current_unix - st.session_state.last_tick_time)
     if elapsed_gap_seconds >= 1:
         st.session_state.session_seconds += elapsed_gap_seconds
-        st.session_state.app_earned += elapsed_gap_seconds * 0.25
+        st.session_state.app_earned += elapsed_gap_seconds * 0.01  # 每秒 0.01 NEXA 
         
         # 补算流失时间内的电能消耗 (满载平均按5.1W算)
-        # 功耗 (W) * 时间 (小时) = 瓦时 (Wh) -> 5.1W * (elapsed / 3600)
         st.session_state.total_energy_wh += 5.1 * (elapsed_gap_seconds / 3600.0)
         st.session_state.last_tick_time = current_unix
 
@@ -373,7 +372,7 @@ with tab2:
     s_sec = st.session_state.session_seconds
     remaining_seconds = max(0, target_total_seconds - s_sec)
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
-    session_generated = s_sec * 0.25
+    session_generated = s_sec * 0.01  # 每秒 0.01 NEXA 产量
     
     panel_title = "DASHBOARD" if lang == "English" else "控制面板"
     hash_label = "NETWORK HASH RATE" if lang == "English" else "当前节点算力"
@@ -405,14 +404,14 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # ⚡ 新增：电能消耗计量硬件面板
+    # 🔌 电能消耗计量硬件面板
     p_title = "REAL-TIME HARDWARE POWER" if lang == "English" else "🔌 智能终端电能计量仓"
     p_lbl1 = "INPUT POWER:" if lang == "English" else "外部输入功耗:"
     p_lbl2 = "CUMULATIVE ENERGY:" if lang == "English" else "累计电力消耗:"
     p_lbl3 = "NEXA MINT EFFICIENCY:" if lang == "English" else "算力挖矿能效比:"
     
-    # 动态能效比换算 (1度电 = 1000Wh)
-    efficiency_val = (3600 * 0.25) / 5.1  # 每消耗1Wh大约生产多少代币
+    # 动态能效比换算 (1度电 = 1000Wh，每消耗1Wh生产 3600*0.01/5.1 = 7.05 NEXA)
+    efficiency_val = (3600 * 0.01) / 5.1  
     
     st.markdown(f"""
     <div class="app-card">
@@ -434,12 +433,12 @@ with tab2:
     """, unsafe_allow_html=True)
 
     t_label = "DURATION:" if lang == "English" else "本次连续运行时间:"
-    yield_lbl = "EST. RATIO: 0.25 NEXA / sec" if lang == "English" else "已为您实时产出代币:"
+    yield_lbl = "EST. RATIO: 0.01 NEXA / sec" if lang == "English" else "已为您实时产出代币:"
     st.markdown(f"""
     <div class="app-card">
         <div style="display:flex; justify-content:space-between;">
             <div><div style="font-size:10px; color:#88929b; font-weight:bold;">{t_label}</div><div class="app-value" style="font-size:18px;">{time_str}</div></div>
-            <div style="text-align:right;"><div style="font-size:10px; color:#88929b; font-weight:bold;">{yield_lbl}</div><div class="app-value neon-green-text" style="font-size:18px;">+{session_generated:,.1f} NEXA</div></div>
+            <div style="text-align:right;"><div style="font-size:10px; color:#88929b; font-weight:bold;">{yield_lbl}</div><div class="app-value neon-green-text" style="font-size:18px;">+{session_generated:,.2f} NEXA</div></div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -477,7 +476,7 @@ with tab2:
 # ==================== 📧 底部白名单与社交推荐奖励表单 ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 
-# 1. 如果用户注册成功，高亮显示成功提示和专属邀请码（不刷新丢码）
+# 1. 如果用户注册成功，高亮显示成功提示和专属邀请码
 if st.session_state.registration_success or st.session_state.my_referral_code:
     if lang == "English":
         st.success("🎉 Whitelist Seat Secured Successfully! Your Node Status has been Activated.")
@@ -562,7 +561,7 @@ with st.form("unified_whitelist_form"):
                 
                 ref_by = u_ref_input if u_ref_input else "NONE"
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
-                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | RefCode: {generated_code} | ReferredBy: {ref_by}\n")
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.2f} | RefCode: {generated_code} | ReferredBy: {ref_by}\n")
                 
                 st.rerun()
 
@@ -600,10 +599,10 @@ st.markdown("<p style='text-align:center; color:#445; font-size: 10px; margin-to
 
 # ==================== 👑 【秒级高频驱动内核】 ====================
 if st.session_state.app_running:
-    st.session_state.app_earned += 0.25        # 每秒产生 0.25 代币
+    st.session_state.app_earned += 0.01        # 每秒完美产生 0.01 代币
     st.session_state.session_seconds += 1      # 增加一秒
     
-    # 高精度电能累加 (满载时平均5.1W功耗，每秒累加 5.1/3600 Wh)
+    # 高精度电能累加
     st.session_state.total_energy_wh += (5.1 / 3600.0)
     
     st.session_state.last_tick_time = time.time()
