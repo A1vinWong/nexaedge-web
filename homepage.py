@@ -64,7 +64,7 @@ st.markdown("""
         display: none !important;
     }
     
-    /* 极致紧凑排版：消除 streamlit 默认空行 */
+    /* 极致紧凑排版 */
     [data-testid="stVerticalBlock"] > div:empty {
         display: none !important;
         margin: 0 !important;
@@ -73,7 +73,7 @@ st.markdown("""
     [data-testid="stElementContainer"] {
         border: none !important;
         background: transparent !important;
-        margin-bottom: 6px !important; /* 压缩垂直间距 */
+        margin-bottom: 6px !important;
     }
     
     .stTabs [data-baseweb="tab-list"] {
@@ -136,7 +136,6 @@ st.markdown("""
         margin-top: 6px;
     }
     
-    /* 🛠️ 已完美优化：完美兼容长文本，防止任何移动端边界压线与折行 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
@@ -416,7 +415,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 🛠️ 重新赋能长文本按钮，结合上层超强响应式 CSS 限制，移动端不溢出
     if not st.session_state.app_running:
         if st.button("START COMPUTE SESSION" if lang == "English" else "激活并启动边缘算力节点", key="app_start_btn"):
             if remaining_seconds <= 0: st.session_state.session_seconds = 0
@@ -443,7 +441,7 @@ if st.session_state.my_referral_code:
             <span style="font-size:12px; color:#88929b;">🎯 YOUR REFERRAL CODE:</span><br>
             <span style="font-size:20px; font-weight:bold; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span><br>
             <p style="font-size:11px; color:#bdc3c7; margin-top:5px; margin-bottom:0;">
-                Share this code! Earn <b>+500 NEXA</b> for every user who registers and follows our socials (even without an airdrop whitelist match!)
+                Share this code! Earn <b>+500 NEXA</b> for every user who registers and follows our socials!
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -453,7 +451,7 @@ if st.session_state.my_referral_code:
             <span style="font-size:12px; color:#88929b;">🎯 你的专属邀请码:</span><br>
             <span style="font-size:20px; font-weight:bold; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span><br>
             <p style="font-size:11px; color:#bdc3c7; margin-top:5px; margin-bottom:0;">
-                分享此邀请码！每成功推荐一位新用户注册并关注官方社媒，即可稳拿 <b>+500 NEXA</b> 额外代币奖励（无论对方最终是否命中白名单空投）！
+                分享此邀请码！每成功推荐一位新用户注册并关注官方社媒，即可稳拿 <b>+500 NEXA</b> 额外代币奖励！
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -491,13 +489,10 @@ with st.form("unified_whitelist_form"):
     
     if st.form_submit_button(submit_btn_text):
         if u_email == "" or u_wallet == "":
-            if lang == "English":
-                st.error("❌ Please fill in both email and wallet fields!")
-            else:
-                st.error("❌ 请完整填写邮箱和钱包地址！")
+            if lang == "English": st.error("❌ Please fill in both email and wallet fields!")
+            else: st.error("❌ 请完整填写邮箱和钱包地址！")
         else:
             is_duplicate = False
-            
             if os.path.exists("whitelist.txt"):
                 with open("whitelist.txt", "r", encoding="utf-8") as f:
                     lines = f.readlines()
@@ -510,27 +505,21 @@ with st.form("unified_whitelist_form"):
                         break
             
             if is_duplicate:
-                if lang == "English":
-                    st.error("⚠️ Submission Rejected! This Email or Solana Wallet has already claimed a whitelist allocation.")
-                else:
-                    st.error("⚠️ 提交失败！该邮箱地址或 Solana 钱包已被注册，每个账户仅限申领一次白名单。")
+                if lang == "English": st.error("⚠️ Submission Rejected! This Email or Solana Wallet has already claimed a whitelist allocation.")
+                else: st.error("⚠️ 提交失败！该邮箱地址或 Solana 钱包已被注册，每个账户仅限申领一次白名单。")
             else:
                 generated_code = generate_referral_code(u_wallet)
                 st.session_state.my_referral_code = generated_code
-                
                 ref_by = u_ref_input if u_ref_input else "NONE"
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | RefCode: {generated_code} | ReferredBy: {ref_by}\n")
-                
                 st.balloons()
-                if lang == "English":
-                    st.success("🎉 Registration Successful! Your referral code is now activated.")
-                else:
-                    st.success("🎉 资格锁定成功！您的专属邀请码已成功激活。")
+                if lang == "English": st.success("🎉 Registration Successful!")
+                else: st.success("🎉 资格锁定成功！您的专属邀请码已成功激活。")
                 st.rerun()
 
 # =========================================================================
-# 🛡️ 智能隐藏式管理员端：【方案 A】通过 URL 传入 ?admin=nexa_gate 暗号解锁
+# 🛡️ 智能隐藏式管理员端
 # =========================================================================
 query_params = st.query_params
 
@@ -540,11 +529,10 @@ if query_params.get("admin") == "nexa_gate":
     
     with st.expander("🔑 节点系统维护", expanded=True):
         st.info(admin_label)
-        pwd_placeholder = "Enter Admin Password to Unlock Whitelist Downloads" if lang == "English" else "请输入管理员密码解密并载入数据"
+        pwd_placeholder = "Enter Admin Password" if lang == "English" else "请输入管理员密码解密并载入数据"
         admin_password = st.text_input("Admin Key", type="password", label_visibility="collapsed", placeholder=pwd_placeholder)
         
         if admin_password == "NexaAdmin2026":
-            st.success("授权成功！欢迎回来，开始管理节点数据..." if lang == "中文" else "Authenticated! Initializing access...")
             if os.path.exists("whitelist.txt"):
                 with open("whitelist.txt", "r", encoding="utf-8") as f: 
                     whitelist_data = f.read()
@@ -553,7 +541,7 @@ if query_params.get("admin") == "nexa_gate":
             else:
                 st.info("No records inside the database yet." if lang == "English" else "当前白名单数据库中暂无有效数据记录。")
         elif admin_password != "":
-            st.error("Invalid Secret Key. Access Denied." if lang == "English" else "管理密码错误，无访问或导出权限。")
+            st.error("Invalid Secret Key." if lang == "English" else "管理密码错误，无访问或导出权限。")
 
 # =========================================================================
 # 📊 【全网绝对真实大盘】：极小字体不换行适配窄屏
