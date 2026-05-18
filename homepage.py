@@ -72,7 +72,7 @@ def sync_data_from_source():
 sync_data_from_source()
 
 if "session_id" not in st.session_state:
-    st.session_id = f"node_{dev_id}_{random.randint(1000, 9999)}"
+    st.session_state.session_id = f"node_{dev_id}_{random.randint(1000, 9999)}"
     global_server["total_online_viewers"] += 1
 
 if 'app_running' not in st.session_state: st.session_state.app_running = False
@@ -88,7 +88,7 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 极客黑绿科技风 CSS 全局注入 ---
+# --- 🟢 CSS 全局注入 ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
@@ -97,7 +97,7 @@ st.markdown("""
     [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
     [data-testid="stElementContainer"] { border: none !important; background: transparent !important; margin-bottom: 6px !important; }
     
-    /* 选项卡唯美样式定制 */
+    /* 选项卡定制 */
     .stTabs [data-baseweb="tab-list"] { gap: 4px; background-color: transparent !important; justify-content: flex-start; border: none !important; overflow-x: auto; }
     .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px 8px 0px 0px !important; border: 1px solid #1e272e !important; border-bottom: none !important; padding: 6px 12px !important; font-weight: 700 !important; font-size: 12px !important; white-space: nowrap; }
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; background-color: #161c23 !important; border-top: 2px solid #A2FF00 !important; }
@@ -113,7 +113,7 @@ st.markdown("""
     .neon-blue-text { color: #00e5ff !important; }
     .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 6px 12px; border-radius: 10px; margin-top: 6px; }
     
-    /* 按钮高级定制 */
+    /* 按钮定制 */
     div.stButton > button:first-child { background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 14px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 10px 4px !important; box-shadow: 0 0 15px rgba(162, 255, 0, 0.3); transition: all 0.2s; }
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #f43f5e !important; box-shadow: none !important; }
     div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 4px 10px !important; font-size: 12px !important; width: auto !important; }
@@ -141,7 +141,7 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# --- 时间追算防断线机制 ---
+# --- 时间追算机制 ---
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap = int(current_unix - st.session_state.last_tick_time)
@@ -161,7 +161,7 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
 # --- 顶栏大标题 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:32px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-# 🌐 默认直接固定切入英文（English）主环境
+# 🌐 语言选择框
 lang = st.selectbox("🌐 Language", ["中文", "English"], index=1, label_visibility="collapsed")
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
@@ -218,7 +218,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 with tab1:
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
-        with c1: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
+        with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
         with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
         
@@ -266,7 +266,7 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-    # 🌍 全球化解耦后的白名单申领表单（绝不再混淆中文）
+    # 🌍 白名单申领表单
     st.markdown("<br>", unsafe_allow_html=True)
     with st.form("unified_whitelist_form"):
         if lang == "中文":
@@ -422,7 +422,7 @@ with tab3:
                 r_pwd = st.text_input("设置密码 / Choose Password:", type="password", placeholder="Enter your secure password")
                 
                 btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Profile ⚡"
-                if st.form_submit_button(btn_reg_txt):
+                if f_submit := st.form_submit_button(btn_reg_txt):
                     if not r_email or not r_pwd:
                         st.error("❌ 邮箱和密码为必填项！" if lang=="中文" else "❌ Email and Password are mandatory!")
                     elif r_email in global_server["user_db"]:
@@ -474,21 +474,30 @@ with tab4:
         table_html = """
         <table class="admin-table">
             <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
+        </table>
         """
-        for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
-            table_html += f"<tr><td>{idx}</td><td>{email}</td><td style='color:#A2FF00; font-weight:bold;'>{info['score']:,.2f} NEXA</td><td>{info['reg_time']}</td></tr>"
-        table_html += "</table>"
         st.markdown(table_html, unsafe_allow_html=True)
     elif adm_key != "":
         st.error("❌ 密钥错误，鉴权被拒绝。")
 
 # ==========================================
-# 📊 宏观大盘全局物理底栏
+# 📊 宏观大盘全局物理底栏 (在这里加上多语言控制！)
 # ==========================================
 st.markdown("<br>", unsafe_allow_html=True)
 col_net1, col_net2 = st.columns(2)
-with col_net1: st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #A2FF00;"><div class="mini-stat-title">● NETWORK ACTIVE NODES</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
-with col_net2: st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #00e5ff;"><div class="mini-stat-title">👀 LIVE REAL VIEWERS</div><div class="mini-stat-value" style="color:#00e5ff;">{global_server["total_online_viewers"]} Online</div></div>', unsafe_allow_html=True)
+
+# 动态配置底部卡片的文本
+if lang == "中文":
+    lbl_active_nodes = "● 全网活跃节点"
+    lbl_real_viewers = "👀 实时在线观众"
+else:
+    lbl_active_nodes = "● NETWORK ACTIVE NODES"
+    lbl_real_viewers = "👀 LIVE REAL VIEWERS"
+
+with col_net1: 
+    st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #A2FF00;"><div class="mini-stat-title">{lbl_active_nodes}</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
+with col_net2: 
+    st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #00e5ff;"><div class="mini-stat-title">{lbl_real_viewers}</div><div class="mini-stat-value" style="color:#00e5ff;">{global_server["total_online_viewers"]} Online</div></div>', unsafe_allow_html=True)
 
 # ==================== 后台实时高频刷新内核 ====================
 if st.session_state.app_running:
