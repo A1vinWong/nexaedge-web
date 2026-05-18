@@ -161,8 +161,8 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
 # --- 顶栏大标题 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:32px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-# 🌐 语言选择框
-lang = st.selectbox("🌐 Language", ["中文", "English"], index=1, label_visibility="collapsed")
+# 🌐 语言选择框 (默认索引设为 0 以优先加载 English)
+lang = st.selectbox("🌐 Language", ["English", "中文"], index=0, label_visibility="collapsed")
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
 TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"]
@@ -175,7 +175,7 @@ else:
     st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
 # ==========================================
-# 👑 2:1 顶层多媒体网格
+# 👑 2:1 顶层多媒体网格与暗门入口
 # ==========================================
 intro_left, intro_right = st.columns([2, 1])
 
@@ -204,12 +204,16 @@ with intro_right:
         </div>
         """, unsafe_allow_html=True)
 
-# --- 核心选项卡 ---
-tab1, tab2, tab3, tab4 = st.tabs([
+# ==========================================
+# 🛡️ 密闭后台管理机制 (不作为Tab展现)
+# ==========================================
+is_admin_active = (lang == "nexaadmin")
+
+# --- 核心可见选项卡 (移除原 Tab4 Admin Panel) ---
+tab1, tab2, tab3 = st.tabs([
     "🌐 Overview" if lang=="English" else "🌐 项目通识", 
     "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
-    "🔑 Auth Portal" if lang=="English" else "🔑 账户注册/登录",
-    "🛡️ Admin Panel" if lang=="English" else "🛡️ 节点内网管理"
+    "🔑 Auth Portal" if lang=="English" else "🔑 账户注册/登录"
 ])
 
 # ==========================================
@@ -319,7 +323,7 @@ with tab2:
         badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
         st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
     else:
-        badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local)"
+        badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
         st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
 
     lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Session Runtime:"
@@ -391,7 +395,7 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: 🔑 账户注册与登录入口
+# TAB 3: 🔑 账户注册与登录入口 (多语言对齐优化)
 # ==========================================
 with tab3:
     if st.session_state.current_user:
@@ -416,10 +420,16 @@ with tab3:
         
         if auth_mode in ["注册新节点账户", "Register Node Account"]:
             with st.form("reg_form"):
-                form_title = "🚀 极简注册（自动继承并合并当前已有 NEXA 数量）" if lang=="中文" else "🚀 Quick Profile Registration"
+                form_title = "🚀 极简注册（自动继承并合并当前已有 NEXA 数量）" if lang=="中文" else "🚀 Quick Profile Registration (Inherits Current Balance)"
                 st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:6px;">{form_title}</div>', unsafe_allow_html=True)
-                r_email = st.text_input("邮箱地址 / Email Address:", placeholder="example@nexa.com").strip()
-                r_pwd = st.text_input("设置密码 / Choose Password:", type="password", placeholder="Enter your secure password")
+                
+                label_mail = "邮箱地址:" if lang == "中文" else "Email Address:"
+                label_pwd = "设置密码:" if lang == "中文" else "Choose Password:"
+                place_mail = "example@nexa.com"
+                place_pwd = "Enter your secure password"
+                
+                r_email = st.text_input(label_mail, placeholder=place_mail).strip()
+                r_pwd = st.text_input(label_pwd, type="password", placeholder=place_pwd)
                 
                 btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Profile ⚡"
                 if f_submit := st.form_submit_button(btn_reg_txt):
@@ -442,8 +452,12 @@ with tab3:
             with st.form("login_form"):
                 login_title = "🔑 登录 NexaEdge 算力账户" if lang=="中文" else "🔑 Connect Node Endpoint Terminal"
                 st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:6px;">{login_title}</div>', unsafe_allow_html=True)
-                l_email = st.text_input("登录邮箱 / Account Email:").strip()
-                l_pwd = st.text_input("验证密码 / Verification Password:", type="password")
+                
+                label_l_mail = "登录邮箱:" if lang == "中文" else "Account Email:"
+                label_l_pwd = "验证密码:" if lang == "中文" else "Verification Password:"
+                
+                l_email = st.text_input(label_l_mail).strip()
+                l_pwd = st.text_input(label_l_pwd, type="password")
                 
                 btn_l_txt = "验证并载入云端档案 ⚡" if lang=="中文" else "Authenticate & Load Assets ⚡"
                 if st.form_submit_button(btn_l_txt):
@@ -458,35 +472,39 @@ with tab3:
                         st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# TAB 4: 🛡️ 管理员安全审计大盘
+# 🛡️ 隐蔽后台暗门管理面板触发区
 # ==========================================
-with tab4:
-    st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口审计</div>', unsafe_allow_html=True)
-    adm_key = st.text_input("请输入高级管理密钥解密全网明细:", type="password", placeholder="Enter admin core key here", key="adm_pwd_box")
+if is_admin_active:
+    st.markdown("---")
+    st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口隐蔽审计大盘 (ADMIN PORTAL ACTIVE)</div>', unsafe_allow_html=True)
+    st.toast("🔓 内网大账本数据已成功解密", icon="🟢")
+    c_a1, c_a2 = st.columns(2)
+    with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">全网总注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Users</div></div>', unsafe_allow_html=True)
+    with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">实时活跃节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
     
-    if adm_key == "nexaadmin":
-        st.toast("🔓 内网大账本数据已成功解密", icon="🟢")
-        c_a1, c_a2 = st.columns(2)
-        with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">全网总注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Users</div></div>', unsafe_allow_html=True)
-        with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">实时活跃节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
-        
-        st.markdown("<p style='font-size:11px; font-weight:bold; margin-top:10px; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
-        table_html = """
-        <table class="admin-table">
-            <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
-        </table>
+    st.markdown("<p style='font-size:11px; font-weight:bold; margin-top:10px; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
+    table_html = """
+    <table class="admin-table">
+        <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
+    """
+    for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
+        table_html += f"""
+        <tr>
+            <td>{idx}</td>
+            <td>{email}</td>
+            <td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td>
+            <td>{info['reg_time']}</td>
+        </tr>
         """
-        st.markdown(table_html, unsafe_allow_html=True)
-    elif adm_key != "":
-        st.error("❌ 密钥错误，鉴权被拒绝。")
+    table_html += "</table>"
+    st.markdown(table_html, unsafe_allow_html=True)
 
 # ==========================================
-# 📊 宏观大盘全局物理底栏 (在这里加上多语言控制！)
+# 📊 宏观大盘全局物理底栏
 # ==========================================
 st.markdown("<br>", unsafe_allow_html=True)
 col_net1, col_net2 = st.columns(2)
 
-# 动态配置底部卡片的文本
 if lang == "中文":
     lbl_active_nodes = "● 全网活跃节点"
     lbl_real_viewers = "👀 实时在线观众"
