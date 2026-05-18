@@ -134,11 +134,12 @@ st.markdown("""
         margin-top: 6px;
     }
     
+    /* 🛠️ 已优化：调小主按钮字号防止超宽折行 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
         font-weight: 800 !important;
-        font-size: 15px !important;
+        font-size: 13px !important; /* 从 15px 调小至 13px */
         width: 100%;
         border-radius: 12px !important;
         border: none !important;
@@ -219,7 +220,7 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 🔄 【核心调整】物理时间防挂起补算逻辑：由3秒判定改写为精确至1秒
+# 🔄 物理时间防挂起补算逻辑：由3秒判定改写为精确至1秒
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap_seconds = int(current_unix - st.session_state.last_tick_time)
@@ -409,15 +410,16 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
+    # 🛠️ 已优化：精简了控制按钮上的文字内容，防止移动端或窄屏挤压变形
     if not st.session_state.app_running:
-        if st.button("START COMPUTE SESSION" if lang == "English" else "启动边缘算力集群", key="app_start_btn"):
+        if st.button("START COMPUTE" if lang == "English" else "启动算力节点", key="app_start_btn"):
             if remaining_seconds <= 0: st.session_state.session_seconds = 0
             st.session_state.app_running = True
             st.session_state.last_tick_time = time.time()
             global_server["active_device_set"].add(st.session_state.session_id)
             st.rerun()
     else:
-        if st.button("PAUSE COMPUTE SESSION" if lang == "English" else "暂停算力输出", key="app_stop_btn"):
+        if st.button("PAUSE COMPUTE" if lang == "English" else "暂停算力节点", key="app_stop_btn"):
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
             global_server["active_device_set"].discard(st.session_state.session_id)
