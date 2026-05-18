@@ -210,10 +210,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 状态初始化 (模拟 Session)
-if 'app_earned' not in st.session_state: st.session_state.app_earned = 1452.7000
+# 状态初始化 (修改：初始总余额归零)
+if 'app_earned' not in st.session_state: st.session_state.app_earned = 0.0000  # 总历史累积收益归零
 if 'app_running' not in st.session_state: st.session_state.app_running = False
-if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
+if 'chart_history' not in st.session_state: st.session_state.chart_history = [0.0]*11 + [0.0]
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
@@ -226,13 +226,12 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 🔄 物理时间防挂起补算逻辑
+# 🔄 物理时间防挂起补算与实时跟踪
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap_seconds = int(current_unix - st.session_state.last_tick_time)
     if elapsed_gap_seconds >= 1:
         st.session_state.session_seconds += elapsed_gap_seconds
-        st.session_state.app_earned += elapsed_gap_seconds * 0.25
         st.session_state.last_tick_time = current_unix
 
 # 扩展映射字典
@@ -346,9 +345,14 @@ with tab2:
     
     target_total_seconds = SECONDS_MAP[st.session_state.target_time_index]
     
+    # 算力定时器结束触发：累加当前Session代币到总池中
     if st.session_state.app_running and st.session_state.session_seconds >= target_total_seconds:
         st.session_state.app_running = False
         global_server["active_device_set"].discard(st.session_state.session_id)
+        # 定时器截止，注入结算总额
+        session_yield = st.session_state.session_seconds * 0.25
+        st.session_state.app_earned += session_yield
+        st.session_state.session_seconds = 0 # 重置单次计时器
         st.toast("⏰ Timer Finished!" if lang == "English" else "⏰ 设定运行时间已满！节点已安全切回待机。")
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -359,6 +363,8 @@ with tab2:
     remaining_seconds = max(0, target_total_seconds - s_sec)
     remaining_str = f"{remaining_seconds // 3600:02d}:{(remaining_seconds % 3600) // 60:02d}:{remaining_seconds % 60:02d}"
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+    
+    # 上方：仅用于显示当前点击启动后的实时飙升收益
     session_generated = s_sec * 0.25
     
     panel_title = "DASHBOARD" if lang == "English" else "控制面板"
@@ -391,8 +397,9 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
+    # 呈现：上方的运行卡片，开启时随着跑表滚跃增长
     t_label = "DURATION:" if lang == "English" else "本次连续运行时间:"
-    yield_lbl = "EST. RATIO: 0.25 NEXA / sec" if lang == "English" else "已为您实时产出代币:"
+    yield_lbl = "SESSION YIELD (REALTIME):" if lang == "English" else "本次开启实时产生代币:"
     st.markdown(f"""
     <div class="app-card">
         <div style="display:flex; justify-content:space-between;">
@@ -402,23 +409,29 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     
+    # 呈现：下方的总额卡片，停止或到期后，代币累积在此处并固化
     node_header = "PARTICIPANT NODE ➔" if lang == "English" else "当前连接节点 ➔"
+    total_lbl_show = "TOTAL ACCUMULATED BALANCE:" if lang == "English" else "节点历史累计总收益额:"
     run_status = "ACTIVE" if st.session_state.app_running else "STANDBY"
     status_color = "#A2FF00" if st.session_state.app_running else "#88929b"
+    
+    # 实时计算当前在界面上显示的总额展示数（总额 = 已沉淀总额 + 本次正在跑的收益）
+    display_total_score = st.session_state.app_earned + session_generated
+
     st.markdown(f"""
     <div class="app-card">
         <div class="app-title" style="margin-bottom:4px;">{node_header}</div>
         <div style="font-size:11px; color:#88929b; margin-bottom:5px;">NODE_ID: <span style="color:#ffffff; font-weight:bold;">@nexaedge / Acc1</span></div>
-        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:5px;">
+        <div style="font-size:11px; color:#88929b; margin-bottom:2px;">{total_lbl_show}</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:2px;">
             <span style="color:{status_color}; font-size:13px; font-weight:800;">● STATUS: {run_status}</span>
-            <span class="app-value neon-green-text" style="font-size:18px;">{st.session_state.app_earned:,.2f} <span style="font-size:10px; color:white;">NEXA</span></span>
+            <span class="app-value neon-green-text" style="font-size:22px;">{display_total_score:,.2f} <span style="font-size:11px; color:white;">NEXA</span></span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     if not st.session_state.app_running:
         if st.button("START COMPUTE SESSION" if lang == "English" else "激活并启动边缘算力节点", key="app_start_btn"):
-            if remaining_seconds <= 0: st.session_state.session_seconds = 0
             st.session_state.app_running = True
             st.session_state.last_tick_time = time.time()
             global_server["active_device_set"].add(st.session_state.session_id)
@@ -428,6 +441,9 @@ with tab2:
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
             global_server["active_device_set"].discard(st.session_state.session_id)
+            # 点击停止时，将本次跑出来的数据，注入沉淀到总历史收益中，并重置本次计数器
+            st.session_state.app_earned += session_generated
+            st.session_state.session_seconds = 0
             st.rerun()
             
     st.markdown('</div>', unsafe_allow_html=True)
@@ -435,8 +451,8 @@ with tab2:
 # ==================== 📧 底部白名单与社交推荐奖励表单 ====================
 st.markdown("<hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
 
-# 1. 如果用户注册成功，高亮显示成功提示和专属邀请码（不刷新丢码）
-if st.session_state.registration_success or st.session_state.my_referral_code:
+# 1. 如果用户注册成功，高亮显示成功提示和专属邀请码（稳固持久化卡片）
+if st.session_state.registration_success and st.session_state.my_referral_code:
     if lang == "English":
         st.success("🎉 Whitelist Seat Secured Successfully! Your Node Status has been Activated.")
         st.markdown(f"""
@@ -459,7 +475,6 @@ if st.session_state.registration_success or st.session_state.my_referral_code:
             </p>
         </div>
         """, unsafe_allow_html=True)
-    st.balloons()
 
 # 2. 白名单注册输入表单
 with st.form("unified_whitelist_form"):
@@ -514,16 +529,24 @@ with st.form("unified_whitelist_form"):
                 if lang == "English": st.error("⚠️ Submission Rejected! This Email or Solana Wallet has already claimed a whitelist allocation.")
                 else: st.error("⚠️ 提交失败！该邮箱地址或 Solana 钱包已被注册，每个账户仅限申领一次白名单。")
             else:
-                # 查重通过，存入本地，更新缓存变量控制前端卡片弹出
+                # 1. 计算核心要素
                 generated_code = generate_referral_code(u_wallet)
+                ref_by = u_ref_input if u_ref_input else "NONE"
+                
+                # 抓取用户最终的绝对累积总收益记录（当前累加后的总收益值）
+                final_total_score = st.session_state.app_earned + (st.session_state.session_seconds * 0.25)
+                
+                # 2. 核心：强制刷入物理文件
+                with open("whitelist.txt", "a", encoding="utf-8") as f:
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {final_total_score:.1f} | RefCode: {generated_code} | ReferredBy: {ref_by}\n")
+                    f.flush()         
+                    os.fsync(f.fileno()) 
+                
+                # 3. 改变 Session 前端控制形态
                 st.session_state.my_referral_code = generated_code
                 st.session_state.registration_success = True
                 
-                ref_by = u_ref_input if u_ref_input else "NONE"
-                with open("whitelist.txt", "a", encoding="utf-8") as f:
-                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.1f} | RefCode: {generated_code} | ReferredBy: {ref_by}\n")
-                
-                # 安全刷新：重构页面布局，展示刚刚在表单上方载入的奖励码卡片
+                # 4. 安全刷新展示
                 st.rerun()
 
 # =========================================================================
@@ -585,8 +608,6 @@ st.markdown("<p style='text-align:center; color:#445; font-size: 10px; margin-to
 
 # ==================== 🏎️ 【秒级高频驱动内核】 ====================
 if st.session_state.app_running:
-    st.session_state.app_earned += 0.25        # 每秒产生 0.25 代币
-    st.session_state.session_seconds += 1      # 增加一秒
     st.session_state.last_tick_time = time.time()
     time.sleep(1.0)                            # 精确阻塞一秒
     st.rerun()
