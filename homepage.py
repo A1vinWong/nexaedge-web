@@ -25,7 +25,6 @@ def init_global_network_server():
         "user_db": {                            
             "demo@nexaedge.ai": {
                 "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
-                "wallet": "GjvqAarpBirdGu2ahhKTrZ5sUcuPexGatMuGDmZLAb33",
                 "score": 1479.0,
                 "reg_time": "2026-05-18 14:22:05"
             }
@@ -81,7 +80,15 @@ if 'chart_history' not in st.session_state: st.session_state.chart_history = [22
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
-# --- 🟢 CSS 全局样式注入 ---
+# --- 📸 自动图像注入器 ---
+def get_project_image():
+    if os.path.exists("image.png"): return "image.png"
+    png_files = glob.glob("*.png")
+    return png_files[0] if png_files else None
+
+target_image = get_project_image()
+
+# --- 🟢 CSS 全局注入 ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
@@ -90,11 +97,13 @@ st.markdown("""
     [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
     [data-testid="stElementContainer"] { border: none !important; background: transparent !important; margin-bottom: 6px !important; }
     
+    /* 选项卡定制 */
     .stTabs [data-baseweb="tab-list"] { gap: 4px; background-color: transparent !important; justify-content: flex-start; border: none !important; overflow-x: auto; }
     .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px 8px 0px 0px !important; border: 1px solid #1e272e !important; border-bottom: none !important; padding: 6px 12px !important; font-weight: 700 !important; font-size: 12px !important; white-space: nowrap; }
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; background-color: #161c23 !important; border-top: 2px solid #A2FF00 !important; }
     .stTabs [data-baseweb="tab-highlight"] { background-color: #A2FF00 !important; height: 0px !important; }
     
+    /* 容器及卡片 */
     .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 14px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 12px; margin-bottom: 10px; }
     .app-title { font-size: 11px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
@@ -104,16 +113,23 @@ st.markdown("""
     .neon-blue-text { color: #00e5ff !important; }
     .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 6px 12px; border-radius: 10px; margin-top: 6px; }
     
+    /* 按钮定制 */
     div.stButton > button:first-child { background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 14px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 10px 4px !important; box-shadow: 0 0 15px rgba(162, 255, 0, 0.3); transition: all 0.2s; }
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #f43f5e !important; box-shadow: none !important; }
     div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 4px 10px !important; font-size: 12px !important; width: auto !important; }
     
+    /* 表单与输入框 */
     [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 15px !important; }
     .user-badge { background: #1e293b; padding: 8px 12px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 12px; font-size: 13px; color: #e2e8f0; }
     .mini-stat-card { text-align: center; background-color:#141d26; padding: 8px 4px; border-radius: 10px; min-height: 55px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; }
     .mini-stat-value { font-size: 13px !important; font-weight: bold; font-family: monospace; margin-top: 2px; }
     
+    .feature-box { background-color: #11171d; padding: 14px; border-radius: 10px; border-left: 4px solid #A2FF00; margin-bottom: 10px; }
+    .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 4px; margin: 6px 0; }
+    .social-btn { display: block; text-align: center; padding: 4px; background-color: #11171d; border: 1px solid #252e38; border-radius: 6px; color: #bdc3c7 !important; font-size: 10px; font-weight: bold; text-decoration: none; }
+    .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; }
+
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; color: #cdfaee; }
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
@@ -125,7 +141,7 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 🔄 追算补偿时钟
+# --- 时间追算机制 ---
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap = int(current_unix - st.session_state.last_tick_time)
@@ -142,53 +158,173 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
         global_server["device_balances"][dev_id]["total_energy_wh"] = st.session_state.total_energy_wh
         global_server["device_balances"][dev_id]["session_seconds"] = st.session_state.session_seconds
 
-# --- 顶栏渲染 ---
+# --- 顶栏大标题 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:32px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-# 🌐 全球化语言核心切换滑块
+# 🌐 语言选择框
 lang = st.selectbox("🌐 Language", ["中文", "English"], index=1, label_visibility="collapsed")
 
-# --- 四大核心选项卡（根据选择语言完美渲染标签名） ---
+TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
+TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"]
+HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
+current_options = TIME_OPTIONS_ZH if lang == "中文" else TIME_OPTIONS_EN
+
+if lang == "中文":
+    st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">让全球闲置手机，成为 AI 时代的高纯度分布式算力网络</p>', unsafe_allow_html=True)
+else:
+    st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
+
+# ==========================================
+# 👑 2:1 顶层多媒体网格
+# ==========================================
+intro_left, intro_right = st.columns([2, 1])
+
+with intro_left:
+    if target_image:
+        st.image(target_image, use_container_width=True)
+
+with intro_right:
+    st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
+    if lang == "中文":
+        st.markdown("""
+        <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 12px; border-radius: 14px; height: 100%;">
+            <p style="color:#A2FF00; font-size:13px; font-weight:800; margin-bottom:6px; text-transform:uppercase;">⚡ 项目核心简报</p>
+            <p style="color:#ffffff; font-size:11px; line-height:1.4; margin:0;">
+                NexaEdge 赋予普通用户将闲置手机性能变现的完整权利。通过建立端到端的加密去中心化沙盒环境，您的设备可在充电且闲置时自动承接分布式 AI 数据清洗与验证任务，安全赚取行业先锋红利。
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 12px; border-radius: 14px; height: 100%;">
+            <p style="color:#A2FF00; font-size:13px; font-weight:800; margin-bottom:6px; text-transform:uppercase;">⚡ Project Briefing</p>
+            <p style="color:#ffffff; font-size:11px; line-height:1.4; margin:0;">
+                NexaEdge empowers users to monetize unutilized smartphone capabilities. By creating an encrypted decentralized sandbox network, your device seamlessly routes localized data verification processes to unlock institutional level rewards while you sleep.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# --- 核心选项卡 ---
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🌐 项目通识" if lang=="中文" else "🌐 Overview", 
-    "📱 算力控制台" if lang=="中文" else "📱 Dashboard", 
-    "🔑 账户注册/登录" if lang=="中文" else "🔑 Auth Portal",
-    "🛡️ 节点内网管理" if lang=="中文" else "🛡️ Admin Panel"
+    "🌐 Overview" if lang=="English" else "🌐 项目通识", 
+    "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
+    "🔑 Auth Portal" if lang=="English" else "🔑 账户注册/登录",
+    "🛡️ Admin Panel" if lang=="English" else "🛡️ 节点内网管理"
 ])
 
 # ==========================================
-# TAB 1: 项目通识
+# TAB 1: 项目通识 与 全球化白名单表单
 # ==========================================
 with tab1:
+    c1, c2, c3 = st.columns(3)
     if lang == "中文":
-        st.markdown('<p style="font-size: 15px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">让全球闲置手机，成为 AI 时代的高纯度分布式算力网络</p>', unsafe_allow_html=True)
-        c1, c2, c3 = st.columns(3)
-        with c1: st.metric(label="平台技术抽成", value="20%", delta="纯现金流造血")
-        with c2: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
-        with c3: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+        with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
+        with c2: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+        with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
+        
+        st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
+        selected_time_tab1 = st.selectbox("选择运行时间档位:", current_options, index=st.session_state.target_time_index, key="calc_box_zh")
+        st.session_state.target_time_index = current_options.index(selected_time_tab1)
+        st.success(f"🎉 预计每月可带来收益: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
+        
+        st.markdown("""
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:14px;">📱 充电即赚 · 睡后收入</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">只需在夜间充电并连接 Wi-Fi，NexaEdge 的轻量级 WASM 沙盒便会在后台静默运行清洗 AI 语料。</p>
+        </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:14px;">🔥 39°C 智能温控屏障</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p>
+        </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:14px;">🛡️ 自研轻量级拜占庭容错机制（BFT）</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">针对边缘物理节点易作弊的痛点，创新引入 2:1 去中心化多数投票冗余验证，从算法底层锁死任何虚假数据提交。</p>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.markdown('<p style="font-size: 15px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">Transforming idle smartphones into data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
-        c1, c2, c3 = st.columns(3)
-        with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue")
-        with c2: st.metric(label="Safety Lock", value="39°C", delta="Device Safety", delta_color="inverse")
-        with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / High TPS")
+        with c1: st.metric(label="Thermal Guard Lock", value="39°C", delta="Device Protection Barrier", delta_color="inverse")
+        with c2: st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
+        with c3: st.metric(label="Network Consensus", value="Proprietary BFT", delta="2:1 Redundant Voting")
+        
+        st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
+        selected_time_tab1 = st.selectbox("Select Session Pattern:", current_options, index=st.session_state.target_time_index, key="calc_box_en")
+        st.session_state.target_time_index = current_options.index(selected_time_tab1)
+        st.success(f"🎉 Estimated Monthly Income: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
+        
+        st.markdown("""
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:14px;">📱 Passive Income via Charging</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">Just plug in and connect Wi-Fi at night, NexaEdge's lightweight WASM Sandbox cleans AI datasets silently in the background.</p>
+        </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:14px;">🔥 39°C Thermal Guard Barrier</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">Total hardware protection. System auto-throttles load instantly if battery hits 39°C. Zero hardware degradation anxiety.</p>
+        </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:14px;">🛡️ Proprietary Byzantine Fault Tolerance (BFT)</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">To combat untrusted edge environments, NexaEdge utilizes a 2:1 decentralized majority voting redundant verification mechanism to eliminate fraudulent computation mathematically.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # 🌍 白名单申领表单
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.form("unified_whitelist_form"):
+        if lang == "中文":
+            st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 申领创世白名单与社媒双倍加速奖励</div>', unsafe_allow_html=True)
+            u_email_label = "申请电子邮箱地址:"
+            u_email_place = "请输入接收通知的邮箱"
+            u_wallet_label = "绑定的 Solana 钱包接收地址 (获取空投资产):"
+            u_wallet_place = "输入您的 Solana SPL 钱包公钥"
+            btn_wl_txt = "锁定创世空投席位 ⚡"
+            msg_empty = "❌ 请完整填写邮箱和钱包地址！"
+            msg_success = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
+        else:
+            st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 Claim Genesis Whitelist & Social Boosting Rewards</div>', unsafe_allow_html=True)
+            u_email_label = "Notification Email Address:"
+            u_email_place = "e.g., node_miner@gmail.com"
+            u_wallet_label = "Bound Solana Wallet Address (For Asset Air-drops):"
+            u_wallet_place = "Enter your Solana SPL public key address"
+            btn_wl_txt = "Lock Genesis Seating ⚡"
+            msg_empty = "❌ Email and Wallet fields cannot be empty!"
+            msg_success = "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot."
+
+        st.markdown("""
+        <div class="social-grid">
+            <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
+            <a class="social-btn" href="https://x.com/nexaedge_?s=21&t=8onO0h_fTxzmAGu431ZxXw" target="_blank">🐦 X</a>
+            <a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>
+            <a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>
+            <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        u_email = st.text_input(u_email_label, placeholder=u_email_place, key="wl_mail").strip()
+        u_wallet = st.text_input(u_wallet_label, placeholder=u_wallet_place, key="wl_wall").strip()
+        
+        if st.form_submit_button(btn_wl_txt):
+            if not u_email or not u_wallet:
+                st.error(msg_empty)
+            else:
+                with open("whitelist.txt", "a", encoding="utf-8") as f:
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                st.success(msg_success)
 
 # ==========================================
-# TAB 2: 算力控制台
+# TAB 2: Dashboard 算力控制台
 # ==========================================
 with tab2:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
     
     if st.session_state.current_user:
-        badge_txt = f"🟢 已锁定云端同步账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Locked Cloud Account: <b>{st.session_state.current_user}</b>"
+        badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
         st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
     else:
-        badge_txt = "⚠️ 游客状态运行（算力保存在本地，建议立即注册/登录账号进行永久云端绑定）" if lang=="中文" else "⚠️ Guest Mode Session (Data stays temporary local, please register to cloud)"
+        badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local)"
         st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
 
-    TIME_OPTIONS = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"] if lang=="中文" else ["15 Mins", "30 Mins", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
-    selected_time = st.selectbox("配置本次节点运行目标时间:" if lang=="中文" else "Set target runtime:", TIME_OPTIONS, index=st.session_state.target_time_index)
-    st.session_state.target_time_index = TIME_OPTIONS.index(selected_time)
+    lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Session Runtime:"
+    selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
+    st.session_state.target_time_index = current_options.index(selected_time_tab2)
 
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
@@ -209,215 +345,161 @@ with tab2:
         st.session_state.chart_history.append(current_hash)
     st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"]), height=85, use_container_width=True)
     
-    st.markdown(f'<div class="app-card" style="margin-top: -5px;"><div class="temp-section"><span class="app-value" style="font-size:17px;">🌡️ {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
+    lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
+    st.markdown(f'<div class="app-card" style="margin-top: -5px;"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
+    lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
+    lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
     st.markdown(f"""
     <div class="app-card">
-        <div class="app-title">🔌 HARDWARE POWER METER (NODE_ID: {dev_id})</div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
             <div style="background:#11171d; padding:6px; border-radius:8px;">
-                <div style="font-size:9px; color:#88929b; font-weight:bold;">INPUT POWER:</div>
+                <div style="font-size:9px; color:#88929b; font-weight:bold;">{lbl_p1}</div>
                 <div class="app-value neon-blue-text" style="font-size:14px; font-family:monospace;">{current_power:.2f} W</div>
             </div>
             <div style="background:#11171d; padding:6px; border-radius:8px;">
-                <div style="font-size:9px; color:#88929b; font-weight:bold;">CUMULATIVE ENERGY:</div>
+                <div style="font-size:9px; color:#88929b; font-weight:bold;">{lbl_p2}</div>
                 <div class="app-value" style="font-size:14px; font-family:monospace; color:#ffffff;">{st.session_state.total_energy_wh:.4f} Wh</div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
+    lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
+    lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     st.markdown(f"""
     <div class="app-card">
         <div style="display:flex; justify-content:space-between;">
-            <div><div style="font-size:10px; color:#88929b; font-weight:bold;">DURATION:</div><div class="app-value" style="font-size:18px;">{time_str}</div></div>
-            <div style="text-align:right;"><div style="font-size:10px; color:#88929b; font-weight:bold;">REALTIME MINTED:</div><div class="app-value neon-green-text" style="font-size:18px;">+{st.session_state.app_earned:,.2f} NEXA</div></div>
+            <div><div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d1}</div><div class="app-value" style="font-size:17px;">{time_str}</div></div>
+            <div style="text-align:right;"><div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d2}</div><div class="app-value neon-green-text" style="font-size:17px;">{st.session_state.app_earned:,.2f} NEXA</div></div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     if not st.session_state.app_running:
-        if st.button("START COMPUTE SESSION" if lang=="English" else "激活并启动边缘算力节点", key="app_start_btn"):
+        btn_start = "激活并启动边缘算力节点" if lang=="中文" else "START COMPUTE SESSION"
+        if st.button(btn_start, key="app_start_btn"):
             st.session_state.app_running = True
             st.session_state.last_tick_time = time.time()
             st.rerun()
     else:
-        if st.button("PAUSE COMPUTE SESSION" if lang=="English" else "暂停当前算力 Session", key="app_stop_btn"):
+        btn_stop = "暂停当前算力 Session" if lang=="中文" else "PAUSE COMPUTE SESSION"
+        if st.button(btn_stop, key="app_stop_btn"):
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# 🔑 TAB 3: 账户注册与登录入口 (无死角汉化修改)
+# TAB 3: 🔑 账户注册与登录入口
 # ==========================================
 with tab3:
     if st.session_state.current_user:
-        st.markdown('<div class="app-card" style="text-align:center;">', unsafe_allow_html=True)
-        if lang == "中文":
-            st.success(f"🎉 欢迎回来！您当前已成功登录账户: {st.session_state.current_user}")
-            st.markdown(f"**您的全网云端累计收益为：** <span class='neon-green-text' style='font-size:24px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>", unsafe_allow_html=True)
-            btn_logout_text = "退出当前登录账户"
-        else:
-            st.success(f"🎉 Welcome back! Logged in as: {st.session_state.current_user}")
-            st.markdown(f"**Total Synchronized Cloud Earnings:** <span class='neon-green-text' style='font-size:24px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>", unsafe_allow_html=True)
-            btn_logout_text = "Logout Current Account"
-            
-        if st.button(btn_logout_text, key="logout_btn"):
+        st.markdown('<div class="app-card" style="text-align:center; padding:20px 10px;">', unsafe_allow_html=True)
+        title_auth = "<b>云端端点挂载就绪</b>" if lang=="中文" else "<b>Secure Network Node Engaged</b>"
+        st.markdown(f"🎉 {title_auth}", unsafe_allow_html=True)
+        lbl_id = f"当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>" if lang=="中文" else f"Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>"
+        st.markdown(lbl_id, unsafe_allow_html=True)
+        
+        box_txt = f"全网同步累计代币池收益<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>" if lang=="中文" else f"Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>"
+        st.markdown(f"<div style='margin:15px 0; background:#11171d; padding:10px; border-radius:10px;'>{box_txt}</div>", unsafe_allow_html=True)
+        
+        btn_logout = "安全退出当前登录账户" if lang=="中文" else "Logout Account Location"
+        if st.button(btn_logout, key="logout_btn"):
             st.session_state.current_user = None
             st.session_state.app_running = False
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
-        # 🟢 彻底解决此处的中英混杂单选框问题
-        radio_options = ["注册新账户", "登录已有账户"] if lang == "中文" else ["Register New Account", "Login Account"]
-        auth_mode = st.radio("Auth Mode", radio_options, horizontal=True, label_visibility="collapsed")
+        opt_auth = ["注册新节点账户", "登录已有账户"] if lang=="中文" else ["Register Node Account", "Login Existing Node"]
+        auth_mode = st.radio("Auth Selection:", opt_auth, horizontal=True, label_visibility="collapsed")
         
-        if auth_mode in ["注册新账户", "Register New Account"]:
-            with st.form("register_form"):
-                form_title = "🚀 NexaEdge 云端分布式网络注册" if lang == "中文" else "🚀 NexaEdge Cloud Network Registration"
-                st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:8px;">{form_title}</div>', unsafe_allow_html=True)
+        if auth_mode in ["注册新节点账户", "Register Node Account"]:
+            with st.form("reg_form"):
+                form_title = "🚀 极简注册（自动继承并合并当前已有 NEXA 数量）" if lang=="中文" else "🚀 Quick Profile Registration"
+                st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:6px;">{form_title}</div>', unsafe_allow_html=True)
+                r_email = st.text_input("邮箱地址 / Email Address:", placeholder="example@nexa.com").strip()
+                r_pwd = st.text_input("设置密码 / Choose Password:", type="password", placeholder="Enter your secure password")
                 
-                label_email = "电子邮箱地址 (Email):" if lang == "中文" else "Email Address:"
-                label_pwd = "设置登录密码 (Password):" if lang == "中文" else "Set Account Password:"
-                label_wallet = "绑定的 Solana 钱包接收地址 (选填):" if lang == "中文" else "Bound Solana Wallet Address (Optional):"
-                
-                reg_email = st.text_input(label_email, placeholder="example@gmail.com").strip()
-                reg_pwd = st.text_input(label_pwd, type="password", placeholder="••••••••")
-                reg_wallet = st.text_input(label_wallet, placeholder="Solana Wallet Public Key").strip()
-                
-                btn_reg_txt = "创建全网统一节点账户 ⚡" if lang == "中文" else "Create Unified Node Profile ⚡"
-                submit_reg = st.form_submit_button(btn_reg_txt)
-                
-                if submit_reg:
-                    if not reg_email or not reg_pwd:
-                        st.error("❌ 邮箱和密码为必填项！" if lang == "中文" else "❌ Email and Password fields are mandatory!")
-                    elif reg_email in global_server["user_db"]:
-                        st.error("❌ 该邮箱已被注册，请直接切换到登录面板。" if lang == "中文" else "❌ Email already registered. Please login.")
+                btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Profile ⚡"
+                if f_submit := st.form_submit_button(btn_reg_txt):
+                    if not r_email or not r_pwd:
+                        st.error("❌ 邮箱和密码为必填项！" if lang=="中文" else "❌ Email and Password are mandatory!")
+                    elif r_email in global_server["user_db"]:
+                        st.error("❌ 该邮箱已被占用！" if lang=="中文" else "❌ Email is already occupied.")
                     else:
-                        inherited_score = st.session_state.app_earned
-                        pwd_hash = hashlib.sha256(reg_pwd.encode()).hexdigest()
-                        
-                        global_server["user_db"][reg_email] = {
-                            "password_hash": pwd_hash,
-                            "wallet": reg_wallet if reg_wallet else f"Anon_{hashlib.md5(reg_email.encode()).hexdigest()[:8]}",
-                            "score": inherited_score,
+                        inherited_nexa = st.session_state.app_earned
+                        global_server["user_db"][r_email] = {
+                            "password_hash": hashlib.sha256(r_pwd.encode()).hexdigest(),
+                            "score": inherited_nexa,
                             "reg_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                         }
-                        
-                        st.session_state.current_user = reg_email
-                        st.success("🎉 注册并同步成功！您之前的本地算力已无缝迁移至云端。" if lang == "中文" else "🎉 Profile successfully synchronized to Cloud ledger!")
+                        st.session_state.current_user = r_email
+                        st.success("🎉 注册成功！" if lang=="中文" else "🎉 Registration complete!")
                         time.sleep(0.5)
                         st.rerun()
-                        
         else:
             with st.form("login_form"):
-                form_login_title = "🔑 登录 NexaEdge 节点大盘" if lang == "中文" else "🔑 Authenticate & Connect Node Terminal"
-                st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#00e5ff; margin-bottom:8px;">{form_login_title}</div>', unsafe_allow_html=True)
+                login_title = "🔑 登录 NexaEdge 算力账户" if lang=="中文" else "🔑 Connect Node Endpoint Terminal"
+                st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:6px;">{login_title}</div>', unsafe_allow_html=True)
+                l_email = st.text_input("登录邮箱 / Account Email:").strip()
+                l_pwd = st.text_input("验证密码 / Verification Password:", type="password")
                 
-                label_login_email = "登录邮箱 (Email):" if lang == "中文" else "Account Email:"
-                label_login_pwd = "验证密码 (Password):" if lang == "中文" else "Verification Password:"
-                
-                login_email = st.text_input(label_login_email).strip()
-                login_pwd = st.text_input(label_login_pwd, type="password")
-                
-                btn_login_txt = "验证并连接节点云端端点" if lang == "中文" else "Verify & Sync Node Endpoint"
-                submit_login = st.form_submit_button(btn_login_txt)
-                
-                if submit_login:
-                    pwd_hash = hashlib.sha256(login_pwd.encode()).hexdigest()
-                    if login_email in global_server["user_db"] and global_server["user_db"][login_email]["password_hash"] == pwd_hash:
-                        st.session_state.current_user = login_email
-                        st.session_state.app_earned = global_server["user_db"][login_email]["score"]
-                        st.success("⚡ 鉴权成功，已成功挂载您的云端持久化算力档案！" if lang == "中文" else "⚡ Core security verified. Assets loaded.")
+                btn_l_txt = "验证并载入云端档案 ⚡" if lang=="中文" else "Authenticate & Load Assets ⚡"
+                if st.form_submit_button(btn_l_txt):
+                    p_hash = hashlib.sha256(l_pwd.encode()).hexdigest()
+                    if l_email in global_server["user_db"] and global_server["user_db"][l_email]["password_hash"] == p_hash:
+                        st.session_state.current_user = l_email
+                        st.session_state.app_earned = global_server["user_db"][l_email]["score"]
+                        st.success("⚡ 登录成功！" if lang=="中文" else "⚡ Authentication verified!")
                         time.sleep(0.5)
                         st.rerun()
                     else:
-                        st.error("❌ 账号或密码错误，验证失败！" if lang == "中文" else "❌ Invalid credential matching, request denied.")
+                        st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# 🛡️ TAB 4: 节点内网管理面板 (中英文完全清洗)
+# TAB 4: 🛡️ 管理员安全审计大盘
 # ==========================================
 with tab4:
-    admin_main_title = "🔒 管理员安全内网访问" if lang == "中文" else "🔒 Administrator Core Intranet Gate"
-    st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">{admin_main_title}</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口审计</div>', unsafe_allow_html=True)
+    adm_key = st.text_input("请输入高级管理密钥解密全网明细:", type="password", placeholder="Enter admin core key here", key="adm_pwd_box")
     
-    label_secret = "请输入管理员核心密钥:" if lang == "中文" else "Input Admin Security Core Key:"
-    admin_password = st.text_input(label_secret, type="password", placeholder="Secret Token Key")
-    
-    if admin_password == "nexaadmin":
-        toast_msg = "🟢 权限已升级：内网数据已成功解密" if lang == "中文" else "🟢 Authorization granted: Intranet assets unlocked"
-        st.toast(toast_msg, icon="🔓")
+    if adm_key == "nexaadmin":
+        st.toast("🔓 内网大账本数据已成功解密", icon="🟢")
+        c_a1, c_a2 = st.columns(2)
+        with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">全网总注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Users</div></div>', unsafe_allow_html=True)
+        with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">实时活跃节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
         
-        total_registered = len(global_server["user_db"])
-        active_nodes_count = len(global_server["active_device_set"])
-        live_viewers_count = global_server["total_online_viewers"]
-        
-        c_adm1, c_adm2, c_adm3 = st.columns(3)
-        
-        title_metric1 = "👥 全网总注册量" if lang == "中文" else "👥 Total Registered"
-        title_metric2 = "🟢 实时活跃节点" if lang == "中文" else "🟢 Active Live Nodes"
-        title_metric3 = "👀 实时在看观众" if lang == "中文" else "👀 Live Traffic View"
-        
-        with c_adm1:
-            st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">{title_metric1}</div><div class="mini-stat-value" style="color:#f43f5e; font-size:16px;">{total_registered} Users</div></div>', unsafe_allow_html=True)
-        with c_adm2:
-            st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">{title_metric2}</div><div class="mini-stat-value" style="color:#A2FF00; font-size:16px;">{active_nodes_count} Nodes</div></div>', unsafe_allow_html=True)
-        with c_adm3:
-            st.markdown(f'<div class="mini-stat-card" style="border:1px solid #00e5ff;"><div class="mini-stat-title">{title_metric3}</div><div class="mini-stat-value" style="color:#00e5ff; font-size:16px;">{live_viewers_count} Online</div></div>', unsafe_allow_html=True)
-            
-        audit_title = "📋 全网注册节点数据审计看板 (Live Database View):" if lang == "中文" else "📋 Registered Node Core Ledger Audit Matrix (Live View):"
-        st.markdown(f"<p style='font-size:13px; font-weight:bold; margin-top:15px; color:#ffffff;'>{audit_title}</p>", unsafe_allow_html=True)
-        
-        # 动态切换表格头部的语言
-        th1 = "注册序号" if lang == "中文" else "ID"
-        th2 = "用户邮箱 (Email)" if lang == "中文" else "Registered Account"
-        th3 = "Solana 绑定钱包" if lang == "中文" else "Bound Solana Wallet"
-        th4 = "当前实测累计 Nexa 算力" if lang == "中文" else "Accumulative Mapped Nexa"
-        th5 = "注册激活时间" if lang == "中文" else "Timestamp Registered"
-
-        table_html = f"""
+        st.markdown("<p style='font-size:11px; font-weight:bold; margin-top:10px; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
+        table_html = """
         <table class="admin-table">
-            <tr>
-                <th>{th1}</th>
-                <th>{th2}</th>
-                <th>{th3}</th>
-                <th>{th4}</th>
-                <th>{th5}</th>
-            </tr>
+            <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
+        </table>
         """
-        for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
-            table_html += f"""
-            <tr>
-                <td>{idx}</td>
-                <td>{email}</td>
-                <td style='font-family:monospace; color:#9ca3af;'>{info['wallet'][:10]}...{info['wallet'][-8:] if len(info['wallet'])>10 else ''}</td>
-                <td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td>
-                <td>{info['reg_time']}</td>
-            </tr>
-            """
-        table_html += "</table>"
         st.markdown(table_html, unsafe_allow_html=True)
-        
-    elif admin_password != "":
-        st.error("❌ 管理员密钥鉴权失败，拒绝访问内网核心账本。" if lang == "中文" else "❌ Token core invalid, request blocked.")
-    else:
-        info_banner = "💡 请在上方输入管理员核心密钥 `nexaadmin` 即可解锁并实时审计全网用户注册明细。" if lang == "中文" else "💡 Input secret code `nexaadmin` above to fully parse real-time global register matrices safely."
-        st.info(info_banner)
+    elif adm_key != "":
+        st.error("❌ 密钥错误，鉴权被拒绝。")
 
-# --- 全局底部大盘基础网络状态组件 ---
+# ==========================================
+# 📊 宏观大盘全局物理底栏 (在这里加上多语言控制！)
+# ==========================================
 st.markdown("<br>", unsafe_allow_html=True)
 col_net1, col_net2 = st.columns(2)
 
-lbl_active_nodes = "● 全网活跃节点" if lang == "中文" else "● NETWORK ACTIVE NODES"
-lbl_real_viewers = "👀 实时在线观众" if lang == "中文" else "👀 LIVE REAL VIEWERS"
+# 动态配置底部卡片的文本
+if lang == "中文":
+    lbl_active_nodes = "● 全网活跃节点"
+    lbl_real_viewers = "👀 实时在线观众"
+else:
+    lbl_active_nodes = "● NETWORK ACTIVE NODES"
+    lbl_real_viewers = "👀 LIVE REAL VIEWERS"
 
 with col_net1: 
     st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #A2FF00;"><div class="mini-stat-title">{lbl_active_nodes}</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
 with col_net2: 
     st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #00e5ff;"><div class="mini-stat-title">{lbl_real_viewers}</div><div class="mini-stat-value" style="color:#00e5ff;">{global_server["total_online_viewers"]} Online</div></div>', unsafe_allow_html=True)
 
-# 驱动级高频自动重刷内核
+# ==================== 后台实时高频刷新内核 ====================
 if st.session_state.app_running:
     st.session_state.app_earned += 0.01
     st.session_state.session_seconds += 1
