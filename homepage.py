@@ -134,16 +134,20 @@ st.markdown("""
     div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 4px 10px !important; font-size: 12px !important; width: auto !important; }
     
     /* Forms and Input Boxes styling */
-    [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 15px !important; }
+    [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 12px !important; }
     .user-badge { background: #1e293b; padding: 8px 12px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 12px; font-size: 12px; color: #e2e8f0; }
     .mini-stat-card { text-align: center; background-color:#141d26; padding: 8px 4px; border-radius: 10px; min-height: 55px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; }
     .mini-stat-value { font-size: 13px !important; font-weight: bold; font-family: monospace; margin-top: 2px; }
     
     .feature-box { background-color: #11171d; padding: 14px; border-radius: 10px; border-left: 4px solid #A2FF00; margin-bottom: 10px; }
-    .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; margin: 10px 0; }
-    .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
+    .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 4px; margin: 6px 0; }
+    .social-btn { display: block; text-align: center; padding: 4px; background-color: #11171d; border: 1px solid #252e38; border-radius: 6px; color: #bdc3c7 !important; font-size: 10px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; }
+
+    /* Compact Form Inputs Override */
+    [data-testid="stForm"] div[data-testid="stWidgetLabel"] p { font-size: 11px !important; margin-bottom: -4px !important; }
+    [data-testid="stForm"] input { padding: 6px 10px !important; font-size: 12px !important; }
 
     /* Back-office Database Admin Table Styling */
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; color: #cdfaee; }
@@ -196,7 +200,7 @@ else:
 if target_image:
     st.image(target_image, use_container_width=True)
 
-# --- Public Frontend Navigation Tabs (Excluding Admin Audit) ---
+# --- Public Frontend Navigation Tabs ---
 tab1, tab2, tab3 = st.tabs([
     "🌐 Overview" if lang=="English" else "🌐 项目通识", 
     "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
@@ -246,6 +250,42 @@ with tab1:
             <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p>
         </div>
         """, unsafe_allow_html=True)
+
+    # 🛡️ COMPACT WHITELIST FORM (Now exclusively isolated inside Tab 1 bottom)
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.form("unified_whitelist_form"):
+        wl_title = "🎁 Genesis Whitelist & Referral Boosters" if lang=="English" else "🎁 申领创世白名单与社媒双倍奖励"
+        st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">{wl_title}</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="social-grid">
+            <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
+            <a class="social-btn" href="https://x.com/nexaedge_?s=21&t=8onO0h_fTxzmAGu431ZxXw" target="_blank">🐦 X</a>
+            <a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>
+            <a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>
+            <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        u_email = st.text_input("Registration Email:" if lang=="English" else "申请邮箱:", key="wl_mail").strip()
+        u_wallet = st.text_input("Solana Wallet Address:" if lang=="English" else "Solana 钱包:", key="wl_wall").strip()
+        u_ref_input = st.text_input("Referrer Invitation Code (Optional):" if lang=="English" else "推荐人邀请码 (选填):", key="wl_ref").strip()
+        
+        btn_wl = "Lock Seating ⚡" if lang=="English" else "锁定席位 ⚡"
+        if st.form_submit_button(btn_wl):
+            if not u_email or not u_wallet:
+                st.error("❌ Form incomplete!" if lang=="English" else "❌ 请完整填写表单！")
+            else:
+                generated_code = generate_referral_code(u_wallet)
+                st.session_state.my_referral_code = generated_code
+                st.session_state.registration_success = True
+                with open("whitelist.txt", "a", encoding="utf-8") as f:
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.2f} | RefCode: {generated_code}\n")
+                st.toast("Allocation Record Locked!")
+                st.rerun()
+
+    if st.session_state.registration_success and st.session_state.my_referral_code:
+        lbl_ref = "YOUR EXCLUSIVE SHARING CODE:" if lang=="English" else "您的专属邀请裂变码:"
+        st.markdown(f'<div class="app-card" style="border:1px solid #A2FF00; text-align:center; padding: 4px;"><span style="font-size:10px; color:#88929b;">{lbl_ref}</span><br><span style="font-size:16px; font-weight:800; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span></div>', unsafe_allow_html=True)
 
 # ==========================================
 # TAB 2: NODE CONTROL DASHBOARD
@@ -361,7 +401,7 @@ with tab3:
         if auth_mode in ["Register Node Account", "注册新节点账户"]:
             with st.form("reg_form"):
                 form_title = "🚀 Register Unified Cloud Node (Inherit & Merge Current NEXA Gains)" if lang=="English" else "🚀 注册统一网络账户（自动继承并合并当前已有NEXA数量）"
-                st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#A2FF00; margin-bottom:8px;">{form_title}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:6px;">{form_title}</div>', unsafe_allow_html=True)
                 r_email = st.text_input("Email Address:", placeholder="example@nexa.com").strip()
                 r_pwd = st.text_input("Choose Node Password:", type="password", placeholder="Enter your secure password")
                 r_wallet = st.text_input("Solana Receiving Address:", placeholder="Solana Wallet Address").strip()
@@ -390,7 +430,7 @@ with tab3:
         else:
             with st.form("login_form"):
                 login_title = "🔑 Connect Node Endpoint Terminal" if lang=="English" else "🔑 登录 NexaEdge 算力账户"
-                st.markdown(f'<div style="font-size:14px; font-weight:bold; color:#00e5ff; margin-bottom:8px;">{login_title}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:6px;">{login_title}</div>', unsafe_allow_html=True)
                 l_email = st.text_input("Account Email:").strip()
                 l_pwd = st.text_input("Security Verification Password:", type="password")
                 
@@ -407,43 +447,6 @@ with tab3:
                     else:
                         err_l = "❌ Invalid email combination or password mismatch!" if lang=="English" else "❌ 账号或密码输入有误，请重试！"
                         st.error(err_l)
-
-# ==========================================
-# 🛡️ GLOBAL WHITELIST FORM COMPONENT
-# ==========================================
-with st.form("unified_whitelist_form"):
-    wl_title = "🎁 Claim Early Genesis Whitelist Allocation & Referral Boosters" if lang=="English" else "🎁 申领创世白名单与社媒双倍裂变奖励"
-    st.markdown(f'<div style="font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:4px;">{wl_title}</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div class="social-grid">
-        <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
-        <a class="social-btn" href="https://x.com/nexaedge_?s=21&t=8onO0h_fTxzmAGu431ZxXw" target="_blank">🐦 X (Twitter)</a>
-        <a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>
-        <a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>
-        <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    u_email = st.text_input("Registration Email:" if lang=="English" else "申请邮箱:", key="wl_mail").strip()
-    u_wallet = st.text_input("Solana Wallet Address:" if lang=="English" else "Solana 钱包:", key="wl_wall").strip()
-    u_ref_input = st.text_input("Referrer Invitation Code (Optional):" if lang=="English" else "推荐人邀请码 (选填):", key="wl_ref").strip()
-    
-    btn_wl = "Lock Allocation Seating ⚡" if lang=="English" else "锁定席位并激活推荐码 ⚡"
-    if st.form_submit_button(btn_wl):
-        if not u_email or not u_wallet:
-            st.error("❌ Form incomplete!" if lang=="English" else "❌ 请完整填写表单！")
-        else:
-            generated_code = generate_referral_code(u_wallet)
-            st.session_state.my_referral_code = generated_code
-            st.session_state.registration_success = True
-            with open("whitelist.txt", "a", encoding="utf-8") as f:
-                f.write(f"Email: {u_email} | Wallet: {u_wallet} | Score: {st.session_state.app_earned:.2f} | RefCode: {generated_code}\n")
-            st.toast("Allocation Record Locked!")
-            st.rerun()
-
-if st.session_state.registration_success and st.session_state.my_referral_code:
-    lbl_ref = "YOUR EXCLUSIVE SHARING CODE:" if lang=="English" else "您的专属邀请裂变码:"
-    st.markdown(f'<div class="app-card" style="border:1px solid #A2FF00; text-align:center;"><span style="font-size:11px; color:#88929b;">{lbl_ref}</span><br><span style="font-size:20px; font-weight:800; color:#A2FF00; font-family:monospace;">{st.session_state.my_referral_code}</span></div>', unsafe_allow_html=True)
 
 # ==========================================
 # 📊 MACRO NETWORKS METRICS SECTION
