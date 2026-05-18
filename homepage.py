@@ -64,6 +64,7 @@ st.markdown("""
         display: none !important;
     }
     
+    /* 极致紧凑排版：消除 streamlit 默认空行 */
     [data-testid="stVerticalBlock"] > div:empty {
         display: none !important;
         margin: 0 !important;
@@ -72,6 +73,7 @@ st.markdown("""
     [data-testid="stElementContainer"] {
         border: none !important;
         background: transparent !important;
+        margin-bottom: 6px !important; /* 压缩垂直间距 */
     }
     
     .stTabs [data-baseweb="tab-list"] {
@@ -134,17 +136,21 @@ st.markdown("""
         margin-top: 6px;
     }
     
-    /* 🛠️ 已优化：调小主按钮字号防止超宽折行 */
+    /* 🛠️ 已完美优化：完美兼容长文本，防止任何移动端边界压线与折行 */
     div.stButton > button:first-child {
         background-color: #A2FF00 !important;
         color: #0b0f12 !important;
         font-weight: 800 !important;
-        font-size: 13px !important; /* 从 15px 调小至 13px */
-        width: 100%;
+        font-size: 14px !important; 
+        width: 100% !important;
+        box-sizing: border-box !important;
         border-radius: 12px !important;
         border: none !important;
-        padding: 10px 0 !important;
-        box-shadow: 0 0 15px rgba(162, 255, 0, 0.3);
+        padding: 12px 4px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        box-shadow: 0 0 15px rgba(162, 255, 0, 0.4);
     }
     
     div.stButton > button[key*="app_stop_btn"] {
@@ -220,7 +226,7 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 🔄 物理时间防挂起补算逻辑：由3秒判定改写为精确至1秒
+# 🔄 物理时间防挂起补算逻辑
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap_seconds = int(current_unix - st.session_state.last_tick_time)
@@ -236,7 +242,7 @@ SECONDS_MAP = [900, 1800, 3600, 7200, 14400, 28800, 43200, 86400]
 HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
 
 # =========================================================================
-# 🔝 顶部常驻区域：主标题 + 语言选择 + 【不缩水的三行大介绍】 + 智能检索图
+# 🔝 顶部常驻区域：主标题 + 语言选择 + 大介绍 + 智能检索图
 # =========================================================================
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:34px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
@@ -245,9 +251,9 @@ lang = st.selectbox("🌐 Language", ["English", "中文"], index=0, label_visib
 current_options = TIME_OPTIONS_EN if lang == "English" else TIME_OPTIONS_ZH
 
 if lang == "English":
-    st.markdown('<p style="font-size: 18px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 12px; line-height: 1.4;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size: 16px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 12px; line-height: 1.4;">Transforming 5B+ idle smartphones into high-purity data fuel factories for the AI Era.</p>', unsafe_allow_html=True)
 else:
-    st.markdown('<p style="font-size: 18px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 12px; line-height: 1.4;">让全球 50 亿部闲置手机，成为 AI 时代的高纯度语料燃料工厂</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size: 16px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 10px; margin-bottom: 12px; line-height: 1.4;">让全球 50 亿部闲置手机，成为 AI 时代的高纯度语料燃料工厂</p>', unsafe_allow_html=True)
 
 if target_image:
     st.image(target_image, caption="NexaEdge Official Gateway" if lang=="English" else "NexaEdge 官方主网网关", use_container_width=True)
@@ -410,16 +416,16 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 🛠️ 已优化：精简了控制按钮上的文字内容，防止移动端或窄屏挤压变形
+    # 🛠️ 重新赋能长文本按钮，结合上层超强响应式 CSS 限制，移动端不溢出
     if not st.session_state.app_running:
-        if st.button("START COMPUTE" if lang == "English" else "启动算力节点", key="app_start_btn"):
+        if st.button("START COMPUTE SESSION" if lang == "English" else "激活并启动边缘算力节点", key="app_start_btn"):
             if remaining_seconds <= 0: st.session_state.session_seconds = 0
             st.session_state.app_running = True
             st.session_state.last_tick_time = time.time()
             global_server["active_device_set"].add(st.session_state.session_id)
             st.rerun()
     else:
-        if st.button("PAUSE COMPUTE" if lang == "English" else "暂停算力节点", key="app_stop_btn"):
+        if st.button("PAUSE COMPUTE SESSION" if lang == "English" else "暂停当前算力 Session", key="app_stop_btn"):
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
             global_server["active_device_set"].discard(st.session_state.session_id)
@@ -499,7 +505,7 @@ with st.form("unified_whitelist_form"):
                     if f"Email: {u_email} |" in line or f"Email: {u_email.lower()} |" in line:
                         is_duplicate = True
                         break
-                    if f"| Wallet: {u_wallet}" in line or f"| Wallet: {u_wallet.lower()}" in line or f"| Wallet: {u_wallet}\n" in line:
+                    if f"| Wallet: {u_wallet}" in line or f"| Wallet: {u_wallet.lower()} |" in line or f"| Wallet: {u_wallet}\n" in line:
                         is_duplicate = True
                         break
             
@@ -524,33 +530,36 @@ with st.form("unified_whitelist_form"):
                 st.rerun()
 
 # =========================================================================
-# 🛡️ 管理员端：权限加密隔离下载
+# 🛡️ 智能隐藏式管理员端：通过 URL 传入 ?admin=true 暗号解锁
 # =========================================================================
-st.markdown("<br>", unsafe_allow_html=True)
-admin_label = "🛡️ Admin Access Console" if lang == "English" else "🛡️ 后台数据管理控制台"
-with st.expander(admin_label, expanded=False):
-    pwd_placeholder = "Enter Admin Password to Unlock Whitelist Downloads" if lang == "English" else "请输入管理员密码解密并载入数据"
-    admin_password = st.text_input("Admin Key", type="password", label_visibility="collapsed", placeholder=pwd_placeholder)
-    
-    if admin_password == "NexaAdmin2026":
-        if os.path.exists("whitelist.txt"):
-            with open("whitelist.txt", "r", encoding="utf-8") as f: 
-                whitelist_data = f.read()
-            dl_label = "📥 Download Whitelist Database (.txt)" if lang == "English" else "📥 导出下载全量白名单数据 (.txt)"
-            st.download_button(label=dl_label, data=whitelist_data, file_name="nexaedge_whitelist.txt", mime="text/plain")
-        else:
-            if lang == "English":
-                st.info("No records inside the database yet.")
+query_params = st.query_params
+if query_params.get("admin") == "true":
+    st.markdown("<br>", unsafe_allow_html=True)
+    admin_label = "🛡️ Admin Access Console (Decrypted View)" if lang == "English" else "🛡️ 后台数据管理控制台 (隐藏模式已激活)"
+    with st.container():
+        st.info(admin_label)
+        pwd_placeholder = "Enter Admin Password to Unlock Whitelist Downloads" if lang == "English" else "请输入管理员密码解密并载入数据"
+        admin_password = st.text_input("Admin Key", type="password", label_visibility="collapsed", placeholder=pwd_placeholder)
+        
+        if admin_password == "NexaAdmin2026":
+            if os.path.exists("whitelist.txt"):
+                with open("whitelist.txt", "r", encoding="utf-8") as f: 
+                    whitelist_data = f.read()
+                dl_label = "📥 Download Whitelist Database (.txt)" if lang == "English" else "📥 导出下载全量白名单数据 (.txt)"
+                st.download_button(label=dl_label, data=whitelist_data, file_name="nexaedge_whitelist.txt", mime="text/plain")
             else:
-                st.info("当前白名单数据库中暂无有效数据记录。")
-    elif admin_password != "":
-        if lang == "English":
-            st.error("Invalid Secret Key. Access Denied.")
-        else:
-            st.error("管理密码错误，无访问或导出权限。")
+                if lang == "English":
+                    st.info("No records inside the database yet.")
+                else:
+                    st.info("当前白名单数据库中暂无有效数据记录。")
+        elif admin_password != "":
+            if lang == "English":
+                st.error("Invalid Secret Key. Access Denied.")
+            else:
+                st.error("管理密码错误，无访问或导出权限。")
 
 # =========================================================================
-# 📊 【全网绝对真实大盘】：完全替换为真实统计，极小字体不换行适配窄屏
+# 📊 【全网绝对真实大盘】：极小字体不换行适配窄屏
 # =========================================================================
 st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0 10px 0;'>", unsafe_allow_html=True)
 
