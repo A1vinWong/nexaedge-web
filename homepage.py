@@ -223,7 +223,7 @@ with tab1:
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
         with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
-        with c2: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+        with c2: st.metric(label="算力结算底座", value="Solana Solana SPL", delta="极速、低 Gas")
         with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
         
         st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
@@ -251,7 +251,7 @@ with tab1:
         with c3: st.metric(label="Network Consensus", value="Proprietary BFT", delta="2:1 Redundant Voting")
         
         st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
-        selected_time_tab1 = st.selectbox("Select Session Pattern:", current_options, index=st.session_state.target_time_index, key="calc_box_en")
+        selected_time_tab1 = st.selectbox("Select Setting Pattern:", current_options, index=st.session_state.target_time_index, key="calc_box_en")
         st.session_state.target_time_index = current_options.index(selected_time_tab1)
         st.success(f"🎉 Estimated Monthly Income: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
         
@@ -326,23 +326,26 @@ with tab2:
         badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
         st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
 
-    lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Session Runtime:"
+    lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
     selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
     st.session_state.target_time_index = current_options.index(selected_time_tab2)
 
+    # 🚀 根据运行状态设置高亮字眼 [ACTIVE]
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
         current_temp = random.uniform(36.4, 36.9)
         current_power = random.uniform(4.85, 5.35)
+        title_status = "DASHBOARD [ACTIVE]"
     else:
         current_hash = 0.0
         current_temp = 30.5
         current_power = random.uniform(0.12, 0.18)
+        title_status = "DASHBOARD"
         
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     
-    st.markdown(f'<div class="app-card"><div class="app-title">DASHBOARD</div><div style="font-size:12px; color:#88929b;">NETWORK HASH RATE (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="app-card"><div class="app-title">{title_status}</div><div style="font-size:12px; color:#88929b;">NETWORK HASH RATE (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div></div>', unsafe_allow_html=True)
     
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
@@ -369,6 +372,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
+    # 🪓 中文部分已将 Session 剥离
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     st.markdown(f"""
@@ -387,7 +391,8 @@ with tab2:
             st.session_state.last_tick_time = time.time()
             st.rerun()
     else:
-        btn_stop = "暂停当前算力 Session" if lang=="中文" else "PAUSE COMPUTE SESSION"
+        # 🪓 这里的中文成功去掉了 "Session" 尾缀
+        btn_stop = "暂停当前算力" if lang=="中文" else "PAUSE COMPUTE SESSION"
         if st.button(btn_stop, key="app_stop_btn"):
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
@@ -395,7 +400,7 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: 🔑 账户注册与登录入口 (多语言对齐优化)
+# TAB 3: 🔑 账户注册与登录入口
 # ==========================================
 with tab3:
     if st.session_state.current_user:
