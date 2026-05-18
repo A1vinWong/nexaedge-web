@@ -210,20 +210,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# =========================================================================
-# 💾 核心升级：引入底层设备 Cookie 持久化锁（替代会话清空，默认改为0开始）
-# =========================================================================
-cookie_earned = st.context.cookies.get("nexa_earned")
-cookie_seconds = st.context.cookies.get("nexa_seconds")
-
-# 如果在设备浏览器缓存里找到了旧进度就直接继承，找不到则强制从 0.0 开始
-init_earned = float(cookie_earned) if cookie_earned else 0.0
-init_seconds = int(cookie_seconds) if cookie_seconds else 0
-
-if 'app_earned' not in st.session_state: st.session_state.app_earned = init_earned
+# 状态安全初始化
+if 'app_earned' not in st.session_state: st.session_state.app_earned = 0.0
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
-if 'session_seconds' not in st.session_state: st.session_state.session_seconds = init_seconds
+if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 if 'my_referral_code' not in st.session_state: st.session_state.my_referral_code = ""
@@ -235,7 +226,7 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 🔄 物理时间防挂起与离线跨页面补算逻辑
+# 🔄 物理时间防挂起补算逻辑（安全修复版）
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap_seconds = int(current_unix - st.session_state.last_tick_time)
@@ -243,9 +234,6 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
         st.session_state.session_seconds += elapsed_gap_seconds
         st.session_state.app_earned += elapsed_gap_seconds * 0.25
         st.session_state.last_tick_time = current_unix
-        # 同步更新进设备硬件缓存区
-        st.context.cookies["nexa_earned"] = str(st.session_state.app_earned)
-        st.context.cookies["nexa_seconds"] = str(st.session_state.session_seconds)
 
 # 扩展映射字典
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
@@ -538,7 +526,7 @@ with st.form("unified_whitelist_form"):
                 st.rerun()
 
 # =========================================================================
-# 🛡️ 智能隐藏式管理员端
+# 🛡️ 智能隐藏式管理员端（已完美隐蔽）
 # =========================================================================
 query_params = st.query_params
 
@@ -599,10 +587,5 @@ if st.session_state.app_running:
     st.session_state.app_earned += 0.25        # 每秒产生 0.25 代币
     st.session_state.session_seconds += 1      # 增加一秒
     st.session_state.last_tick_time = time.time()
-    
-    # 将最新进度强制回写到设备浏览器的硬件 Cookie 中，确保离开后依旧死锁进度
-    st.context.cookies["nexa_earned"] = str(st.session_state.app_earned)
-    st.context.cookies["nexa_seconds"] = str(st.session_state.session_seconds)
-    
     time.sleep(1.0)                            # 精确阻塞一秒
     st.rerun()
