@@ -533,7 +533,9 @@ with st.form("unified_whitelist_form"):
 # 🛡️ 智能隐藏式管理员端：通过 URL 传入 ?admin=true 暗号解锁
 # =========================================================================
 query_params = st.query_params
-if query_params.get("admin") == "true":
+                st.success("🎉 资格锁定成功！您的专属邀请码已成功激活。")
+                st.rerun()
+
     st.markdown("<br>", unsafe_allow_html=True)
     admin_label = "🛡️ Admin Access Console (Decrypted View)" if lang == "English" else "🛡️ 后台数据管理控制台 (隐藏模式已激活)"
     with st.container():
@@ -603,7 +605,12 @@ import streamlit as st
 # ... 你的主页代码（NexaEdge的前端展示）...
 
 # 在页面最底部，放一个密码输入框
-with st.expander("🔑 节点系统维护"):
+# =========================================================================
+# 📊 【全网绝对真实大盘】：极小字体不换行适配窄屏
+# =========================================================================
+st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0 10px 0;'>", unsafe_allow_html=True)
+...
+
     admin_password = st.text_input("请输入管理员授权码", type="password")
     if admin_password == "你设置的超级密码nexa2026":
         st.success("授权成功！")
