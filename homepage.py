@@ -141,7 +141,7 @@ if st.session_state.app_running:
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# --- 防断线补算 ---
+# --- 时间追算防断线机制 ---
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     current_unix = time.time()
     elapsed_gap = int(current_unix - st.session_state.last_tick_time)
@@ -158,10 +158,10 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
         global_server["device_balances"][dev_id]["total_energy_wh"] = st.session_state.total_energy_wh
         global_server["device_balances"][dev_id]["session_seconds"] = st.session_state.session_seconds
 
-# --- 顶栏渲染 ---
+# --- 顶栏大标题 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:32px; font-weight:800; margin-bottom:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-# 🌐 默认直接加载英文（English）主视图
+# 🌐 默认直接固定切入英文（English）主环境
 lang = st.selectbox("🌐 Language", ["中文", "English"], index=1, label_visibility="collapsed")
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
@@ -175,7 +175,7 @@ else:
     st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
 # ==========================================
-# 👑 2:1 左右主视觉分栏结构
+# 👑 2:1 顶层多媒体网格
 # ==========================================
 intro_left, intro_right = st.columns([2, 1])
 
@@ -204,7 +204,7 @@ with intro_right:
         </div>
         """, unsafe_allow_html=True)
 
-# --- 导航选项卡 ---
+# --- 核心选项卡 ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "🌐 Overview" if lang=="English" else "🌐 项目通识", 
     "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
@@ -213,7 +213,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: 项目通识
+# TAB 1: 项目通识 与 全球化白名单表单
 # ==========================================
 with tab1:
     c1, c2, c3 = st.columns(3)
@@ -237,8 +237,8 @@ with tab1:
             <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p>
         </div>
         <div class="feature-box">
-            <h4 style="color:white; margin:0; font-size:14px;">🛡️ 自研拜占庭容错机制（BFT）</h4>
-            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">针对边缘物理节点不可信、易遭遇逆向黑客攻击作弊的痛点，NexaEdge 创新引入 2:1 去中心化多数投票冗余验证，从数学算法底层彻底锁死任何虚假算力提交。</p>
+            <h4 style="color:white; margin:0; font-size:14px;">🛡️ 自研轻量级拜占庭容错机制（BFT）</h4>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">针对边缘物理节点易作弊的痛点，创新引入 2:1 去中心化多数投票冗余验证，从算法底层锁死任何虚假数据提交。</p>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -262,13 +262,11 @@ with tab1:
         </div>
         <div class="feature-box">
             <h4 style="color:white; margin:0; font-size:14px;">🛡️ Proprietary Byzantine Fault Tolerance (BFT)</h4>
-            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">To combat untrusted edge environments and reverse-engineering exploits, NexaEdge utilizes a 2:1 decentralized majority voting redundant verification mechanism to eliminate fraudulent computation mathematically.</p>
+            <p style="color:#bdc3c7; font-size:12px; margin:4px 0 0 0;">To combat untrusted edge environments, NexaEdge utilizes a 2:1 decentralized majority voting redundant verification mechanism to eliminate fraudulent computation mathematically.</p>
         </div>
         """, unsafe_allow_html=True)
 
-    # ==========================================
-    # 🌍 全球化白名单表单系统（彻底解决语言显示错乱）
-    # ==========================================
+    # 🌍 全球化解耦后的白名单申领表单（绝不再混淆中文）
     st.markdown("<br>", unsafe_allow_html=True)
     with st.form("unified_whitelist_form"):
         if lang == "中文":
@@ -312,7 +310,7 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: 算力控制台 Dashboard
+# TAB 2: Dashboard 算力控制台
 # ==========================================
 with tab2:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
@@ -393,7 +391,7 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: 🔑 账户中心 (注册与登录)
+# TAB 3: 🔑 账户注册与登录入口
 # ==========================================
 with tab3:
     if st.session_state.current_user:
@@ -460,7 +458,7 @@ with tab3:
                         st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# TAB 4: 🛡️ 管理员内网审计面板 
+# TAB 4: 🛡️ 管理员安全审计大盘
 # ==========================================
 with tab4:
     st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口审计</div>', unsafe_allow_html=True)
