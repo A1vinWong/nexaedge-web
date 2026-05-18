@@ -530,35 +530,30 @@ with st.form("unified_whitelist_form"):
                 st.rerun()
 
 # =========================================================================
-# 🛡️ 智能隐藏式管理员端：通过 URL 传入 ?admin=true 暗号解锁
+# 🛡️ 智能隐藏式管理员端：【方案 A】通过 URL 传入 ?admin=nexa_gate 暗号解锁
 # =========================================================================
 query_params = st.query_params
-                st.success("🎉 资格锁定成功！您的专属邀请码已成功激活。")
-                st.rerun()
 
+if query_params.get("admin") == "nexa_gate":
     st.markdown("<br>", unsafe_allow_html=True)
-    admin_label = "🛡️ Admin Access Console (Decrypted View)" if lang == "English" else "🛡️ 后台数据管理控制台 (隐藏模式已激活)"
-    with st.container():
+    admin_label = "🛡️ Admin Access Console (Decrypted View)" if lang == "English" else "🛡️ 后台数据管理控制台 (暗号模式已激活)"
+    
+    with st.expander("🔑 节点系统维护", expanded=True):
         st.info(admin_label)
         pwd_placeholder = "Enter Admin Password to Unlock Whitelist Downloads" if lang == "English" else "请输入管理员密码解密并载入数据"
         admin_password = st.text_input("Admin Key", type="password", label_visibility="collapsed", placeholder=pwd_placeholder)
         
         if admin_password == "NexaAdmin2026":
+            st.success("授权成功！欢迎回来，开始管理节点数据..." if lang == "中文" else "Authenticated! Initializing access...")
             if os.path.exists("whitelist.txt"):
                 with open("whitelist.txt", "r", encoding="utf-8") as f: 
                     whitelist_data = f.read()
                 dl_label = "📥 Download Whitelist Database (.txt)" if lang == "English" else "📥 导出下载全量白名单数据 (.txt)"
                 st.download_button(label=dl_label, data=whitelist_data, file_name="nexaedge_whitelist.txt", mime="text/plain")
             else:
-                if lang == "English":
-                    st.info("No records inside the database yet.")
-                else:
-                    st.info("当前白名单数据库中暂无有效数据记录。")
+                st.info("No records inside the database yet." if lang == "English" else "当前白名单数据库中暂无有效数据记录。")
         elif admin_password != "":
-            if lang == "English":
-                st.error("Invalid Secret Key. Access Denied.")
-            else:
-                st.error("管理密码错误，无访问或导出权限。")
+            st.error("Invalid Secret Key. Access Denied." if lang == "English" else "管理密码错误，无访问或导出权限。")
 
 # =========================================================================
 # 📊 【全网绝对真实大盘】：极小字体不换行适配窄屏
@@ -599,21 +594,3 @@ if st.session_state.app_running:
     st.session_state.last_tick_time = time.time()
     time.sleep(1.0)                            # 精确阻塞一秒
     st.rerun()
-
-import streamlit as st
-
-# ... 你的主页代码（NexaEdge的前端展示）...
-
-# 在页面最底部，放一个密码输入框
-# =========================================================================
-# 📊 【全网绝对真实大盘】：极小字体不换行适配窄屏
-# =========================================================================
-st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0 10px 0;'>", unsafe_allow_html=True)
-...
-
-    admin_password = st.text_input("请输入管理员授权码", type="password")
-    if admin_password == "你设置的超级密码nexa2026":
-        st.success("授权成功！")
-        # 把你的管理员控制台代码嵌套在这里
-        st.write("欢迎回来，开始管理 8 Devices / 85 Online 用户...")
-        # st.button("清空白名单数据") 等等...
