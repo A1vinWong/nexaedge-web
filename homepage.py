@@ -47,54 +47,43 @@ st.markdown("""
     .mini-stat-card { text-align: center; background-color:#141d26; padding: 6px 4px; border-radius: 10px; min-height: 55px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; transform: scale(0.95); }
     .mini-stat-value { font-size: 13px !important; font-weight: bold; font-family: monospace; margin-top: 2px; }
-    
-    .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin: 10px 0; }
-    .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
-    .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; }
     </style>
 """, unsafe_allow_html=True)
 
 # =========================================================================
-# 💾 2. 复合本地持久化数据引擎（同时服务白名单、用户库与算力持久化）
+# 💾 2. 核心本地数据库存储引擎（持久化结构化平铺）
 # =========================================================================
 DB_FILE = "users_db.txt"
-WHITELIST_FILE = "whitelist.txt"
 
 def load_users_db():
-    """载入账户数据库：{email: {password_hash: str, balance: float, wallet: str, ref_code: str, ref_by: str, reg_time: str}}"""
+    """读取数据库文件：{email: {password_hash: str, balance: float, wallet: str, reg_time: str}}"""
     users = {}
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or " | " not in line: continue
+                # 格式: Email: x | Pass: x | Balance: x | Wallet: x | Time: x
                 parts = line.split(" | ")
                 try:
                     email = parts[0].replace("Email: ", "")
                     pwd = parts[1].replace("Pass: ", "")
                     bal = float(parts[2].replace("Balance: ", ""))
                     wal = parts[3].replace("Wallet: ", "")
-                    rc = parts[4].replace("RefCode: ", "")
-                    rb = parts[5].replace("ReferredBy: ", "")
-                    tm = parts[6].replace("Time: ", "")
-                    users[email.lower()] = {"pwd": pwd, "balance": bal, "wallet": wal, "ref_code": rc, "ref_by": rb, "time": tm}
+                    tm = parts[4].replace("Time: ", "")
+                    users[email.lower()] = {"pwd": pwd, "balance": bal, "wallet": wal, "time": tm}
                 except:
                     continue
     return users
 
 def save_users_db(users_dict):
-    """同步写回核心数据库文件"""
+    """回写持久化本地文件数据库"""
     with open(DB_FILE, "w", encoding="utf-8") as f:
         for email, data in users_dict.items():
-            f.write(f"Email: {email} | Pass: {data['pwd']} | Balance: {data['balance']:.2f} | Wallet: {data['wallet']} | RefCode: {data['ref_code']} | ReferredBy: {data['ref_by']} | Time: {data['time']}\n")
-
-def append_to_whitelist_txt(email, wallet, score, ref_code, ref_by):
-    """精确同步追加到原汁原味的 whitelist.txt 以备导出"""
-    with open(WHITELIST_FILE, "a", encoding="utf-8") as f:
-        f.write(f"Email: {email} | Wallet: {wallet} | Score: {score:.2f} | RefCode: {ref_code} | ReferredBy: {ref_by}\n")
+            f.write(f"Email: {email} | Pass: {data['pwd']} | Balance: {data['balance']:.2f} | Wallet: {data['wallet']} | Time: {data['time']}\n")
 
 # =========================================================================
-# 🔒 3. 服务器跨进程内存锁安全初始化
+# 🔒 3. 服务器内存锁状态安全初始化
 # =========================================================================
 @st.cache_resource
 def init_global_network_server():
@@ -105,11 +94,12 @@ def init_global_network_server():
 
 global_server = init_global_network_server()
 
+# 初始化全局会话状态
 if "session_id" not in st.session_state:
     st.session_state.session_id = f"node_{random.randint(100000, 999999)}_{time.time()}"
     global_server["total_online_viewers"] += 1
 
-if 'current_user' not in st.session_state: st.session_state.current_user = None 
+if 'current_user' not in st.session_state: st.session_state.current_user = None # 当前登录用户名(邮箱)
 if 'app_running' not in st.session_state: st.session_state.app_running = False
 if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
 if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
@@ -117,12 +107,13 @@ if 'target_time_index' not in st.session_state: st.session_state.target_time_ind
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 if 'total_energy_wh' not in st.session_state: st.session_state.total_energy_wh = 0.0
 
+# 跨页面刷新同步节点共享区
 if st.session_state.app_running and st.session_state.current_user:
     global_server["active_device_set"].add(st.session_state.session_id)
 else:
     global_server["active_device_set"].discard(st.session_state.session_id)
 
-# 🔄 跑算物理时间收益累加核心，同步持久化到数据库
+# 🔄 跑算物理时间累加与数据库同步实时持久化
 if st.session_state.app_running and st.session_state.last_tick_time > 0 and st.session_state.current_user:
     current_unix = time.time()
     elapsed_gap = int(current_unix - st.session_state.last_tick_time)
@@ -132,23 +123,19 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0 and st.s
         st.session_state.total_energy_wh += 5.1 * (elapsed_gap / 3600.0)
         st.session_state.last_tick_time = current_unix
         
-        # 实时回写本地文件
+        # 核心写入：将本轮步长收益立刻同步至本地数据文件
         all_users = load_users_db()
         c_user = st.session_state.current_user.lower()
         if c_user in all_users:
             all_users[c_user]["balance"] += increment_tokens
             save_users_db(all_users)
 
+# 基础文件配图检测
 def get_project_image():
     if os.path.exists("image.png"): return "image.png"
     png_files = glob.glob("*.png")
     return png_files[0] if png_files else None
 target_image = get_project_image()
-
-def generate_referral_code(wallet_str):
-    if not wallet_str: return ""
-    hasher = hashlib.md5(wallet_str.encode('utf-8')).hexdigest().upper()
-    return f"NEXA-{wallet_str[:4].upper()}-{hasher[:4]}"
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
 TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"]
@@ -170,20 +157,21 @@ if target_image:
     st.image(target_image, use_container_width=True)
 
 # =========================================================================
-# 🚪 5. 条件分流控制闸：未登录状态 ➔ 渲染白名单注册与账户登录
+# 🚪 5. 条件分流控制闸：未登录状态下，强行渲染注册/登录/管理员入口
 # =========================================================================
 if st.session_state.current_user is None:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
     
-    gate_tab1, gate_tab2, gate_tab3 = st.tabs(["🔐 Sign In / 登录账户", "🚀 Whitelist & Sign Up / 锁定白名单并注册", "👑 Admin / 管理员后台"])
+    # 采用独立Tab切分，确保输入框不被外部高频时钟摧毁
+    gate_tab1, gate_tab2, gate_tab3 = st.tabs(["🔐 Sign In / 登录", "🚀 Sign Up / 注册账户", "👑 Admin / 管理员后台"])
     
-    # ---- 登录模块 ----
+    # ---- 登录功能 ----
     with gate_tab1:
-        st.markdown("<div style='padding:8px 0;'></div>", unsafe_allow_html=True)
-        login_email = st.text_input("Email Address / 邮箱地址", key="l_email").strip()
-        login_pwd = st.text_input("Password / 登录密码", type="password", key="l_pwd").strip()
+        st.markdown("<div style='padding:10px 0;'></div>", unsafe_allow_html=True)
+        login_email = st.text_input("Email Address / 邮箱地址", key="login_email_input").strip()
+        login_pwd = st.text_input("Password / 登录密码", type="password", key="login_pwd_input").strip()
         
-        if st.button("CONFIRM SIGN IN / 登录算力中心 ⚡", key="btn_login_trigger"):
+        if st.button("CONFIRM SIGN IN / 立即登录 ⚡", key="action_login_trigger"):
             if not login_email or not login_pwd:
                 st.error("❌ Please complete all fields! / 请完整填写账号密码！")
             else:
@@ -191,191 +179,154 @@ if st.session_state.current_user is None:
                 hashed_input_pwd = hashlib.sha256(login_pwd.encode()).hexdigest()
                 if login_email.lower() in db and db[login_email.lower()]["pwd"] == hashed_input_pwd:
                     st.session_state.current_user = login_email.lower()
-                    st.success("🎉 Authentication successful! Loading node workspace...")
+                    st.success("🎉 Authentication successful! Loading console...")
                     time.sleep(0.5)
                     st.rerun()
                 else:
                     st.error("❌ Invalid Email or Password. / 邮箱或密码错误。")
                     
-    # ---- 核心：白名单 + 账户复合注册模块 ----
+    # ---- 注册功能 ----
     with gate_tab2:
-        st.markdown("<div style='padding:8px 0;'></div>", unsafe_allow_html=True)
-        if lang == "English":
-            st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00;">⚡ STEP 1: Follow Official Social Channels</div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00;">⚡ STEP 1: 必须关注以下官方社交频道激活白名单资格</div>', unsafe_allow_html=True)
-            
-        st.markdown("""
-        <div class="social-grid">
-            <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
-            <a class="social-btn" href="https://x.com/nexaedge_?s=21&t=8onO0h_fTxzmAGu431ZxXw" target="_blank">🐦 X (Twitter)</a>
-            <a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>
-            <a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>
-            <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<div style='padding:10px 0;'></div>", unsafe_allow_html=True)
+        reg_email = st.text_input("Email Address / 注册电子邮箱", key="reg_email_input").strip()
+        reg_pwd = st.text_input("Create Password / 设置登录密码", type="password", key="reg_pwd_input").strip()
+        reg_wallet = st.text_input("Solana Wallet Address / 结算钱包地址", key="reg_wallet_input").strip()
         
-        st.markdown("<hr style='border:1px solid #1e272e; margin:10px 0;'>", unsafe_allow_html=True)
-        st.markdown(f"<div style='font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:5px;'>📝 STEP 2: {"Fill Credentials" if lang=='English' else "填报创建白名单节点账户"}</div>", unsafe_allow_html=True)
-        
-        reg_email = st.text_input("Email Address / 电子邮箱地址", key="r_email").strip()
-        reg_pwd = st.text_input("Create Account Password / 设置登录密码", type="password", key="r_pwd").strip()
-        reg_wallet = st.text_input("Solana Wallet Address / Solana 接收钱包地址", key="r_wallet").strip()
-        reg_ref = st.text_input("Referral Code (Optional) / 推荐人邀请码 (选填)", key="r_ref").strip()
-        
-        if st.button("SUBMIT WHITELIST & CREATE ACCOUNT / 锁定白名单并创建账户 🚀", key="btn_register_trigger"):
+        if st.button("CREATE ACCOUNT & JOIN / 立即创建账户 🚀", key="action_register_trigger"):
             if not reg_email or not reg_pwd or not reg_wallet:
-                st.error("❌ All fields are required to secure a node placement! / 请完整填写邮箱、密码与钱包地址！")
+                st.error("❌ All fields are required! / 请完整填写所有注册资料！")
             elif "@" not in reg_email:
-                st.error("❌ Invalid Email Format! / 请填写格式合规的电子邮箱！")
+                st.error("❌ Invalid Email Format! / 邮箱格式不正确！")
             else:
                 db = load_users_db()
-                
-                # 双重排重检查（支持邮箱与钱包双排重）
-                is_duplicate = False
                 if reg_email.lower() in db:
-                    is_duplicate = True
-                for em, info in db.items():
-                    if info["wallet"].lower() == reg_wallet.lower():
-                        is_duplicate = True
-                        break
-                        
-                if is_duplicate:
-                    st.error("⚠️ Rejected! This Email or Solana Wallet has already claimed a whitelist allocation. / 提交失败！该邮箱或钱包已存在于白名单记录中。")
+                    st.error("⚠️ Account already exists! Please log in. / 该邮箱已被注册，请直接登录。")
                 else:
-                    # 1. 生成唯一邀请裂变码
-                    generated_code = generate_referral_code(reg_wallet)
-                    ref_by_clean = reg_ref if reg_ref else "NONE"
-                    now_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                    
-                    # 2. 写入账户持久化库
                     hashed_pwd = hashlib.sha256(reg_pwd.encode()).hexdigest()
                     db[reg_email.lower()] = {
                         "pwd": hashed_pwd,
                         "balance": 0.0,
                         "wallet": reg_wallet,
-                        "ref_code": generated_code,
-                        "ref_by": ref_by_clean,
-                        "time": now_str
+                        "time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                     }
                     save_users_db(db)
-                    
-                    # 3. 同步追加写入原有 whitelist.txt 文件中
-                    append_to_whitelist_txt(reg_email, reg_wallet, 0.0, generated_code, ref_by_clean)
-                    
-                    st.success("🎉 Whitelist allocation secured and account initialized! Head to Sign In. / 创世白名单锁定成功！请切换至登录标签验证身份。")
+                    st.success("🎉 Account deployed successfully! Please head to Sign In tab. / 账户注册成功！请切换至登录标签完成验证。")
                     st.balloons()
                     
-    # ---- 管理员动态审计后台 ----
+    # ---- 管理员后台功能 ----
     with gate_tab3:
-        st.markdown("<div style='padding:8px 0;'></div>", unsafe_allow_html=True)
-        admin_key = st.text_input("Admin Token / 管理员审计密钥", type="password", key="master_adm_key")
+        st.markdown("<div style='padding:10px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<span style='font-size:12px; color:#88929b;'>🛡️ ENTER MASTER KEY FOR LIVE AUDIT INSPECTION</span>", unsafe_allow_html=True)
+        admin_key = st.text_input("Admin Access Token / 管理员密钥", type="password", key="admin_key_field")
         
-        if admin_key == "nexa2026":
+        # 安全隐藏管理员入口，输入设定的密钥方能提取大盘内部全局机密
+        if admin_key == "nexa2026": 
             st.markdown("<hr style='border:1px dashed #A2FF00;'>", unsafe_allow_html=True)
-            st.markdown("<h3 style='color:#A2FF00; font-size:16px;'>👑 NexaEdge Real-time Whitelist & User Audit</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color:#A2FF00; font-size:16px;'>👑 NexaEdge Live Global Admin Audit</h3>", unsafe_allow_html=True)
             
             db = load_users_db()
             if not db:
-                st.info("No registered whitelist nodes detected in the local architecture.")
+                st.info("No registered users detected in data layer yet.")
             else:
                 admin_records = []
-                total_minted = 0.0
+                total_network_minted = 0.0
                 for email, info in db.items():
-                    total_minted += info["balance"]
+                    total_network_minted += info["balance"]
                     admin_records.append({
-                        "Whitelist Email": email,
-                        "Solana Wallet": info["wallet"],
-                        "Real-time NEXA Asset": f"{info['balance']:,.2f}",
-                        "User Invite Code": info["ref_code"],
-                        "Invited By": info["ref_by"],
-                        "Reg Time": info["time"]
+                        "Registered User (Email)": email,
+                        "Solana Address": info["wallet"],
+                        "Accumulated NEXA Balance": f"{info['balance']:,.2f}",
+                        "Registration Date": info["time"]
                     })
                 
+                # 统计看板卡片
                 st.markdown(f"""
-                <div style='display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;'>
+                <div style='display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;'>
                     <div style='background:#0b0f12; padding:10px; border-radius:10px; border:1px solid #252e38;'>
-                        <div style='font-size:11px; color:#88929b;'>TOTAL REGISTERED NODES</div>
-                        <div style='color:#A2FF00; font-size:22px; font-weight:bold;'>{len(db)} Accounts</div>
+                        <div style='font-size:11px; color:#88929b;'>TOTAL REGISTERED ACCOUNTS</div>
+                        <div style='color:#A2FF00; font-size:22px; font-weight:bold;'>{len(db)} Users</div>
                     </div>
                     <div style='background:#0b0f12; padding:10px; border-radius:10px; border:1px solid #252e38;'>
-                        <div style='font-size:11px; color:#88929b;'>TOTAL LOGGED MINING</div>
-                        <div style='color:#00e5ff; font-size:22px; font-weight:bold;'>{total_minted:,.2f} NEXA</div>
+                        <div style='font-size:11px; color:#88929b;'>TOTAL ACCUMULATED MINT</div>
+                        <div style='color:#00e5ff; font-size:22px; font-weight:bold;'>{total_network_minted:,.2f} NEXA</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                st.dataframe(pd.DataFrame(admin_records), use_container_width=True, hide_index=True)
+                # 数据表渲染
+                df_admin = pd.DataFrame(admin_records)
+                st.dataframe(df_admin, use_container_width=True, hide_index=True)
         elif admin_key:
-            st.error("❌ Access Denied!")
+            st.error("❌ Access Denied! Invalid Master Key Token.")
             
     st.markdown('</div>', unsafe_allow_html=True)
-
+    
 # =========================================================================
-# 🎛️ 6. 条件分流控制闸：已登录状态 ➔ 挂载边缘算力大盘
+# 🎛️ 6. 条件分流控制闸：已登录状态下，加载全量控制台及实时算力累加器
 # =========================================================================
 else:
+    # 实时从持久化层载入该登录用户的实时具体数据余额
     db = load_users_db()
     user_key = st.session_state.current_user.lower()
     
+    # 异常保护：防止本地被篡改
     if user_key not in db:
         st.session_state.current_user = None
         st.rerun()
         
     current_user_balance = db[user_key]["balance"]
     current_user_wallet = db[user_key]["wallet"]
-    current_user_refcode = db[user_key]["ref_code"]
 
-    tab1, tab2 = st.tabs(["🌐 Overview & Allocation / 白名单名片", "📱 Node Console / 边缘算力控制台"])
+    tab1, tab2 = st.tabs(["🌐 Overview & Pillars / 项目通识", "📱 Node Dashboard / 边缘节点控制台"])
 
-    # ---- 页面一：个人白名单名片及资产详情 ----
+    # ---- 页面一：项目静态通识壁垒 ----
     with tab1:
         c1, c2, c3 = st.columns(3)
         if lang == "English":
-            with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue Flow")
-            with c2: st.metric(label="Safety Threshold", value="39°C", delta="Device Safety Lock", delta_color="inverse")
-            with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas / High TPS")
+            with c1: st.metric(label="Network Fee", value="20%", delta="Pure Revenue")
+            with c2: st.metric(label="Safety Threshold", value="39°C", delta="Hardware Lock", delta_color="inverse")
+            with c3: st.metric(label="Settlement Base", value="Solana SPL", delta="Low Gas Token")
         else:
             with c1: st.metric(label="平台技术抽成", value="20%", delta="纯现金流造血")
             with c2: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
-            with c3: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+            with c3: st.metric(label="算力结算底座", value="Solana SPL", delta="极速低 Gas")
             
         st.markdown("<hr style='border:1px solid #1e272e; margin: 12px 0;'>", unsafe_allow_html=True)
-        st.markdown(f'<h4 style="color:#A2FF00; margin-bottom:10px;">📋 {"Your Whitelist Identity Pass" if lang=="English" else "您的白名单创世名片"}</h4>', unsafe_allow_html=True)
+        st.markdown(f'<h4 style="color:#A2FF00; margin-bottom:10px;">👤 {"User Account Account Details" if lang=="English" else "当前登录身份资产信息"}</h4>', unsafe_allow_html=True)
         
         st.markdown(f"""
-        <div class="app-card" style="border-left: 4px solid #A2FF00;">
-            <div style="font-size:11px; color:#88929b;">WHITELIST REGISTERED EMAIL</div>
-            <div style="font-size:15px; font-weight:bold; color:white; margin-bottom:6px;">{st.session_state.current_user}</div>
-            <div style="font-size:11px; color:#88929b;">BOUND SOLANA WALLET ADDRESS</div>
-            <div style="font-size:13px; font-family:monospace; color:#bdc3c7; margin-bottom:6px;">{current_user_wallet}</div>
-            <div style="font-size:11px; color:#88929b;">🎯 YOUR EXCLUSIVE REFERRAL CODE</div>
-            <div style="font-size:16px; font-family:monospace; font-weight:bold; color:#A2FF00;">{current_user_refcode}</div>
+        <div class="app-card" style="border-left: 4px solid #00e5ff;">
+            <div style="font-size:11px; color:#88929b;">LOGGED IN ACCOUNT (EMAIL)</div>
+            <div style="font-size:15px; font-weight:bold; color:white; margin-bottom:5px;">{st.session_state.current_user}</div>
+            <div style="font-size:11px; color:#88929b;">BOUND SETTLEMENT WALLET</div>
+            <div style="font-size:13px; font-family:monospace; color:#bdc3c7;">{current_user_wallet}</div>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("LOGOUT / 退出当前算力账户 👋", key="btn_logout_action"):
+        if st.button("LOGOUT / 注销当前账户 👋", key="action_logout_btn"):
             st.session_state.app_running = False
             global_server["active_device_set"].discard(st.session_state.session_id)
             st.session_state.current_user = None
             st.rerun()
 
-    # ---- 页面二：高频节点工作舱 ----
+    # ---- 页面二：动态高频挂接主战场 ----
     with tab2:
         st.markdown('<div class="app-container">', unsafe_allow_html=True)
         
+        # 算力定时器调节
         st.markdown('<div class="app-card">', unsafe_allow_html=True)
         st.markdown(f'<div class="app-title">{"⏳ COMPUTE TIMER" if lang=="English" else "⏳ 算力定时器"}</div>', unsafe_allow_html=True)
-        selected_time = st.selectbox("Set runtime pattern:", current_options, index=st.session_state.target_time_index, key="engine_time_selectbox")
+        selected_time = st.selectbox("Set target runtime:", current_options, index=st.session_state.target_time_index, key="time_select_core_engine")
         st.session_state.target_time_index = current_options.index(selected_time)
         target_total_seconds = SECONDS_MAP[st.session_state.target_time_index]
         
         if st.session_state.app_running and st.session_state.session_seconds >= target_total_seconds:
             st.session_state.app_running = False
             global_server["active_device_set"].discard(st.session_state.session_id)
-            st.toast("⏰ Timer Finished!")
+            st.toast("⏰ Session Completed!")
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # 高频波形变动逻辑
         if st.session_state.app_running:
             current_hash, current_temp, current_power = random.uniform(45.5, 49.8), random.uniform(36.4, 36.9), random.uniform(4.85, 5.35)
             st.session_state.chart_history.pop(0)
@@ -389,47 +340,50 @@ else:
         st.markdown(f'<div class="app-card"><div style="font-size:12px; color:#88929b;">{"NETWORK HASH RATE" if lang=="English" else "当前节点算力"} (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div></div>', unsafe_allow_html=True)
         st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"]), height=90, use_container_width=True)
         
+        # 🔌 电能和温度硬件面板
+        efficiency_val = (3600 * 0.01) / 5.1  
         st.markdown(f"""
         <div class="app-card" style="margin-top:-5px;">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
                 <div style="background:#11171d; padding:6px; border-radius:8px;">
-                    <div style="font-size:9px; color:#88929b; font-weight:bold;">🌡️ DEVICE TEMP:</div>
+                    <div style="font-size:9px; color:#88929b; font-weight:bold;">🌡️ TERMINAL TEMP:</div>
                     <div class="app-value neon-green-text" style="font-size:14px;">{current_temp:.1f} °C</div>
                 </div>
                 <div style="background:#11171d; padding:6px; border-radius:8px;">
-                    <div style="font-size:9px; color:#88929b; font-weight:bold;">🔌 HARDWARE METRICS:</div>
+                    <div style="font-size:9px; color:#88929b; font-weight:bold;">🔌 CUMULATIVE POWER:</div>
                     <div class="app-value neon-blue-text" style="font-size:14px; font-family:monospace;">{st.session_state.total_energy_wh:.4f} Wh</div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # ✨ 亮点：直接将从本地提取的白名单大盘资产额动态渲染在这里
+        # 🎯 核心高亮：实时展现本账户在本地txt数据库内保存的累积实际资产额
         st.markdown(f"""
         <div class="app-card" style="border: 1px solid #A2FF00; background: linear-gradient(135deg, #161c23 0%, #111b15 100%);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
-                    <div style="font-size:10px; color:#88929b; font-weight:bold;">🔒 REAL-TIME BAL (WHITELIST WALLET) / 您的白名单账户真实总余额</div>
+                    <div style="font-size:10px; color:#88929b; font-weight:bold;">🔒 YOUR ACCOUNT REAL-TIME BALANCE / 您的账户真实总余额</div>
                     <div class="app-value neon-green-text" style="font-size:24px; margin-top:2px;">
                         {current_user_balance:,.2f} <span style="font-size:12px; color:white; font-weight:normal;">NEXA</span>
                     </div>
                 </div>
                 <div style="text-align:right;">
-                    <div style="font-size:9px; color:#88929b; font-weight:bold;">RUNNING TIME</div>
+                    <div style="font-size:9px; color:#88929b; font-weight:bold;">SESSION TIME</div>
                     <div class="app-value" style="font-size:14px; font-family:monospace; color:white;">{time_str}</div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
+        # 算力按键控制总成
         if not st.session_state.app_running:
-            if st.button("START COMPUTE SESSION ⚡" if lang=="English" else "激活并启动边缘算力节点 ⚡", key="btn_start_running"):
+            if st.button("START COMPUTE SESSION ⚡" if lang=="English" else "激活并启动边缘算力节点 ⚡", key="app_start_btn"):
                 st.session_state.app_running = True
                 st.session_state.last_tick_time = time.time()
                 global_server["active_device_set"].add(st.session_state.session_id)
                 st.rerun()
         else:
-            if st.button("PAUSE COMPUTE SESSION 🛑" if lang=="English" else "暂停当前算力 Session 🛑", key="btn_stop_running"):
+            if st.button("PAUSE COMPUTE SESSION 🛑" if lang=="English" else "暂停当前算力 Session 🛑", key="app_stop_btn"):
                 st.session_state.app_running = False
                 st.session_state.last_tick_time = 0.0
                 global_server["active_device_set"].discard(st.session_state.session_id)
@@ -438,7 +392,7 @@ else:
         st.markdown('</div>', unsafe_allow_html=True)
 
     # =========================================================================
-    # 📊 7. 全网大盘同步
+    # 📊 7. 全网绝对真实底层全网大盘同步渲染
     # =========================================================================
     st.markdown("<hr style='border:1px solid #1e272e; margin: 15px 0 10px 0;'>", unsafe_allow_html=True)
     col_net1, col_net2 = st.columns(2)
@@ -450,7 +404,7 @@ else:
     st.markdown("<p style='text-align:center; color:#445; font-size: 10px; margin-top:12px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
 
     # =========================================================================
-    # 👑 8. 高频刷新控制层
+    # 👑 8. 秒级高频秒刷驱动内核（仅在登录运行态时工作，防冲突闭环）
     # =========================================================================
     if st.session_state.app_running:
         time.sleep(1.0)
