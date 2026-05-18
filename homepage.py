@@ -197,8 +197,35 @@ if lang == "English":
 else:
     st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">让全球闲置手机，成为 AI 时代的高纯度分布式算力网络</p>', unsafe_allow_html=True)
 
-if target_image:
-    st.image(target_image, use_container_width=True)
+# ==========================================
+# 👑 2:1 LAYOUT STRUCTURE RE-MIGRATED
+# ==========================================
+intro_left, intro_right = st.columns([2, 1])
+
+with intro_left:
+    if target_image:
+        st.image(target_image, use_container_width=True)
+
+with intro_right:
+    st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
+    if lang == "English":
+        st.markdown("""
+        <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 12px; border-radius: 14px; height: 100%;">
+            <p style="color:#A2FF00; font-size:13px; font-weight:800; margin-bottom:6px; text-transform:uppercase;">⚡ Project Briefing</p>
+            <p style="color:#ffffff; font-size:11px; line-height:1.4; margin:0;">
+                NexaEdge empowers users to monetize unutilized smartphone capabilities. By creating an encrypted decentralized sandbox network, your device seamlessly routes localized data verification processes to unlock institutional level rewards while you sleep.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 12px; border-radius: 14px; height: 100%;">
+            <p style="color:#A2FF00; font-size:13px; font-weight:800; margin-bottom:6px; text-transform:uppercase;">⚡ 项目核心简报</p>
+            <p style="color:#ffffff; font-size:11px; line-height:1.4; margin:0;">
+                NexaEdge 赋予普通用户将闲置手机性能变现的完整权利。通过建立端到端的加密去中心化沙盒环境，您的设备可在充电且闲置时自动承接分布式 AI 数据清洗与验证任务，安全赚取行业先锋红利。
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # --- Public Frontend Navigation Tabs ---
 tab1, tab2, tab3 = st.tabs([
@@ -251,7 +278,7 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-    # 🛡️ COMPACT WHITELIST FORM (Now exclusively isolated inside Tab 1 bottom)
+    # 🛡️ COMPACT WHITELIST FORM (Exclusively isolated inside Tab 1 bottom)
     st.markdown("<br>", unsafe_allow_html=True)
     with st.form("unified_whitelist_form"):
         wl_title = "🎁 Genesis Whitelist & Referral Boosters" if lang=="English" else "🎁 申领创世白名单与社媒双倍奖励"
@@ -329,11 +356,13 @@ with tab2:
         st.session_state.chart_history.append(current_hash)
     st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"]), height=85, use_container_width=True)
     
-    lbl_safe = "Hardware Temp" if lang=="English" else "室温控感"
-    st.markdown(f'<div class="app-card" style="margin-top: -5px;"><div class="temp-section"><span class="app-value" style="font-size:16px;">{lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
+    # 🌡️ THERMOMETER ICON ADDED BACK
+    lbl_safe = "Hardware Temp" if lang=="English" else "硬件运行温度"
+    st.markdown(f'<div class="app-card" style="margin-top: -5px;"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
+    # 🔋 BATTERY ICON PLACED IN CUMULATIVE ENERGY SECTION
     lbl_p1 = "Input Power:" if lang=="English" else "实时输入功耗:"
-    lbl_p2 = "Cumulative Energy:" if lang=="English" else "累计电力消耗:"
+    lbl_p2 = "Cumulative Energy:" if lang=="English" else "🔋 累计电力消耗:"
     st.markdown(f"""
     <div class="app-card">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
@@ -375,7 +404,7 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: 🔑 IDENTITY PORTAL & AUTH REGISTRATION
+# TAB 3: 🔑 IDENTITY PORTAL & ADMIN PANEL MIGRATED HERE
 # ==========================================
 with tab3:
     if st.session_state.current_user:
@@ -448,6 +477,33 @@ with tab3:
                         err_l = "❌ Invalid email combination or password mismatch!" if lang=="English" else "❌ 账号或密码输入有误，请重试！"
                         st.error(err_l)
 
+    # =========================================================================
+    # 🛡️ 🔍 PURE BACK-OFFICE HIDDEN PANEL (Now safely locked inside Tab 3 bottom)
+    # =========================================================================
+    st.markdown("<br><hr style='border:1px solid #1e272e; margin-top:20px;'>", unsafe_allow_html=True)
+    expander_title = "⚙️ Core Infrastructure Port Lock (System Admins Only)"
+    with st.expander(expander_title):
+        st.markdown('<div style="font-size:12px; font-weight:bold; color:#f43f5e; margin-bottom:4px;">🔒 Encrypted Internal Ledger Audit Engine</div>', unsafe_allow_html=True)
+        adm_key = st.text_input("Enter Root Master Secret Key to decrypt database view:", type="password", placeholder="Enter admin key here", key="adm_pwd_box")
+        
+        if adm_key == "nexaadmin":
+            st.toast("🔓 Access Granted. Network Database Decrypted Successfully.", icon="🟢")
+            c_a1, c_a2 = st.columns(2)
+            with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">TOTAL REGISTERED USERS</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Nodes Profiles</div></div>', unsafe_allow_html=True)
+            with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">COMPUTE REALTIME DEVICES</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Online</div></div>', unsafe_allow_html=True)
+            
+            st.markdown("<p style='font-size:11px; font-weight:bold; margin-top:10px; color:#A2FF00;'>📋 LIVE REGISTERED USERS ACCOUNT BALANCE AUDIT DIRECTORY:</p>", unsafe_allow_html=True)
+            table_html = """
+            <table class="admin-table">
+                <tr><th>ID</th><th>User Registered Email</th><th>Solana Bound Wallet</th><th>NEXA Tokens Assets Owned</th><th>Activation Time (UTC)</th></tr>
+            """
+            for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
+                table_html += f"<tr><td>{idx}</td><td>{email}</td><td style='font-family:monospace; color:#9ca3af;'>{info['wallet'][:12]}...{info['wallet'][-8:] if len(info['wallet'])>12 else ''}</td><td style='color:#A2FF00; font-weight:bold;'>{info['score']:,.2f} NEXA</td><td>{info['reg_time']}</td></tr>"
+            table_html += "</table>"
+            st.markdown(table_html, unsafe_allow_html=True)
+        elif adm_key != "":
+            st.error("❌ Master authentication failed. Data decrypt matrix access denied.")
+
 # ==========================================
 # 📊 MACRO NETWORKS METRICS SECTION
 # ==========================================
@@ -457,33 +513,6 @@ with col_net1: st.markdown(f'<div class="mini-stat-card" style="border:1px dashe
 with col_net2: st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #00e5ff;"><div class="mini-stat-title">👀 LIVE REAL VIEWERS</div><div class="mini-stat-value" style="color:#00e5ff;">{global_server["total_online_viewers"]} Online</div></div>', unsafe_allow_html=True)
 
 st.markdown("<p style='text-align:center; color:#445; font-size: 10px; margin-top:12px;'>NexaEdge Network © 2026 | Powered by Solana DePIN Infrastructure</p>", unsafe_allow_html=True)
-
-# =========================================================================
-# 🛡️ 🔍 PURE BACK-OFFICE HIDDEN PANEL (Admin Audit Hidden Below Main Page)
-# =========================================================================
-st.markdown("<br><br><hr style='border:1px solid #0d1216; margin-top:40px;'>", unsafe_allow_html=True)
-expander_title = "⚙️ Core Infrastructure Port Lock (System Admins Only)"
-with st.expander(expander_title):
-    st.markdown('<div style="font-size:12px; font-weight:bold; color:#f43f5e; margin-bottom:4px;">🔒 Encrypted Internal Ledger Audit Engine</div>', unsafe_allow_html=True)
-    adm_key = st.text_input("Enter Root Master Secret Key to decrypt database view:", type="password", placeholder="Enter admin key here")
-    
-    if adm_key == "nexaadmin":
-        st.toast("🔓 Access Granted. Network Database Decrypted Successfully.", icon="🟢")
-        c_a1, c_a2 = st.columns(2)
-        with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">TOTAL REGISTERED USERS</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Nodes Profiles</div></div>', unsafe_allow_html=True)
-        with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">COMPUTE REALTIME DEVICES</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Online</div></div>', unsafe_allow_html=True)
-        
-        st.markdown("<p style='font-size:11px; font-weight:bold; margin-top:10px; color:#A2FF00;'>📋 LIVE REGISTERED USERS ACCOUNT BALANCE AUDIT DIRECTORY:</p>", unsafe_allow_html=True)
-        table_html = """
-        <table class="admin-table">
-            <tr><th>ID</th><th>User Registered Email</th><th>Solana Bound Wallet</th><th>NEXA Tokens Assets Owned</th><th>Activation Time (UTC)</th></tr>
-        """
-        for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
-            table_html += f"<tr><td>{idx}</td><td>{email}</td><td style='font-family:monospace; color:#9ca3af;'>{info['wallet'][:12]}...{info['wallet'][-8:] if len(info['wallet'])>12 else ''}</td><td style='color:#A2FF00; font-weight:bold;'>{info['score']:,.2f} NEXA</td><td>{info['reg_time']}</td></tr>"
-        table_html += "</table>"
-        st.markdown(table_html, unsafe_allow_html=True)
-    elif adm_key != "":
-        st.error("❌ Master authentication failed. Data decrypt matrix access denied.")
 
 # ==================== 👑 HIGH-FREQUENCY DRIVE CORE ====================
 if st.session_state.app_running:
