@@ -91,7 +91,7 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 CSS 全局注入（图表深度工整对称化升级） ---
+# --- 🟢 CSS 全局注入 ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
@@ -99,13 +99,11 @@ st.markdown("""
     header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; height:0px !important; }
     [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
     
-    /* 选项卡全局美化控制 */
     .stTabs [data-baseweb="tab-list"] { gap: 8px; background-color: transparent !important; justify-content: center; border: none !important; overflow-x: auto; margin-bottom: 16px; }
     .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px !important; border: 1px solid #1e272e !important; padding: 10px 16px !important; font-weight: 700 !important; font-size: 13px !important; white-space: nowrap; transition: all 0.3s; }
     .stTabs [aria-selected="true"] { color: #0b0f12 !important; background-color: #A2FF00 !important; border-top: none !important; }
     .stTabs [data-baseweb="tab-highlight"] { background-color: #A2FF00 !important; height: 0px !important; }
     
-    /* 组件外壳工整间距设计 */
     .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 14px; margin-bottom: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .app-title { font-size: 11px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
@@ -115,13 +113,11 @@ st.markdown("""
     .neon-blue-text { color: #00e5ff !important; }
     .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 8px 12px; border-radius: 10px; }
     
-    /* 按钮样式微调 */
     div.stButton > button:first-child { background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 15px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 12px 18px !important; box-shadow: 0 5px 15px rgba(162, 255, 0, 0.2); transition: all 0.2s; }
     div.stButton > button:hover { background-color: #b5ff33 !important; }
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #f43f5e !important; box-shadow: none !important; }
     div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 5px 12px !important; font-size: 12px !important; width: auto !important; }
     
-    /* 表单与文本输入框 */
     [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 18px !important; }
     .user-badge { background: #1e293b; padding: 10px 14px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 12px; font-size: 13px; color: #e2e8f0; line-height: 1.4; }
     .mini-stat-card { text-align: center; background-color:#141d26; padding: 10px 6px; border-radius: 10px; min-height: 58px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -133,12 +129,14 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* 📊 深度校准的图表外框包裹器 - 确保与 app-card 严丝合缝完全对齐 */
+    /* 📊 深度校准的图表外框包裹器 - 增加负边距实现上移和左移 */
     .chart-wrapper { 
         background-color: #161c23; 
         border: 1px solid #252e38; 
         border-radius: 14px; 
         padding: 14px 14px 4px 14px; 
+        margin-top: -15px;      /* 向上移动 */
+        margin-left: -15px;     /* 向左移动 */
         margin-bottom: 12px;
         box-sizing: border-box;
     }
@@ -155,33 +153,9 @@ st.markdown("""
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 10px; border: 1px solid #374151; }
     .admin-table td { padding: 10px; border: 1px solid #374151; background-color: #111827; }
     
-    /* 合约地址样式结构 */
-    .ca-white-box { 
-        background: transparent; 
-        border: none; 
-        padding: 0; 
-        margin-top: 4px;
-        text-align: left;
-    }
-    .ca-label {
-        font-size: 11px;
-        color: #88929b;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 2px;
-        display: block;
-        text-align: left;
-    }
-    .ca-white-box div[data-testid="stTextInput"] input {
-        color: #ffffff !important;
-        border-color: #1e2a38 !important;
-        background-color: #161c23 !important;
-        font-family: monospace !important;
-        font-size: 11px !important;
-        text-align: left !important;
-        padding: 6px 10px !important;
-    }
+    .ca-white-box { background: transparent; border: none; padding: 0; margin-top: 4px; text-align: left; }
+    .ca-label { font-size: 11px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: block; text-align: left; }
+    .ca-white-box div[data-testid="stTextInput"] input { color: #ffffff !important; border-color: #1e2a38 !important; background-color: #161c23 !important; font-family: monospace !important; font-size: 11px !important; text-align: left !important; padding: 6px 10px !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -275,7 +249,6 @@ with tab1:
         with c1: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: 
             st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-            # 🔄 已经完美由 "代币智能合约地址" 更改为 "智能合约地址"
             st.markdown('<div class="ca-white-box"><span class="ca-label">智能合约地址</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_zh")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -330,7 +303,6 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-    # 🌍 白名单申领表单
     st.markdown("<br>", unsafe_allow_html=True)
     with st.form("unified_whitelist_form"):
         if lang == "中文":
@@ -377,10 +349,9 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: Dashboard 算力控制台 (🛠️ 深度对齐调优)
+# TAB 2: Dashboard 算力控制台
 # ==========================================
 with tab2:
-    # 核心数据状态演算逻辑
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
         current_temp = random.uniform(36.4, 36.9)
@@ -392,7 +363,6 @@ with tab2:
         current_temp = 30.5
         current_power = random.uniform(0.12, 0.18)
     
-    # 1. 顶部挂载账户提示横条
     if st.session_state.current_user:
         badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
         st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
@@ -400,7 +370,6 @@ with tab2:
         badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
         st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
 
-    # 2. 运行配置选择框
     lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
     selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
     st.session_state.target_time_index = current_options.index(selected_time_tab2)
@@ -408,7 +377,6 @@ with tab2:
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     
-    # 3. 📈 严丝合缝、极致工整的实时算力动态折线图面板
     chart_lbl = "📶 边缘节点算力实时波形数据 (Hashrate Chart)" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
     st.markdown(f'<div class="chart-title-lbl">{chart_lbl}</div>', unsafe_allow_html=True)
     
@@ -417,11 +385,9 @@ with tab2:
     st.line_chart(df_chart, height=135, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 4. 温度安全组件
     lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
     st.markdown(f'<div class="app-card"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
-    # 5. 功耗与电量网格
     lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
     lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
     st.markdown(f"""
@@ -439,7 +405,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 6. 收益与运行时长汇总卡片
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     
@@ -463,7 +428,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 7. 动态启停开关
     if not st.session_state.app_running:
         btn_start = "激活并启动边缘算力节点" if lang=="中文" else "START COMPUTE SESSION"
         if st.button(btn_start, key="app_start_btn"):
