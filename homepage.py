@@ -129,52 +129,17 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* 📊 Professional Dashboard Chart Container */
-.chart-wrapper { 
-    background-color: #161c23;
-    border: 1px solid #252e38;
-
-    border-radius: 16px;
-
-    padding: 12px 12px 4px 12px;
-
-    margin-top: 8px;
-    margin-bottom: 14px;
-
-    width: 100%;
-
-    overflow: hidden;
-
-    box-sizing: border-box;
-
-    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-}
-
-/* 图表标题 */
-.chart-title-lbl {
-    font-size: 11px;
-    color: #88929b;
-
-    font-weight: bold;
-
-    text-transform: uppercase;
-
-    margin-bottom: 8px;
-
-    padding-left: 2px;
-
-    letter-spacing: 0.5px;
-}
-
-/* 修复 Streamlit 图表 */
-[data-testid="stLineChart"] {
-    background: transparent !important;
-}
-
-/* Canvas 圆角 */
-canvas {
-    border-radius: 12px !important;
-}
+    /* 📊 深度校准的图表外框包裹器 - 增加负边距实现上移和左移 */
+    .chart-wrapper { 
+        background-color: #161c23; 
+        border: 1px solid #252e38; 
+        border-radius: 14px; 
+        padding: 14px 14px 4px 14px; 
+        margin-top: -15px;      /* 向上移动 */
+        margin-left: -15px;     /* 向左移动 */
+        margin-bottom: 12px;
+        box-sizing: border-box;
+    }
     .chart-title-lbl {
         font-size: 11px; 
         color: #88929b; 
@@ -416,22 +381,12 @@ with tab2:
     st.markdown(f'<div class="chart-title-lbl">{chart_lbl}</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
+    df_chart = pd.DataFrame(st.session_state.chart_history, columns=["Hashrate (G/s)"])
+    st.line_chart(df_chart, height=135, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-df_chart = pd.DataFrame(
-    st.session_state.chart_history,
-    columns=["Hashrate (G/s)"]
-)
-
-st.line_chart(
-    df_chart,
-    height=185,
-    use_container_width=True
-)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
-st.markdown(f'<div class="app-card"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
+    lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
+    st.markdown(f'<div class="app-card"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
     lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
     lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
@@ -662,3 +617,4 @@ if st.session_state.app_running:
     st.session_state.last_tick_time = time.time()
     time.sleep(1.0)
     st.rerun()
+    
