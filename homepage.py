@@ -29,10 +29,18 @@ def init_global_network_server():
             "contact@nexaedge.org": {  # 👈 官方邮箱
                 "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
                 "score": 1479.0,
-                "reg_time": "2026-05-18 14:22:05"
+                "reg_time": "2026-05-18 14:22:05",
+                "referral_code": "NX-OFF-ICL"
             }
-        }
+        },
+        "whitelist_emails": set(),   # 已申请白名单的邮箱
+        "whitelist_wallets": set(),  # 已申请白名单的钱包
     }
+
+def generate_referral_code(email: str) -> str:
+    """根据邮箱生成唯一推荐码，格式 NX-XXX-XXX"""
+    h = hashlib.md5(email.encode()).hexdigest().upper()
+    return "NX-" + h[:3] + "-" + h[3:6]
 
 global_server = init_global_network_server()
 
@@ -356,7 +364,15 @@ with tab1:
         if st.form_submit_button(btn_wl_txt):
             if not u_email or not u_wallet:
                 st.error(msg_empty)
+            elif u_email.lower() in global_server["whitelist_emails"]:
+                err_dup_email = "❌ 该邮箱已申请过白名单，每个邮箱仅限一次！" if lang=="中文" else "❌ This email has already been registered. One application per email!"
+                st.error(err_dup_email)
+            elif u_wallet.lower() in global_server["whitelist_wallets"]:
+                err_dup_wallet = "❌ 该钱包地址已申请过白名单，每个钱包仅限一次！" if lang=="中文" else "❌ This wallet has already been registered. One application per wallet!"
+                st.error(err_dup_wallet)
             else:
+                global_server["whitelist_emails"].add(u_email.lower())
+                global_server["whitelist_wallets"].add(u_wallet.lower())
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
                 st.success(msg_success)
@@ -500,13 +516,15 @@ with tab4:
                         st.error("❌ 该邮箱已被占用！" if lang=="中文" else "❌ Email is already occupied.")
                     else:
                         inherited_nexa = st.session_state.app_earned
+                        ref_code = generate_referral_code(r_email)
                         global_server["user_db"][r_email] = {
                             "password_hash": hashlib.sha256(r_pwd.encode()).hexdigest(),
                             "score": inherited_nexa,
-                            "reg_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                            "reg_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                            "referral_code": ref_code
                         }
                         st.session_state.current_user = r_email
-                        st.success("🎉 注册成功！" if lang=="中文" else "🎉 Registration complete!")
+                        st.session_state.new_referral_code = ref_code
                         time.sleep(0.5)
                         st.rerun()
         else:
