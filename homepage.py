@@ -157,7 +157,7 @@ st.markdown("""
         font-weight: bold;
         text-transform: uppercase;
         margin-bottom: 4px;
-        margin-left: -16px;
+        margin-left: 0px;
         padding-left: 2px;
     }
 
