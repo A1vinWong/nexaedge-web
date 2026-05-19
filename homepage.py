@@ -375,11 +375,24 @@ with tab2:
 
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
+    
+    # 动态状态标签计算区域
+    if st.session_state.app_running:
+        status_badge = '<span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:middle;">ACTIVE</span>'
+    else:
+        status_badge = '<span style="background-color:#1e272e; color:#88929b; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:middle;">STANDBY</span>'
+        
     st.markdown(f"""
     <div class="app-card">
         <div style="display:flex; justify-content:space-between;">
-            <div><div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d1}</div><div class="app-value" style="font-size:17px;">{time_str}</div></div>
-            <div style="text-align:right;"><div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d2}</div><div class="app-value neon-green-text" style="font-size:17px;">{st.session_state.app_earned:,.2f} NEXA</div></div>
+            <div>
+                <div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d1}</div>
+                <div class="app-value" style="font-size:17px; display:inline-block;">{time_str}{status_badge}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d2}</div>
+                <div class="app-value neon-green-text" style="font-size:17px;">{st.session_state.app_earned:,.2f} NEXA</div>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
