@@ -91,20 +91,27 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 CSS 全局注入 ---
+# --- 🟢 CSS 全局注入（进行深度净化排雷） ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
     #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"] { display: none !important; }
     header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; }
-    [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
-    [data-testid="stElementContainer"] { border: none !important; background: transparent !important; margin-bottom: 6px !important; }
+    
+    /* 🔥 暴力清除可能导致红圈空框的所有 Streamlit 默认虚空 Block 容器和间距 */
+    [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; }
+    [data-testid="stVerticalBlock"] { gap: 0rem !important; }
+    .st-emotion-cache-zk9v0d { gap: 0rem !important; }
+    [data-testid="stElementContainer"] { border: none !important; background: transparent !important; margin-bottom: 0px !important; padding: 0px !important; }
     
     /* 选项卡定制 */
     .stTabs [data-baseweb="tab-list"] { gap: 4px; background-color: transparent !important; justify-content: flex-start; border: none !important; overflow-x: auto; }
     .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px 8px 0px 0px !important; border: 1px solid #1e272e !important; border-bottom: none !important; padding: 6px 12px !important; font-weight: 700 !important; font-size: 12px !important; white-space: nowrap; }
     .stTabs [aria-selected="true"] { color: #A2FF00 !important; background-color: #161c23 !important; border-top: 2px solid #A2FF00 !important; }
     .stTabs [data-baseweb="tab-highlight"] { background-color: #A2FF00 !important; height: 0px !important; }
+    
+    /* 选项卡内部面板容器无缝化 */
+    [data-testid="stTabPanel"] { padding-top: 0px !important; margin-top: 0px !important; }
     
     /* 容器及卡片 */
     .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 14px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -255,7 +262,7 @@ with tab1:
     if lang == "中文":
         with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: 
-            st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+            st.metric(label="算力结算底座", value="Solana Solana SPL", delta="极速、低 Gas")
             st.markdown('<div class="ca-white-box"><span class="ca-label">Contract Address</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_zh")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -357,10 +364,11 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: Dashboard 算力控制台 (🛠️ 已移除顶部的 DASHBOARD 状态条)
+# TAB 2: Dashboard 算力控制台 (🛠️ 无缝贴合无多余间留白)
 # ==========================================
 with tab2:
-    st.markdown('<div class="app-container">', unsafe_allow_html=True)
+    # 彻底杜绝 tab2 面板顶部的额外任何渲染元素或留白，直接进入主内容容器
+    st.markdown('<div class="app-container" style="margin-top: 0px; padding-top: 10px;">', unsafe_allow_html=True)
 
     # 在后台保留实时环境运算状态逻辑，供其他组件消费
     if st.session_state.app_running:
@@ -374,13 +382,13 @@ with tab2:
         current_temp = 30.5
         current_power = random.uniform(0.12, 0.18)
     
-    # 1. 警示/提示横条 (当前已成为了控制台的最顶部组件)
+    # 1. 提示横条 (直接做第一顺位渲染，无任何前置占位符)
     if st.session_state.current_user:
         badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
-        st.markdown(f'<div class="user-badge" style="margin-top: 5px;">{badge_txt}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="user-badge" style="margin-top: 0px; margin-bottom: 12px;">{badge_txt}</div>', unsafe_allow_html=True)
     else:
         badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
-        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300; margin-top: 5px;">{badge_txt}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300; margin-top: 0px; margin-bottom: 12px;">{badge_txt}</div>', unsafe_allow_html=True)
 
     # 2. 运行时间配置
     lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
