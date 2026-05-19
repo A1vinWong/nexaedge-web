@@ -28,7 +28,12 @@ def init_global_network_server():
                 "score": 1479.0,
                 "reg_time": "2026-05-18 14:22:05"
             }
-        }
+        },
+        # 💬 全局跨进程实时聊天大账本（支持多行长文与历史记录留存）
+        "chat_history": [
+            {"user": "System", "text": "NexaEdge Network Node Chat Gateway Online. Welcome!", "time": "12:00:00"},
+            {"user": "demo@nexaedge.ai", "text": "Hello global nodes! Mining speed is great today. 🚀", "time": "14:25:12"}
+        ]
     }
 
 global_server = init_global_network_server()
@@ -133,6 +138,11 @@ st.markdown("""
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; color: #cdfaee; }
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
+
+    /* 💬 独立聊天大厅特制暗黑样式 */
+    .chat-lobby { background-color: #11171d; border: 1px solid #1e272e; border-radius: 16px; padding: 15px; }
+    [data-testid="stChatMessage"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 10px !important; margin-bottom: 8px !important; padding: 10px !important; }
+    [data-testid="stChatMessage"] p { font-size: 13px !important; color: #e2e8f0 !important; line-height: 1.5; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -210,10 +220,11 @@ with intro_right:
 url_admin_param = st.query_params.get("admin", None)
 is_admin_active = (lang == "nexaadmin" or url_admin_param == "nexa_gate")
 
-# --- 核心可见选项卡 ---
-tab1, tab2, tab3 = st.tabs([
+# --- 🚀 核心四大并行选项卡（新增实时聊天大厅） ---
+tab1, tab2, tab3, tab4 = st.tabs([
     "🌐 Overview" if lang=="English" else "🌐 项目通识", 
     "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
+    "💬 Global Chat" if lang=="English" else "💬 节点聊天大厅", 
     "🔑 Auth Portal" if lang=="English" else "🔑 账户注册/登录"
 ])
 
@@ -331,7 +342,6 @@ with tab2:
     selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
     st.session_state.target_time_index = current_options.index(selected_time_tab2)
 
-    # 🚀 根据运行状态设置高亮字眼
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
         current_temp = random.uniform(36.4, 36.9)
@@ -376,7 +386,6 @@ with tab2:
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     
-    # 动态状态标签计算区域
     if st.session_state.app_running:
         status_badge = '<span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:middle;">ACTIVE</span>'
     else:
@@ -412,9 +421,46 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: 🔑 账户注册与登录入口
+# 💬 TAB 3: 节点聊天大厅 (剥离出的独立大选项卡)
 # ==========================================
 with tab3:
+    st.markdown('<div class="chat-lobby">', unsafe_allow_html=True)
+    
+    # 用户身份顶标
+    if st.session_state.current_user:
+        chat_user_badge = f"💬 当前发言身份: <b style='color:#A2FF00;'>{st.session_state.current_user}</b> (已认证节点)"
+    else:
+        chat_user_badge = f"💬 当前发言身份: <b style='color:#ffb300;'>游客({dev_id})</b> (建议前往注册以锁定专属标签)"
+    st.markdown(f'<div style="font-size:13px; color:#ffffff; margin-bottom:12px;">{chat_user_badge}</div>', unsafe_allow_html=True)
+    st.markdown('<hr style="border-color:#1e272e; margin-top:0px; margin-bottom:12px;">', unsafe_allow_html=True)
+    
+    # 🌟 核心高视野视窗（拔高到 380 像素，超出自动生成滚动条）
+    chat_container = st.container(height=380, border=False)
+    with chat_container:
+        for msg in global_server["chat_history"]:
+            is_system = (msg["user"] == "System")
+            with st.chat_message("assistant" if is_system else "user"):
+                st.markdown(f"**{msg['user']}** <span style='color:#88929b; font-size:10px;'>({msg['time']})</span>\n\n{msg['text']}", unsafe_allow_html=True)
+
+    # 🌟 吸附在选项卡最底部的交互输入框
+    chat_place = "在 Nexa 全球节点大厅发言... (支持输入多行长文，按下 Enter 发送)" if lang=="中文" else "Broadcast to Nexa Network... (Press Enter to send)"
+    if user_input := st.chat_input(chat_place, key="lobby_chat_input"):
+        sender_name = st.session_state.current_user if st.session_state.current_user else (f"游客({dev_id})" if lang=="中文" else f"Visitor({dev_id})")
+        
+        # 将聊天记录写回全局跨进程服务器内存中
+        global_server["chat_history"].append({
+            "user": sender_name,
+            "text": user_input,
+            "time": time.strftime("%H:%M:%S")
+        })
+        st.rerun()
+        
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==========================================
+# TAB 4: 🔑 账户注册与登录入口
+# ==========================================
+with tab4:
     if st.session_state.current_user:
         st.markdown('<div class="app-card" style="text-align:center; padding:20px 10px;">', unsafe_allow_html=True)
         title_auth = "<b>云端端点挂载就绪</b>" if lang=="中文" else "<b>Secure Network Node Engaged</b>"
@@ -489,19 +535,16 @@ with tab3:
                         st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# 🛡️ 隐蔽后台暗门管理面板触发区 (高保密密码锁升级版)
+# 🛡️ 隐蔽后台暗门管理面板触发区
 # ==========================================
 if is_admin_active:
     st.markdown("---")
     st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口隐蔽审计大盘 (ADMIN PORTAL DETECTED)</div>', unsafe_allow_html=True)
-    
-    # 强制进行第二层物理密码校验（默认密码设定为：NexaAdmin2026）
     admin_password = st.text_input("🔑 请输入内网管理员授权验证密码：", type="password", key="admin_pwd_gate")
     
     if admin_password == "NexaAdmin2026":
         st.toast("🔓 内网大账本数据已成功解密并挂载", icon="🟢")
         
-        # 读取白名单文本文件的行数作为人数统计
         whitelist_count = 0
         whitelist_lines = []
         if os.path.exists("whitelist.txt"):
@@ -517,7 +560,6 @@ if is_admin_active:
         with c_a3: 
             st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 实时活跃算力节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
         
-        # 内部切换表格
         adm_sub_tab1, adm_sub_tab2 = st.tabs(["📋 注册用户大表 (User DB)", "🎁 创世白名单明细 (Whitelist.txt)"])
         
         with adm_sub_tab1:
