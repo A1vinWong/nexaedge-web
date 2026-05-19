@@ -129,23 +129,27 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* 📊 深度校准的图表外框包裹器 - 增加负边距实现上移和左移 */
-    .chart-wrapper { 
-        background-color: #161c23; 
-        border: 1px solid #252e38; 
-        border-radius: 14px; 
-        padding: 14px 14px 4px 14px; 
-        margin-top: -15px;      /* 向上移动 */
-        margin-left: -15px;     /* 向左移动 */
+    /* ✅ 修复后的图表外框 */
+    .chart-wrapper {
+        background-color: #161c23;
+        border: 1px solid #252e38;
+        border-radius: 14px;
+        padding: 6px 8px 0px 8px;
+        margin-top: 4px;
         margin-bottom: 12px;
         box-sizing: border-box;
+        overflow: hidden;
+    }
+    /* 抵消 Streamlit line_chart 自带的内边距 */
+    .chart-wrapper [data-testid="stVegaLiteChart"] {
+        margin: -10px -8px -18px -8px !important;
     }
     .chart-title-lbl {
-        font-size: 11px; 
-        color: #88929b; 
-        font-weight: bold; 
-        text-transform: uppercase; 
-        margin-bottom: 6px; 
+        font-size: 11px;
+        color: #88929b;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 6px;
         padding-left: 2px;
     }
 
@@ -380,9 +384,10 @@ with tab2:
     chart_lbl = "📶 边缘节点算力实时波形数据 (Hashrate Chart)" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
     st.markdown(f'<div class="chart-title-lbl">{chart_lbl}</div>', unsafe_allow_html=True)
     
+    # ✅ 修复后的图表区域：去掉负边距，用 overflow:hidden + vega负边距抵消内边距
     st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
     df_chart = pd.DataFrame(st.session_state.chart_history, columns=["Hashrate (G/s)"])
-    st.line_chart(df_chart, height=135, use_container_width=True)
+    st.line_chart(df_chart, height=120, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
@@ -617,4 +622,3 @@ if st.session_state.app_running:
     st.session_state.last_tick_time = time.time()
     time.sleep(1.0)
     st.rerun()
-    
