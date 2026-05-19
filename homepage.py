@@ -357,39 +357,32 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: Dashboard 算力控制台 (🛠️ 已移除折线图格子)
+# TAB 2: Dashboard 算力控制台 (🛠️ 已移除顶部的 DASHBOARD 状态条)
 # ==========================================
 with tab2:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
 
-    # 1. 状态指示条
+    # 在后台保留实时环境运算状态逻辑，供其他组件消费
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
         current_temp = random.uniform(36.4, 36.9)
         current_power = random.uniform(4.85, 5.35)
-        title_status = "DASHBOARD [ACTIVE]"
+        st.session_state.chart_history.pop(0)
+        st.session_state.chart_history.append(current_hash)
     else:
         current_hash = 0.0
         current_temp = 30.5
         current_power = random.uniform(0.12, 0.18)
-        title_status = "DASHBOARD"
-
-    st.markdown(f'<div class="app-card" style="margin-bottom: 12px;"><div class="app-title">{title_status}</div><div style="font-size:12px; color:#88929b;">NETWORK HASH RATE (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div></div>', unsafe_allow_html=True)
     
-    # 2. 警示/提示横条 (贴在状态条下方)
+    # 1. 警示/提示横条 (当前已成为了控制台的最顶部组件)
     if st.session_state.current_user:
         badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
-        st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="user-badge" style="margin-top: 5px;">{badge_txt}</div>', unsafe_allow_html=True)
     else:
         badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
-        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300; margin-top: 5px;">{badge_txt}</div>', unsafe_allow_html=True)
 
-    # 后台哈希序列历史数据维护（保留内存，删除前端组件渲染）
-    if st.session_state.app_running:
-        st.session_state.chart_history.pop(0)
-        st.session_state.chart_history.append(current_hash)
-
-    # 3. 运行时间配置
+    # 2. 运行时间配置
     lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
     selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
     st.session_state.target_time_index = current_options.index(selected_time_tab2)
@@ -397,11 +390,11 @@ with tab2:
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     
-    # 4. 温度显示
+    # 3. 温度显示
     lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
     st.markdown(f'<div class="app-card"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
-    # 5. 功耗与电量
+    # 4. 功耗与电量
     lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
     lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
     st.markdown(f"""
@@ -419,7 +412,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 6. 收益与运行时长
+    # 5. 收益与运行时长
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     
@@ -443,7 +436,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 7. 控制按钮
+    # 6. 控制按钮
     if not st.session_state.app_running:
         btn_start = "激活并启动边缘算力节点" if lang=="中文" else "START COMPUTE SESSION"
         if st.button(btn_start, key="app_start_btn"):
