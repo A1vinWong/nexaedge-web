@@ -134,12 +134,12 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* ✅ 修复后的图表外框 - 整体向左偏移 */
+    /* ✅ 修复后的图表外框 */
     .chart-wrapper {
         background-color: #161c23;
         border: 1px solid #252e38;
         border-radius: 14px;
-        padding: 6px 8px 0px 8px;
+        padding: 6px 0px 0px 0px;
         margin-top: 4px;
         margin-left: -18px;
         margin-right: 8px;
@@ -147,9 +147,11 @@ st.markdown("""
         box-sizing: border-box;
         overflow: hidden;
     }
-    /* 抵消 Streamlit line_chart 自带的内边距 */
+    /* 去掉图表顶部灰色分隔线 */
+    .chart-wrapper hr, .chart-wrapper [data-testid="stHorizontalBlock"] { display: none !important; }
+    /* 抵消 Streamlit line_chart 自带的内边距，线条贴紧左边 */
     .chart-wrapper [data-testid="stVegaLiteChart"] {
-        margin: -10px -8px -18px -8px !important;
+        margin: -10px 0px -18px -12px !important;
     }
     .chart-title-lbl {
         font-size: 11px;
@@ -157,17 +159,19 @@ st.markdown("""
         font-weight: bold;
         text-transform: uppercase;
         margin-bottom: 4px;
-        margin-left: 0px;
+        margin-left: 14px;
         padding-left: 2px;
     }
 
-    /* 底部 Online/Devices 缩小 */
-    .mini-stat-card { text-align: center; background-color:#141d26; padding: 6px 4px; border-radius: 8px; min-height: 42px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-    .mini-stat-title { font-size: 8px !important; color: #88929b; font-weight: bold; white-space: nowrap; }
-    .mini-stat-value { font-size: 12px !important; font-weight: bold; font-family: monospace; margin-top: 2px; }
+    /* 底部 Online/Devices 缩小并排一行 */
+    .bottom-stats-row { display: flex; gap: 8px; margin-top: 4px; }
+    .mini-stat-card { text-align: center; background-color:#141d26; padding: 5px 8px; border-radius: 8px; min-height: 36px; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 8px; flex: 1; }
+    .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; margin: 0; }
+    .mini-stat-value { font-size: 12px !important; font-weight: bold; font-family: monospace; margin: 0; }
 
-    /* Dashboard 卡片间距收紧 */
+    /* Dashboard 卡片间距收紧，balance不截断 */
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+    .app-card .app-value { font-size: 15px !important; white-space: nowrap; overflow: visible; }
     .user-badge { background: #1e293b; padding: 8px 12px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 8px; font-size: 12px; color: #e2e8f0; line-height: 1.4; }
 
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; color: #cdfaee; }
@@ -445,14 +449,14 @@ with tab2:
         
     st.markdown(f"""
     <div class="app-card">
-        <div style="display:flex; justify-content:space-between;">
-            <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:8px;">
+            <div style="flex:1; min-width:0;">
                 <div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d1}</div>
-                <div class="app-value" style="font-size:17px; display:inline-block;">{time_str}{status_badge}</div>
+                <div class="app-value" style="font-size:16px; display:inline-block; white-space:nowrap;">{time_str}{status_badge}</div>
             </div>
-            <div style="text-align:right;">
+            <div style="text-align:right; flex:1; min-width:0;">
                 <div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d2}</div>
-                <div class="app-value neon-green-text" style="font-size:17px;">{st.session_state.app_earned:,.2f} NEXA</div>
+                <div class="app-value neon-green-text" style="font-size:15px; white-space:nowrap;">{st.session_state.app_earned:,.2f} NEXA</div>
             </div>
         </div>
     </div>
@@ -639,9 +643,6 @@ if is_admin_active:
 # ==========================================
 # 📊 宏观大盘全局物理底栏
 # ==========================================
-st.markdown("<br>", unsafe_allow_html=True)
-col_net1, col_net2 = st.columns(2)
-
 if lang == "中文":
     lbl_active_nodes = "● 全网活跃节点"
     lbl_real_viewers = "👀 实时在线观众"
@@ -649,10 +650,18 @@ else:
     lbl_active_nodes = "● NETWORK ACTIVE NODES"
     lbl_real_viewers = "👀 LIVE REAL VIEWERS"
 
-with col_net1: 
-    st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #A2FF00;"><div class="mini-stat-title">{lbl_active_nodes}</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
-with col_net2: 
-    st.markdown(f'<div class="mini-stat-card" style="border:1px dashed #00e5ff;"><div class="mini-stat-title">{lbl_real_viewers}</div><div class="mini-stat-value" style="color:#00e5ff;">{global_server["total_online_viewers"]} Online</div></div>', unsafe_allow_html=True)
+st.markdown(f"""
+<div class="bottom-stats-row">
+    <div class="mini-stat-card" style="border:1px dashed #A2FF00;">
+        <span class="mini-stat-title">{lbl_active_nodes}</span>
+        <span class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</span>
+    </div>
+    <div class="mini-stat-card" style="border:1px dashed #00e5ff;">
+        <span class="mini-stat-title">{lbl_real_viewers}</span>
+        <span class="mini-stat-value" style="color:#00e5ff;">{global_server["total_online_viewers"]} Online</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ==================== 后台实时高频刷新内核 ====================
 if st.session_state.app_running:
