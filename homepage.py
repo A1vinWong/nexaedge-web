@@ -430,8 +430,8 @@ st.line_chart(
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-    lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
-    st.markdown(f'<div class="app-card"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
+lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
+st.markdown(f'<div class="app-card"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
     lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
     lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
