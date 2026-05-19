@@ -91,7 +91,7 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 CSS 全局注入（深度美化工整净化版） ---
+# --- 🟢 CSS 全局注入（深度工整化与美化升级版） ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
@@ -99,50 +99,53 @@ st.markdown("""
     header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; }
     [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
     
-    /* 选项卡定制 - 美化工整版 */
-    .stTabs [data-baseweb="tab-list"] { gap: 8px; background-color: transparent !important; justify-content: center; border: none !important; overflow-x: auto; margin-bottom: 20px; }
-    .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px !important; border: 1px solid #1e272e !important; padding: 10px 18px !important; font-weight: 700 !important; font-size: 13px !important; white-space: nowrap; transition: all 0.3s; }
+    /* 选项卡全局美化控制 */
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; background-color: transparent !important; justify-content: center; border: none !important; overflow-x: auto; margin-bottom: 16px; }
+    .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px !important; border: 1px solid #1e272e !important; padding: 10px 16px !important; font-weight: 700 !important; font-size: 13px !important; white-space: nowrap; transition: all 0.3s; }
     .stTabs [aria-selected="true"] { color: #0b0f12 !important; background-color: #A2FF00 !important; border-top: none !important; }
     .stTabs [data-baseweb="tab-highlight"] { background-color: #A2FF00 !important; height: 0px !important; }
     
-    /* 容器及卡片 - 美化工整版 */
-    .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 20px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 15px; margin-bottom: 12px; }
+    /* 组件外壳工整间距设计 */
+    .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .app-title { font-size: 11px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 24px; font-weight: 700; }
     
     .neon-green-text { color: #A2FF00 !important; }
     .neon-blue-text { color: #00e5ff !important; }
-    .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 10px 15px; border-radius: 10px; margin-top: 10px; }
+    .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 8px 12px; border-radius: 10px; }
     
-    /* 按钮定制 - 美化工整版 */
-    div.stButton > button:first-child { background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 15px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 12px 18px !important; box-shadow: 0 5px 15px rgba(162, 255, 0, 0.3); transition: all 0.2s; }
+    /* 按钮样式微调 */
+    div.stButton > button:first-child { background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 15px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 12px 18px !important; box-shadow: 0 5px 15px rgba(162, 255, 0, 0.2); transition: all 0.2s; }
     div.stButton > button:hover { background-color: #b5ff33 !important; }
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #f43f5e !important; box-shadow: none !important; }
     div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 5px 12px !important; font-size: 12px !important; width: auto !important; }
     
-    /* 表单与输入框 */
-    [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 20px !important; }
-    .user-badge { background: #1e293b; padding: 10px 15px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 15px; font-size: 13px; color: #e2e8f0; }
-    .mini-stat-card { text-align: center; background-color:#141d26; padding: 10px 6px; border-radius: 10px; min-height: 60px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    /* 表单与文本输入框 */
+    [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 18px !important; }
+    .user-badge { background: #1e293b; padding: 10px 14px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 12px; font-size: 13px; color: #e2e8f0; line-height: 1.4; }
+    .mini-stat-card { text-align: center; background-color:#141d26; padding: 10px 6px; border-radius: 10px; min-height: 58px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; }
     .mini-stat-value { font-size: 14px !important; font-weight: bold; font-family: monospace; margin-top: 4px; }
     
-    .feature-box { background-color: #11171d; padding: 16px; border-radius: 10px; border-left: 4px solid #A2FF00; margin-bottom: 12px; }
-    .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 6px; margin: 8px 0; }
-    .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; transition: all 0.2s; }
+    .feature-box { background-color: #11171d; padding: 14px; border-radius: 10px; border-left: 4px solid #A2FF00; margin-bottom: 10px; }
+    .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 6px; margin: 6px 0; }
+    .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
+
+    /* 内部图表外框包裹器，使图表边缘工整对齐 */
+    .chart-wrapper { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 12px; margin-bottom: 12px; }
 
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; color: #cdfaee; }
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 10px; border: 1px solid #374151; }
     .admin-table td { padding: 10px; border: 1px solid #374151; background-color: #111827; }
     
-    /* 合约地址样式 */
+    /* 合约地址样式结构 */
     .ca-white-box { 
         background: transparent; 
         border: none; 
         padding: 0; 
-        margin-top: 6px;
+        margin-top: 4px;
         text-align: left;
     }
     .ca-label {
@@ -160,9 +163,9 @@ st.markdown("""
         border-color: #1e2a38 !important;
         background-color: #161c23 !important;
         font-family: monospace !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         text-align: left !important;
-        padding: 8px 12px !important;
+        padding: 6px 10px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -206,7 +209,7 @@ else:
     st.markdown('<p style="font-size: 14px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 5px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
 # ==========================================
-# 👑 2:1 顶层多媒体网格与暗门入口
+# 👑 2:1 顶层多媒体网格与简报
 # ==========================================
 intro_left, intro_right = st.columns([2, 1])
 
@@ -254,10 +257,10 @@ tab1, tab2, tab4 = st.tabs([
 with tab1:
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
-        with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
+        with c1: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: 
             st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-            st.markdown('<div class="ca-white-box"><span class="ca-label">Contract Address</span>', unsafe_allow_html=True)
+            st.markdown('<div class="ca-white-box"><span class="ca-label">代币智能合约地址</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_zh")
             st.markdown('</div>', unsafe_allow_html=True)
         with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
@@ -321,7 +324,7 @@ with tab1:
             u_wallet_label = "绑定的 Solana 钱包接收地址 (获取空投资产):"
             u_wallet_place = "输入您的 Solana SPL 钱包公钥"
             btn_wl_txt = "锁定创世空投席位 ⚡"
-            msg_empty = "❌ 请完整填写邮箱 and 钱包地址！"
+            msg_empty = "❌ 请完整填写邮箱和钱包地址！"
             msg_success = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
             contact_btn_label = "📧 联系我们"
         else:
@@ -358,12 +361,12 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: Dashboard 算力控制台 (🛠️ 已移除顶部的 DASHBOARD 状态条)
+# TAB 2: Dashboard 算力控制台 (📈 重新嵌入折线图走势)
 # ==========================================
 with tab2:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
 
-    # 在后台保留实时环境运算状态逻辑，供其他组件消费
+    # 核心数据状态演算逻辑
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
         current_temp = random.uniform(36.4, 36.9)
@@ -375,7 +378,7 @@ with tab2:
         current_temp = 30.5
         current_power = random.uniform(0.12, 0.18)
     
-    # 1. 警示/提示横条 (当前已成为了控制台的最顶部组件)
+    # 1. 顶部挂载账户提示横条
     if st.session_state.current_user:
         badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
         st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
@@ -383,7 +386,7 @@ with tab2:
         badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
         st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
 
-    # 2. 运行时间配置
+    # 2. 运行配置选择框
     lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
     selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
     st.session_state.target_time_index = current_options.index(selected_time_tab2)
@@ -391,11 +394,20 @@ with tab2:
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     
-    # 3. 温度显示
+    # 3. 📈 重新加回的实时算力动态折线图走势面板
+    chart_lbl = "📶 边缘节点算力实时波形数据 (Hashrate Chart)" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
+    st.markdown(f'<div style="font-size:11px; color:#88929b; font-weight:bold; margin-bottom:4px; text-transform:uppercase; padding-left:4px;">{chart_lbl}</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
+    df_chart = pd.DataFrame(st.session_state.chart_history, columns=["Hashrate (G/s)"])
+    st.line_chart(df_chart, height=130, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 4. 温度安全组件
     lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
     st.markdown(f'<div class="app-card"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
-    # 4. 功耗与电量
+    # 5. 功耗与电量网格
     lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
     lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
     st.markdown(f"""
@@ -413,7 +425,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 5. 收益与运行时长
+    # 6. 收益与运行时长汇总卡片
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     
@@ -437,7 +449,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # 6. 控制按钮
+    # 7. 动态启停开关
     if not st.session_state.app_running:
         btn_start = "激活并启动边缘算力节点" if lang=="中文" else "START COMPUTE SESSION"
         if st.button(btn_start, key="app_start_btn"):
