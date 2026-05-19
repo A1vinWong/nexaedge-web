@@ -133,6 +133,9 @@ st.markdown("""
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; color: #cdfaee; }
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
+    
+    /* 代币合约地址展示定制 */
+    .token-box { background: #161c23; border: 1px dashed #A2FF00; border-radius: 10px; padding: 10px; margin-bottom: 15px; text-align: center; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -221,6 +224,23 @@ tab1, tab2, tab4 = st.tabs([
 # TAB 1: 项目通识 与 全球化白名单表单
 # ==========================================
 with tab1:
+    # 🌟 新增：NEXA 代币合约地址高亮一键复制区域 🌟
+    if lang == "中文":
+        st.markdown("""
+        <div class="token-box">
+            <span style="color:#88929b; font-size:11px; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">🔗 NEXA 官方代币合约地址 (Solana SPL)</span>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="token-box">
+            <span style="color:#88929b; font-size:11px; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">🔗 NEXA TOKEN CONTRACT ADDRESS (Solana SPL)</span>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.text_input("Token Contract Address (CA)", value="D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2", disabled=True, label_visibility="collapsed")
+    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
         with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
@@ -283,7 +303,7 @@ with tab1:
             btn_wl_txt = "锁定创世空投席位 ⚡"
             msg_empty = "❌ 请完整填写邮箱和钱包地址！"
             msg_success = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
-            contact_btn_label = "📧 联系我们"  # 👈 中文标签
+            contact_btn_label = "📧 联系我们"
         else:
             st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 Claim Genesis Whitelist & Social Boosting Rewards</div>', unsafe_allow_html=True)
             u_email_label = "Notification Email Address:"
@@ -293,9 +313,8 @@ with tab1:
             btn_wl_txt = "Lock Genesis Seating ⚡"
             msg_empty = "❌ Email and Wallet fields cannot be empty!"
             msg_success = "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot."
-            contact_btn_label = "📧 Contact US"  # 👈 英文标签
+            contact_btn_label = "📧 Contact US"
 
-        # 👈 这里已经将 contact_btn_label 变量融合进 HTML 字符串中了
         st.markdown(f"""
         <div class="social-grid">
             <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
