@@ -293,6 +293,7 @@ with tab1:
             msg_empty = "❌ Email and Wallet fields cannot be empty!"
             msg_success = "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot."
 
+        # 👈 此处加入了独立的邮箱点击发送邮件入口 (融合进社交媒体网格中)
         st.markdown("""
         <div class="social-grid">
             <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
@@ -300,6 +301,7 @@ with tab1:
             <a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>
             <a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>
             <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
+            <a class="social-btn" href="mailto:contact@nexaedge.org" style="border-color: #00e5ff; color: #00e5ff !important;" title="点击直接发邮件给官方">📧 Contact US</a>
         </div>
         """, unsafe_allow_html=True)
         
