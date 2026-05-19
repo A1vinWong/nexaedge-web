@@ -79,7 +79,7 @@ if "session_id" not in st.session_state:
     global_server["total_online_viewers"] += 1
 
 if 'app_running' not in st.session_state: st.session_state.app_running = False
-if 'chart_history' not in st.session_state: st.session_state.chart_history = [22.0, 25.0, 24.0, 28.0, 27.0, 31.0, 29.0, 33.0, 31.0, 35.0, 33.0, 36.8]
+if 'chart_history' not in st.session_state: st.session_state.chart_history = [45.2, 46.8, 45.1, 47.3, 46.0, 48.2, 45.9, 49.1, 47.5, 48.8, 46.2, 47.9]
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
@@ -91,12 +91,12 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 CSS 全局注入（深度工整化与美化升级版） ---
+# --- 🟢 CSS 全局注入（图表深度工整对称化升级） ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
     #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"] { display: none !important; }
-    header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; }
+    header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; height:0px !important; }
     [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
     
     /* 选项卡全局美化控制 */
@@ -106,7 +106,7 @@ st.markdown("""
     .stTabs [data-baseweb="tab-highlight"] { background-color: #A2FF00 !important; height: 0px !important; }
     
     /* 组件外壳工整间距设计 */
-    .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 14px; margin-bottom: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .app-title { font-size: 11px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 24px; font-weight: 700; }
@@ -133,8 +133,23 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* 内部图表外框包裹器，使图表边缘工整对齐 */
-    .chart-wrapper { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 12px; margin-bottom: 12px; }
+    /* 📊 深度校准的图表外框包裹器 - 确保与 app-card 严丝合缝完全对齐 */
+    .chart-wrapper { 
+        background-color: #161c23; 
+        border: 1px solid #252e38; 
+        border-radius: 14px; 
+        padding: 14px 14px 4px 14px; 
+        margin-bottom: 12px;
+        box-sizing: border-box;
+    }
+    .chart-title-lbl {
+        font-size: 11px; 
+        color: #88929b; 
+        font-weight: bold; 
+        text-transform: uppercase; 
+        margin-bottom: 6px; 
+        padding-left: 2px;
+    }
 
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; color: #cdfaee; }
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 10px; border: 1px solid #374151; }
@@ -260,7 +275,8 @@ with tab1:
         with c1: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: 
             st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-            st.markdown('<div class="ca-white-box"><span class="ca-label">代币智能合约地址</span>', unsafe_allow_html=True)
+            # 🔄 已经完美由 "代币智能合约地址" 更改为 "智能合约地址"
+            st.markdown('<div class="ca-white-box"><span class="ca-label">智能合约地址</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_zh")
             st.markdown('</div>', unsafe_allow_html=True)
         with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
@@ -361,11 +377,9 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: Dashboard 算力控制台 (📈 重新嵌入折线图走势)
+# TAB 2: Dashboard 算力控制台 (🛠️ 深度对齐调优)
 # ==========================================
 with tab2:
-    st.markdown('<div class="app-container">', unsafe_allow_html=True)
-
     # 核心数据状态演算逻辑
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
@@ -394,13 +408,13 @@ with tab2:
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     
-    # 3. 📈 重新加回的实时算力动态折线图走势面板
+    # 3. 📈 严丝合缝、极致工整的实时算力动态折线图面板
     chart_lbl = "📶 边缘节点算力实时波形数据 (Hashrate Chart)" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
-    st.markdown(f'<div style="font-size:11px; color:#88929b; font-weight:bold; margin-bottom:4px; text-transform:uppercase; padding-left:4px;">{chart_lbl}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="chart-title-lbl">{chart_lbl}</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
     df_chart = pd.DataFrame(st.session_state.chart_history, columns=["Hashrate (G/s)"])
-    st.line_chart(df_chart, height=130, use_container_width=True)
+    st.line_chart(df_chart, height=135, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     # 4. 温度安全组件
@@ -462,7 +476,6 @@ with tab2:
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
 # TAB 4: 🔑 账户注册与登录入口
