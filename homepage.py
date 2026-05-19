@@ -18,25 +18,21 @@ st.set_page_config(
 # =========================================================================
 @st.cache_resource
 def init_global_network_server():
-    # 结构重构：以唯一的 'English Username' 作为字典的 Key，内部存储 email 与 display_name
     return {
         "active_device_set": set(),             
         "total_online_viewers": random.randint(102, 125), 
         "device_balances": {},                  
         "user_db": {                            
-            "nexa_miner_pro": {
-                "email": "demo@nexaedge.ai",
-                "display_name": "测试用户",
+            "demo@nexaedge.ai": {
                 "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
-                "wallet": "GjvqAarpBirdGu2ahhKTrZ5sUcuPexGatMuGDmZLAb33",
                 "score": 1479.0,
                 "reg_time": "2026-05-18 14:22:05"
             }
         },
-        # 💬 全局跨进程实时聊天大账本
+        # 💬 新增：全局跨进程实时聊天大账本
         "chat_history": [
-            {"user": "System", "text": "NexaEdge Network Node Chat Gateway Online. Welcome!", "time": "12:00:00"},
-            {"user": "nexa_miner_pro", "text": "Hello global nodes! Mining speed is great today. 🚀", "time": "14:25:12"}
+            {"user": "System", "text": "NexaEdge Node Gateway Core Online.", "time": "12:00"},
+            {"user": "demo@nexaedge.ai", "text": "Hello global nodes! Mining speed is great today. 🚀", "time": "14:25"}
         ]
     }
 
@@ -53,7 +49,7 @@ if "device_fingerprint" not in st.session_state:
 dev_id = st.session_state.device_fingerprint
 
 if "current_user" not in st.session_state:
-    st.session_state.current_user = None  # 存储成功登录后的唯一 'English Username'
+    st.session_state.current_user = None  
 
 # 初始化匿名硬件账本
 if dev_id not in global_server["device_balances"]:
@@ -65,12 +61,12 @@ if dev_id not in global_server["device_balances"]:
 
 def sync_data_from_source():
     if st.session_state.current_user:
-        username = st.session_state.current_user
-        if 'app_earned' not in st.session_state or st.session_state.get('last_user') != username:
-            st.session_state.app_earned = global_server["user_db"][username]["score"]
+        email = st.session_state.current_user
+        if 'app_earned' not in st.session_state or st.session_state.get('last_user') != email:
+            st.session_state.app_earned = global_server["user_db"][email]["score"]
             st.session_state.total_energy_wh = global_server["device_balances"][dev_id]["total_energy_wh"]
             st.session_state.session_seconds = global_server["device_balances"][dev_id]["session_seconds"]
-            st.session_state.last_user = username
+            st.session_state.last_user = email
     else:
         if 'app_earned' not in st.session_state or st.session_state.get('last_user') is not None:
             st.session_state.app_earned = global_server["device_balances"][dev_id]["app_earned"]
@@ -81,7 +77,7 @@ def sync_data_from_source():
 sync_data_from_source()
 
 if "session_id" not in st.session_state:
-    st.session_id = f"node_{dev_id}_{random.randint(1000, 9999)}"
+    st.session_state.session_id = f"node_{dev_id}_{random.randint(1000, 9999)}"
     global_server["total_online_viewers"] += 1
 
 if 'app_running' not in st.session_state: st.session_state.app_running = False
@@ -143,10 +139,9 @@ st.markdown("""
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
 
-    /* 💬 独立聊天大厅特制暗黑样式 */
-    .chat-lobby { background-color: #11171d; border: 1px solid #1e272e; border-radius: 16px; padding: 15px; }
-    [data-testid="stChatMessage"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 10px !important; margin-bottom: 8px !important; padding: 10px !important; }
-    [data-testid="stChatMessage"] p { font-size: 13px !important; color: #e2e8f0 !important; line-height: 1.5; }
+    /* 💬 注入聊天室组件暗色调微调 */
+    [data-testid="stChatMessage"] { background-color: #11171d !important; border: 1px solid #252e38 !important; border-radius: 10px !important; margin-bottom: 5px !important; padding: 8px !important; }
+    [data-testid="stChatMessage"] p { font-size: 12px !important; color: #e2e8f0 !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -224,11 +219,10 @@ with intro_right:
 url_admin_param = st.query_params.get("admin", None)
 is_admin_active = (lang == "nexaadmin" or url_admin_param == "nexa_gate")
 
-# --- 🚀 核心四大并行选项卡 ---
-tab1, tab2, tab3, tab4 = st.tabs([
+# --- 核心可见选项卡 ---
+tab1, tab2, tab3 = st.tabs([
     "🌐 Overview" if lang=="English" else "🌐 项目通识", 
     "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
-    "💬 Global Chat" if lang=="English" else "💬 节点聊天大厅", 
     "🔑 Auth Portal" if lang=="English" else "🔑 账户注册/登录"
 ])
 
@@ -335,9 +329,8 @@ with tab1:
 with tab2:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
     
-    # 📌 规范：控制台统一显示英文唯一 username
     if st.session_state.current_user:
-        badge_txt = f"🟢 已成功挂载云端账户 Username: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account Username: <b>{st.session_state.current_user}</b>"
+        badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
         st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
     else:
         badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
@@ -347,6 +340,7 @@ with tab2:
     selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
     st.session_state.target_time_index = current_options.index(selected_time_tab2)
 
+    # 🚀 根据运行状态设置高亮字眼
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
         current_temp = random.uniform(36.4, 36.9)
@@ -390,23 +384,11 @@ with tab2:
 
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
-    
-    if st.session_state.app_running:
-        status_badge = '<span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:middle;">ACTIVE</span>'
-    else:
-        status_badge = '<span style="background-color:#1e272e; color:#88929b; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:middle;">STANDBY</span>'
-        
     st.markdown(f"""
     <div class="app-card">
         <div style="display:flex; justify-content:space-between;">
-            <div>
-                <div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d1}</div>
-                <div class="app-value" style="font-size:17px; display:inline-block;">{time_str}{status_badge}</div>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d2}</div>
-                <div class="app-value neon-green-text" style="font-size:17px;">{st.session_state.app_earned:,.2f} NEXA</div>
-            </div>
+            <div><div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d1}</div><div class="app-value" style="font-size:17px;">{time_str}</div></div>
+            <div style="text-align:right;"><div style="font-size:10px; color:#88929b; font-weight:bold;">{lbl_d2}</div><div class="app-value neon-green-text" style="font-size:17px;">{st.session_state.app_earned:,.2f} NEXA</div></div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -423,52 +405,49 @@ with tab2:
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
-# ==========================================
-# 💬 TAB 3: 节点聊天大厅 (规范：发言身份全部限制为英文唯一 Username)
-# ==========================================
-with tab3:
-    st.markdown('<div class="chat-lobby">', unsafe_allow_html=True)
+    # =====================================================================
+    # 💬 新增：控制台内网嵌入式实时聊天室 (多端互通)
+    # =====================================================================
+    st.markdown("<br>", unsafe_allow_html=True)
+    chat_title = "💬 全球边缘节点内网聊天室" if lang=="中文" else "💬 Global Node Internal Chatroom"
+    st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:6px; text-transform:uppercase;">{chat_title}</div>', unsafe_allow_html=True)
     
-    if st.session_state.current_user:
-        chat_user_badge = f"💬 当前发言身份 Username: <b style='color:#A2FF00;'>{st.session_state.current_user}</b> (已认证节点)"
-    else:
-        chat_user_badge = f"💬 当前发言身份: <b style='color:#ffb300;'>Visitor({dev_id})</b> (建议前往注册以锁定专属英文名)"
-    st.markdown(f'<div style="font-size:13px; color:#ffffff; margin-bottom:12px;">{chat_user_badge}</div>', unsafe_allow_html=True)
-    st.markdown('<hr style="border-color:#1e272e; margin-top:0px; margin-bottom:12px;">', unsafe_allow_html=True)
-    
-    chat_container = st.container(height=380, border=False)
+    # 设一个固定高度的聊天记录渲染框（利用容器容纳最后15条发言）
+    chat_container = st.container(height=180, border=False)
     with chat_container:
-        for msg in global_server["chat_history"]:
-            is_system = (msg["user"] == "System")
-            with st.chat_message("assistant" if is_system else "user"):
-                # 渲染时使用存入的唯一英文 username
-                st.markdown(f"**{msg['user']}** <span style='color:#88929b; font-size:10px;'>({msg['time']})</span>\n\n{msg['text']}", unsafe_allow_html=True)
+        for msg in global_server["chat_history"][-15:]:
+            with st.chat_message("user" if msg["user"] != "System" else "assistant"):
+                st.markdown(f"**{msg['user']}** *({msg['time']})* \n{msg['text']}")
 
-    chat_place = "在 Nexa 全球节点大厅发言... (支持输入多行长文，按下 Enter 发送)" if lang=="中文" else "Broadcast to Nexa Network... (Press Enter to send)"
-    if user_input := st.chat_input(chat_place, key="lobby_chat_input"):
-        # 强制设置发送者为英文唯一 Username 
-        sender_name = st.session_state.current_user if st.session_state.current_user else f"Visitor({dev_id})"
-        
+    # 聊天框输入区域
+    chat_place = "说点什么... (回车发送)" if lang=="中文" else "Type a message... (Press Enter)"
+    if user_input := st.chat_input(chat_place):
+        # 动态判定当前发送消息的人的真实身份
+        if st.session_state.current_user:
+            sender_name = st.session_state.current_user
+        else:
+            sender_name = f"游客({dev_id})" if lang=="中文" else f"Visitor({dev_id})"
+            
+        # 将新消息追加到全局持久化字典中
         global_server["chat_history"].append({
             "user": sender_name,
             "text": user_input,
             "time": time.strftime("%H:%M:%S")
         })
-        st.rerun()
+        st.rerun() # 立即刷新，让聊天即时显现
         
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# TAB 4: 🔑 账户注册与登录入口（四件套注册与仅英文名登录修改区）
+# TAB 3: 🔑 账户注册与登录入口
 # ==========================================
-with tab4:
+with tab3:
     if st.session_state.current_user:
         st.markdown('<div class="app-card" style="text-align:center; padding:20px 10px;">', unsafe_allow_html=True)
         title_auth = "<b>云端端点挂载就绪</b>" if lang=="中文" else "<b>Secure Network Node Engaged</b>"
         st.markdown(f"🎉 {title_auth}", unsafe_allow_html=True)
-        lbl_id = f"当前在线账户 Username：<span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>" if lang=="中文" else f"Active Account Username: <span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>"
+        lbl_id = f"当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>" if lang=="中文" else f"Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>"
         st.markdown(lbl_id, unsafe_allow_html=True)
         
         box_txt = f"全网同步累计代币池收益<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>" if lang=="中文" else f"Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>"
@@ -484,78 +463,73 @@ with tab4:
         opt_auth = ["注册新节点账户", "登录已有账户"] if lang=="中文" else ["Register Node Account", "Login Existing Node"]
         auth_mode = st.radio("Auth Selection:", opt_auth, horizontal=True, label_visibility="collapsed")
         
-        # 📌 注册环节：必须填写 Email, User Name, English Username, Password
         if auth_mode in ["注册新节点账户", "Register Node Account"]:
             with st.form("reg_form"):
-                form_title = "🚀 分布式节点注册中心 (需要完整填写以下四项基本凭证)" if lang=="中文" else "🚀 Distributed Node Registration Portal (4 Mandatory Fields)"
+                form_title = "🚀 极简注册（自动继承并合并当前已有 NEXA 数量）" if lang=="中文" else "🚀 Quick Profile Registration (Inherits Current Balance)"
                 st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:6px;">{form_title}</div>', unsafe_allow_html=True)
                 
-                label_mail = "Email Address (电子邮箱):" if lang == "中文" else "Email Address:"
-                label_display = "User Name (用户显示名称):" if lang == "中文" else "User Name:"
-                label_user = "English Username (英文唯一用户名 - 登录及发言专用):" if lang == "中文" else "English Username (For login & chat):"
-                label_pwd = "Password (设置密码):" if lang == "中文" else "Choose Password:"
+                label_mail = "邮箱地址:" if lang == "中文" else "Email Address:"
+                label_pwd = "设置密码:" if lang == "中文" else "Choose Password:"
+                place_mail = "example@nexa.com"
+                place_pwd = "Enter your secure password"
                 
-                r_email = st.text_input(label_mail, placeholder="example@domain.com").strip()
-                r_display_name = st.text_input(label_display, placeholder="例如: 张伟 / Alex").strip()
-                r_username = st.text_input(label_user, placeholder="例如: alex_miner99 (不可包含中文)").strip()
-                r_pwd = st.text_input(label_pwd, type="password", placeholder="Enter your secure password")
+                r_email = st.text_input(label_mail, placeholder=place_mail).strip()
+                r_pwd = st.text_input(label_pwd, type="password", placeholder=place_pwd)
                 
                 btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Profile ⚡"
                 if f_submit := st.form_submit_button(btn_reg_txt):
-                    if not r_email or not r_display_name or not r_username or not r_pwd:
-                        st.error("❌ 注册失败：Email、User Name、English Username 和密码全为必填项！" if lang=="中文" else "❌ Registration Failed: Email, User Name, English Username, and Password are all required!")
-                    elif r_username in global_server["user_db"]:
-                        st.error("❌ 该英文用户名已被占用，请换一个唯一的英文用户名！" if lang=="中文" else "❌ This English Username is already occupied.")
+                    if not r_email or not r_pwd:
+                        st.error("❌ 邮箱和密码为必填项！" if lang=="中文" else "❌ Email and Password are mandatory!")
+                    elif r_email in global_server["user_db"]:
+                        st.error("❌ 该邮箱已被占用！" if lang=="中文" else "❌ Email is already occupied.")
                     else:
                         inherited_nexa = st.session_state.app_earned
-                        global_server["user_db"][r_username] = {
-                            "email": r_email,
-                            "display_name": r_display_name,
+                        global_server["user_db"][r_email] = {
                             "password_hash": hashlib.sha256(r_pwd.encode()).hexdigest(),
-                            "wallet": f"Anon_{hashlib.md5(r_username.encode()).hexdigest()[:8]}",
                             "score": inherited_nexa,
                             "reg_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                         }
-                        st.session_state.current_user = r_username
-                        st.success("🎉 注册成功并自动绑定端点！" if lang=="中文" else "🎉 Registration complete and endpoint bound!")
+                        st.session_state.current_user = r_email
+                        st.success("🎉 注册成功！" if lang=="中文" else "🎉 Registration complete!")
                         time.sleep(0.5)
                         st.rerun()
-                        
-        # 📌 登录环节：只需要填写 English Username 和 Password
         else:
             with st.form("login_form"):
                 login_title = "🔑 登录 NexaEdge 算力账户" if lang=="中文" else "🔑 Connect Node Endpoint Terminal"
                 st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:6px;">{login_title}</div>', unsafe_allow_html=True)
                 
-                label_l_user = "English Username (英文用户名):" if lang == "中文" else "English Username:"
-                label_l_pwd = "Password (验证密码):" if lang == "中文" else "Verification Password:"
+                label_l_mail = "登录邮箱:" if lang == "中文" else "Account Email:"
+                label_l_pwd = "验证密码:" if lang == "中文" else "Verification Password:"
                 
-                l_username = st.text_input(label_l_user).strip()
+                l_email = st.text_input(label_l_mail).strip()
                 l_pwd = st.text_input(label_l_pwd, type="password")
                 
                 btn_l_txt = "验证并载入云端档案 ⚡" if lang=="中文" else "Authenticate & Load Assets ⚡"
                 if st.form_submit_button(btn_l_txt):
                     p_hash = hashlib.sha256(l_pwd.encode()).hexdigest()
-                    if l_username in global_server["user_db"] and global_server["user_db"][l_username]["password_hash"] == p_hash:
-                        st.session_state.current_user = l_username
-                        st.session_state.app_earned = global_server["user_db"][l_username]["score"]
+                    if l_email in global_server["user_db"] and global_server["user_db"][l_email]["password_hash"] == p_hash:
+                        st.session_state.current_user = l_email
+                        st.session_state.app_earned = global_server["user_db"][l_email]["score"]
                         st.success("⚡ 登录成功！" if lang=="中文" else "⚡ Authentication verified!")
                         time.sleep(0.5)
                         st.rerun()
                     else:
-                        st.error("❌ 英文用户名或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
+                        st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# 🛡️ 隐蔽后台暗门管理面板触发区
+# 🛡️ 隐蔽后台暗门管理面板触发区 (高保密密码锁升级版)
 # ==========================================
 if is_admin_active:
     st.markdown("---")
     st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口隐蔽审计大盘 (ADMIN PORTAL DETECTED)</div>', unsafe_allow_html=True)
+    
+    # 强制进行第二层物理密码校验（默认密码设定为：NexaAdmin2026）
     admin_password = st.text_input("🔑 请输入内网管理员授权验证密码：", type="password", key="admin_pwd_gate")
     
     if admin_password == "NexaAdmin2026":
         st.toast("🔓 内网大账本数据已成功解密并挂载", icon="🟢")
         
+        # 读取白名单文本文件的行数作为人数统计
         whitelist_count = 0
         whitelist_lines = []
         if os.path.exists("whitelist.txt"):
@@ -571,21 +545,20 @@ if is_admin_active:
         with c_a3: 
             st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 实时活跃算力节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
         
+        # 内部切换表格
         adm_sub_tab1, adm_sub_tab2 = st.tabs(["📋 注册用户大表 (User DB)", "🎁 创世白名单明细 (Whitelist.txt)"])
         
         with adm_sub_tab1:
             st.markdown("<p style='font-size:11px; font-weight:bold; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
             table_html = """
             <table class="admin-table">
-                <tr><th>序号</th><th>English Username</th><th>User Name</th><th>Email</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
+                <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
             """
-            for idx, (username, info) in enumerate(global_server["user_db"].items(), 1):
+            for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
                 table_html += f"""
                 <tr>
                     <td>{idx}</td>
-                    <td style='color:#00e5ff; font-weight:bold;'>{username}</td>
-                    <td>{info.get('display_name', 'N/A')}</td>
-                    <td>{info.get('email', 'N/A')}</td>
+                    <td>{email}</td>
                     <td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td>
                     <td>{info['reg_time']}</td>
                 </tr>
