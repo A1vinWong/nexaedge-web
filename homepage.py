@@ -5,6 +5,7 @@ import random
 import pandas as pd
 import glob
 import hashlib
+import plotly.graph_objects as go  # 📊 用于微米级平滑控制的图表库
 
 # 💡 在这里统一配置你的新合约地址
 DEFAULT_CA = "D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2"
@@ -26,7 +27,7 @@ def init_global_network_server():
         "total_online_viewers": random.randint(102, 125), 
         "device_balances": {},                  
         "user_db": {                            
-            "contact@nexaedge.org": {  # 👈 官方邮箱
+            "contact@nexaedge.org": {  
                 "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
                 "score": 1479.0,
                 "reg_time": "2026-05-18 14:22:05"
@@ -79,7 +80,11 @@ if "session_id" not in st.session_state:
     global_server["total_online_viewers"] += 1
 
 if 'app_running' not in st.session_state: st.session_state.app_running = False
-if 'chart_history' not in st.session_state: st.session_state.chart_history = [45.2, 46.8, 45.1, 47.3, 46.0, 48.2, 45.9, 49.1, 47.5, 48.8, 46.2, 47.9]
+
+# 📉 初始化均线在 20 附近的波动历史数据 (保持 12 个打点点位)
+if 'chart_history' not in st.session_state: 
+    st.session_state.chart_history = [19.8, 20.2, 19.9, 20.1, 20.3, 19.7, 20.0, 20.2, 19.9, 20.1, 19.8, 20.0]
+
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
@@ -96,7 +101,7 @@ st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
     #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"] { display: none !important; }
-    header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; height:0px !important; }
+    header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; }
     [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
     
     /* 选项卡全局美化控制 */
@@ -133,12 +138,12 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* 📊 深度校准的图表外框包裹器 - 确保与 app-card 严丝合缝完全对齐 */
+    /* 📊 深度校准的图表外框包裹器 - 确保无多余空白框，并紧密咬合 */
     .chart-wrapper { 
         background-color: #161c23; 
         border: 1px solid #252e38; 
         border-radius: 14px; 
-        padding: 14px 14px 4px 14px; 
+        padding: 10px 12px 10px 12px; 
         margin-bottom: 12px;
         box-sizing: border-box;
     }
@@ -147,7 +152,7 @@ st.markdown("""
         color: #88929b; 
         font-weight: bold; 
         text-transform: uppercase; 
-        margin-bottom: 6px; 
+        margin-bottom: 4px; 
         padding-left: 2px;
     }
 
@@ -275,7 +280,7 @@ with tab1:
         with c1: st.metric(label="智能硬件风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: 
             st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-            # 🔄 已经完美由 "代币智能合约地址" 更改为 "智能合约地址"
+            # 🔄 精准变更：由代币智能合约地址更名为智能合约地址
             st.markdown('<div class="ca-white-box"><span class="ca-label">智能合约地址</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_zh")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -377,12 +382,12 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: Dashboard 算力控制台 (🛠️ 深度对齐调优)
+# TAB 2: Dashboard 算力控制台 (🛠️ 图表完美缝合改造)
 # ==========================================
 with tab2:
-    # 核心数据状态演算逻辑
+    # 核心数据状态演算逻辑（将算力控制在 20 附近微幅波动）
     if st.session_state.app_running:
-        current_hash = random.uniform(45.5, 49.8)
+        current_hash = random.uniform(19.6, 20.4)  # 🎯 稳定在 20 上下轻微起伏
         current_temp = random.uniform(36.4, 36.9)
         current_power = random.uniform(4.85, 5.35)
         st.session_state.chart_history.pop(0)
@@ -408,13 +413,43 @@ with tab2:
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     
-    # 3. 📈 严丝合缝、极致工整的实时算力动态折线图面板
-    chart_lbl = "📶 边缘节点算力实时波形数据 (Hashrate Chart)" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
+    # 3. 📈 图表零黑边外壳、紧贴大标题、均线稳定 20 调优
+    chart_lbl = "📶 EDGE NODE REAL-TIME HASHRATE TREND" if lang=="English" else "📶 边缘节点算力实时波形数据"
     st.markdown(f'<div class="chart-title-lbl">{chart_lbl}</div>', unsafe_allow_html=True)
     
+    # 用独立的外壳包裹，切断 Streamlit 原本自带的顶部空白杂音
     st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-    df_chart = pd.DataFrame(st.session_state.chart_history, columns=["Hashrate (G/s)"])
-    st.line_chart(df_chart, height=135, use_container_width=True)
+    
+    # 🛠️ 引入 Plotly 渲染高精度图表，移除空壳与额外控制组件
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        y=st.session_state.chart_history,
+        mode='lines',
+        line=dict(color='#00e5ff', width=2),
+        fill='tozeroy',
+        fillcolor='rgba(0, 229, 255, 0.05)'
+    ))
+    
+    # 配置图表轴极限，让 20 处于正中心，并封死多余页边距
+    fig.update_layout(
+        margin=dict(l=26, r=10, t=10, b=15),
+        height=130,
+        backgroundColor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        xaxis=dict(
+            showgrid=True, gridcolor='#252e38', showline=False, zeroline=False,
+            tickmode='linear', tick0=0, dtick=1, tickfont=dict(color='#88929b', size=9)
+        ),
+        yaxis=dict(
+            range=[0, 30], showgrid=True, gridcolor='#252e38', showline=False, zeroline=False,
+            tickvals=[0, 10, 20, 30], tickfont=dict(color='#88929b', size=9)
+        )
+    )
+    
+    # 使用 config={"displayModeBar": False} 彻底干掉上方的悬浮工具栏和空白框
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
     st.markdown('</div>', unsafe_allow_html=True)
 
     # 4. 温度安全组件
