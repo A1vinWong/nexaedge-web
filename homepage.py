@@ -134,8 +134,22 @@ st.markdown("""
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
     
-    /* 合约专用美化样式 */
-    .ca-container { background: #161c23; border: 1px solid #252e38; border-radius: 12px; padding: 10px 14px; margin-top: 14px; margin-bottom: 8px; }
+    /* 🪐 独家定制：Low Gas 霓虹蓝风格合约外壳 */
+    .ca-blue-box { 
+        background: #11171d; 
+        border: 1px dashed #00e5ff; 
+        border-radius: 8px; 
+        padding: 6px 10px; 
+        margin-top: 8px; 
+    }
+    /* 强制重写其内部文本框，使其与 Low blue 完美融合 */
+    .ca-blue-box div[data-testid="stTextInput"] input {
+        color: #00e5ff !important;
+        border-color: #1e2a38 !important;
+        background-color: #161c23 !important;
+        font-family: monospace !important;
+        font-size: 12px !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -227,18 +241,24 @@ with tab1:
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
         with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
-        with c2: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+        with c2: 
+            st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
+            # ✨ 👈 完美注入：直接位于 Low Gas / High TPS 指标垂直正下方 ✨
+            st.markdown('<div class="ca-blue-box">', unsafe_allow_html=True)
+            st.markdown('<p style="color:#00e5ff; font-size:10px; font-weight:bold; margin:0 0 2px 0; text-transform:uppercase; letter-spacing:0.3px;">📋 Contract Address :</p>', unsafe_allow_html=True)
+            st.text_input("CA_Blue", value="D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2", disabled=True, label_visibility="collapsed", key="ca_input_zh")
+            st.markdown('</div>', unsafe_allow_html=True)
         with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
     else:
         with c1: st.metric(label="Thermal Guard Lock", value="39°C", delta="Device Protection Barrier", delta_color="inverse")
-        with c2: st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
+        with c2: 
+            st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
+            # ✨ 👈 完美注入：直接位于 Low Gas / High TPS 指标垂直正下方 ✨
+            st.markdown('<div class="ca-blue-box">', unsafe_allow_html=True)
+            st.markdown('<p style="color:#00e5ff; font-size:10px; font-weight:bold; margin:0 0 2px 0; text-transform:uppercase; letter-spacing:0.3px;">📋 Contract Address :</p>', unsafe_allow_html=True)
+            st.text_input("CA_Blue", value="D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2", disabled=True, label_visibility="collapsed", key="ca_input_en")
+            st.markdown('</div>', unsafe_allow_html=True)
         with c3: st.metric(label="Network Consensus", value="Proprietary BFT", delta="2:1 Redundant Voting")
-        
-    # ✨ 👈 合约地址已被完美移动到 Solana SPL 指标的正下方 ✨
-    st.markdown('<div class="ca-container">', unsafe_allow_html=True)
-    st.markdown('<p style="color:#A2FF00; font-size:11px; font-weight:bold; margin:0 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">📋 Contract Address :</p>', unsafe_allow_html=True)
-    st.text_input("Solana SPL Token CA", value="D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2", disabled=True, label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
 
     if lang == "中文":
         st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:14px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
