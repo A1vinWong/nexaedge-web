@@ -91,65 +91,58 @@ def get_project_image():
 
 target_image = get_project_image()
 
-# --- 🟢 CSS 全局注入（进行深度净化排雷） ---
+# --- 🟢 CSS 全局注入（深度美化工整净化版） ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0f12; }
     #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"] { display: none !important; }
     header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; }
+    [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
     
-    /* 🔥 暴力清除可能导致红圈空框的所有 Streamlit 默认虚空 Block 容器和间距 */
-    [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; }
-    [data-testid="stVerticalBlock"] { gap: 0rem !important; }
-    .st-emotion-cache-zk9v0d { gap: 0rem !important; }
-    [data-testid="stElementContainer"] { border: none !important; background: transparent !important; margin-bottom: 0px !important; padding: 0px !important; }
-    
-    /* 选项卡定制 */
-    .stTabs [data-baseweb="tab-list"] { gap: 4px; background-color: transparent !important; justify-content: flex-start; border: none !important; overflow-x: auto; }
-    .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px 8px 0px 0px !important; border: 1px solid #1e272e !important; border-bottom: none !important; padding: 6px 12px !important; font-weight: 700 !important; font-size: 12px !important; white-space: nowrap; }
-    .stTabs [aria-selected="true"] { color: #A2FF00 !important; background-color: #161c23 !important; border-top: 2px solid #A2FF00 !important; }
+    /* 选项卡定制 - 美化工整版 */
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; background-color: transparent !important; justify-content: center; border: none !important; overflow-x: auto; margin-bottom: 20px; }
+    .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px !important; border: 1px solid #1e272e !important; padding: 10px 18px !important; font-weight: 700 !important; font-size: 13px !important; white-space: nowrap; transition: all 0.3s; }
+    .stTabs [aria-selected="true"] { color: #0b0f12 !important; background-color: #A2FF00 !important; border-top: none !important; }
     .stTabs [data-baseweb="tab-highlight"] { background-color: #A2FF00 !important; height: 0px !important; }
     
-    /* 选项卡内部面板容器无缝化 */
-    [data-testid="stTabPanel"] { padding-top: 0px !important; margin-top: 0px !important; }
-    
-    /* 容器及卡片 */
-    .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 14px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 12px; margin-bottom: 10px; }
-    .app-title { font-size: 11px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 22px; font-weight: 700; }
+    /* 容器及卡片 - 美化工整版 */
+    .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 20px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 15px; margin-bottom: 12px; }
+    .app-title { font-size: 11px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 24px; font-weight: 700; }
     
     .neon-green-text { color: #A2FF00 !important; }
     .neon-blue-text { color: #00e5ff !important; }
-    .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 6px 12px; border-radius: 10px; margin-top: 6px; }
+    .temp-section { display: flex; align-items: center; justify-content: space-between; background: #11171d; padding: 10px 15px; border-radius: 10px; margin-top: 10px; }
     
-    /* 按钮定制 */
-    div.stButton > button:first-child { background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 14px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 10px 4px !important; box-shadow: 0 0 15px rgba(162, 255, 0, 0.3); transition: all 0.2s; }
+    /* 按钮定制 - 美化工整版 */
+    div.stButton > button:first-child { background-color: #A2FF00 !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 15px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 12px 18px !important; box-shadow: 0 5px 15px rgba(162, 255, 0, 0.3); transition: all 0.2s; }
+    div.stButton > button:hover { background-color: #b5ff33 !important; }
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #f43f5e !important; box-shadow: none !important; }
-    div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 4px 10px !important; font-size: 12px !important; width: auto !important; }
+    div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 5px 12px !important; font-size: 12px !important; width: auto !important; }
     
     /* 表单与输入框 */
-    [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 15px !important; }
-    .user-badge { background: #1e293b; padding: 8px 12px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 12px; font-size: 13px; color: #e2e8f0; }
-    .mini-stat-card { text-align: center; background-color:#141d26; padding: 8px 4px; border-radius: 10px; min-height: 55px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 20px !important; }
+    .user-badge { background: #1e293b; padding: 10px 15px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 15px; font-size: 13px; color: #e2e8f0; }
+    .mini-stat-card { text-align: center; background-color:#141d26; padding: 10px 6px; border-radius: 10px; min-height: 60px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; }
-    .mini-stat-value { font-size: 13px !important; font-weight: bold; font-family: monospace; margin-top: 2px; }
+    .mini-stat-value { font-size: 14px !important; font-weight: bold; font-family: monospace; margin-top: 4px; }
     
-    .feature-box { background-color: #11171d; padding: 14px; border-radius: 10px; border-left: 4px solid #A2FF00; margin-bottom: 10px; }
-    .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 4px; margin: 6px 0; }
-    .social-btn { display: block; text-align: center; padding: 4px; background-color: #11171d; border: 1px solid #252e38; border-radius: 6px; color: #bdc3c7 !important; font-size: 10px; font-weight: bold; text-decoration: none; }
-    .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; }
+    .feature-box { background-color: #11171d; padding: 16px; border-radius: 10px; border-left: 4px solid #A2FF00; margin-bottom: 12px; }
+    .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 6px; margin: 8px 0; }
+    .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; transition: all 0.2s; }
+    .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; color: #cdfaee; }
-    .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
-    .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; color: #cdfaee; }
+    .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 10px; border: 1px solid #374151; }
+    .admin-table td { padding: 10px; border: 1px solid #374151; background-color: #111827; }
     
     /* 合约地址样式 */
     .ca-white-box { 
         background: transparent; 
         border: none; 
         padding: 0; 
-        margin-top: 4px;
+        margin-top: 6px;
         text-align: left;
     }
     .ca-label {
@@ -169,6 +162,7 @@ st.markdown("""
         font-family: monospace !important;
         font-size: 12px !important;
         text-align: left !important;
+        padding: 8px 12px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -262,7 +256,7 @@ with tab1:
     if lang == "中文":
         with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: 
-            st.metric(label="算力结算底座", value="Solana Solana SPL", delta="极速、低 Gas")
+            st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
             st.markdown('<div class="ca-white-box"><span class="ca-label">Contract Address</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_zh")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -364,11 +358,10 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: Dashboard 算力控制台 (🛠️ 无缝贴合无多余间留白)
+# TAB 2: Dashboard 算力控制台 (🛠️ 已移除顶部的 DASHBOARD 状态条)
 # ==========================================
 with tab2:
-    # 彻底杜绝 tab2 面板顶部的额外任何渲染元素或留白，直接进入主内容容器
-    st.markdown('<div class="app-container" style="margin-top: 0px; padding-top: 10px;">', unsafe_allow_html=True)
+    st.markdown('<div class="app-container">', unsafe_allow_html=True)
 
     # 在后台保留实时环境运算状态逻辑，供其他组件消费
     if st.session_state.app_running:
@@ -382,13 +375,13 @@ with tab2:
         current_temp = 30.5
         current_power = random.uniform(0.12, 0.18)
     
-    # 1. 提示横条 (直接做第一顺位渲染，无任何前置占位符)
+    # 1. 警示/提示横条 (当前已成为了控制台的最顶部组件)
     if st.session_state.current_user:
         badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
-        st.markdown(f'<div class="user-badge" style="margin-top: 0px; margin-bottom: 12px;">{badge_txt}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
     else:
         badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
-        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300; margin-top: 0px; margin-bottom: 12px;">{badge_txt}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
 
     # 2. 运行时间配置
     lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
