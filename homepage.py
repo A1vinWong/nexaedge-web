@@ -137,13 +137,13 @@ st.markdown("""
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
     
-    /* 🪐 已更新：无格子的纯白色 (White) 样式输入框容器与标签 */
+    /* 🪐 已更新：左对齐 (Left-aligned) 无格子的纯白色样式输入框容器与标签 */
     .ca-white-box { 
         background: transparent; 
         border: none; 
         padding: 0; 
         margin-top: 4px;
-        text-align: center;
+        text-align: left; /* 👈 更改为左对齐 */
     }
     .ca-label {
         font-size: 11px;
@@ -153,15 +153,16 @@ st.markdown("""
         letter-spacing: 0.5px;
         margin-bottom: 2px;
         display: block;
+        text-align: left; /* 👈 更改为左对齐 */
     }
-    /* 强制重写其内部文本框，使其呈现干净的纯白色文本样式 */
+    /* 强制重写其内部文本框，使其呈现干净的左对齐纯白色文本样式 */
     .ca-white-box div[data-testid="stTextInput"] input {
         color: #ffffff !important;
         border-color: #1e2a38 !important;
         background-color: #161c23 !important;
         font-family: monospace !important;
         font-size: 12px !important;
-        text-align: center !important;
+        text-align: left !important; /* 👈 更改为左对齐 */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -256,7 +257,7 @@ with tab1:
         with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: 
             st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-            # ✨ 👈 完美注入：上方放置 Contract Address，下方放置纯白色文本框 ✨
+            # ✨ 👈 完美注入：左对齐的 Contract Address 模块 ✨
             st.markdown('<div class="ca-white-box"><span class="ca-label">Contract Address</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_zh")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -265,7 +266,7 @@ with tab1:
         with c1: st.metric(label="Thermal Guard Lock", value="39°C", delta="Device Protection Barrier", delta_color="inverse")
         with c2: 
             st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
-            # ✨ 👈 完美注入：上方放置 Contract Address，下方放置纯白色文本框 ✨
+            # ✨ 👈 完美注入：左对齐的 Contract Address 模块 ✨
             st.markdown('<div class="ca-white-box"><span class="ca-label">Contract Address</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_en")
             st.markdown('</div>', unsafe_allow_html=True)
