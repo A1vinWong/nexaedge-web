@@ -476,15 +476,34 @@ with tab2:
 # ==========================================
 with tab4:
     if st.session_state.current_user:
+        email = st.session_state.current_user
+        user_info = global_server["user_db"].get(email, {})
+        ref_code = user_info.get("referral_code", generate_referral_code(email))
+
+        # 注册成功刚跳转时显示成功提示
+        if st.session_state.get("new_referral_code"):
+            ok_msg = "🎉 注册成功！您的专属推荐码已生成 👇" if lang=="中文" else "🎉 Registration complete! Your referral code is ready 👇"
+            st.success(ok_msg)
+            st.session_state.new_referral_code = None
+
         st.markdown('<div class="app-card" style="text-align:center; padding:20px 10px;">', unsafe_allow_html=True)
         title_auth = "<b>云端端点挂载就绪</b>" if lang=="中文" else "<b>Secure Network Node Engaged</b>"
         st.markdown(f"🎉 {title_auth}", unsafe_allow_html=True)
-        lbl_id = f"当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>" if lang=="中文" else f"Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>{st.session_state.current_user}</span>"
+        lbl_id = f"当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>{email}</span>" if lang=="中文" else f"Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>{email}</span>"
         st.markdown(lbl_id, unsafe_allow_html=True)
-        
+
         box_txt = f"全网同步累计代币池收益<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>" if lang=="中文" else f"Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>"
-        st.markdown(f"<div style='margin:15px 0; background:#11171d; padding:10px; border-radius:10px;'>{box_txt}</div>", unsafe_allow_html=True)
-        
+        st.markdown(f"<div style='margin:12px 0; background:#11171d; padding:10px; border-radius:10px;'>{box_txt}</div>", unsafe_allow_html=True)
+
+        # 推荐码展示区
+        ref_label = "🎟️ 您的专属推荐码（分享给好友可获得加速奖励）" if lang=="中文" else "🎟️ Your Referral Code (Share to earn boosted rewards)"
+        st.markdown(f"""
+        <div style="background:#0d1f0d; border:1px dashed #A2FF00; border-radius:10px; padding:12px; margin:8px 0;">
+            <div style="font-size:10px; color:#88929b; font-weight:bold; margin-bottom:6px;">{ref_label}</div>
+            <div style="font-size:22px; font-weight:900; font-family:monospace; color:#A2FF00; letter-spacing:3px;">{ref_code}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
         btn_logout = "安全退出当前登录账户" if lang=="中文" else "Logout Account Location"
         if st.button(btn_logout, key="logout_btn"):
             st.session_state.current_user = None
