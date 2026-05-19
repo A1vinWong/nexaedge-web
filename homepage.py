@@ -137,13 +137,13 @@ st.markdown("""
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
     
-    /* 🪐 已更新：左对齐 (Left-aligned) 无格子的纯白色样式输入框容器与标签 */
+    /* 合约地址样式 */
     .ca-white-box { 
         background: transparent; 
         border: none; 
         padding: 0; 
         margin-top: 4px;
-        text-align: left; /* 👈 更改为左对齐 */
+        text-align: left;
     }
     .ca-label {
         font-size: 11px;
@@ -153,16 +153,15 @@ st.markdown("""
         letter-spacing: 0.5px;
         margin-bottom: 2px;
         display: block;
-        text-align: left; /* 👈 更改为左对齐 */
+        text-align: left;
     }
-    /* 强制重写其内部文本框，使其呈现干净的左对齐纯白色文本样式 */
     .ca-white-box div[data-testid="stTextInput"] input {
         color: #ffffff !important;
         border-color: #1e2a38 !important;
         background-color: #161c23 !important;
         font-family: monospace !important;
         font-size: 12px !important;
-        text-align: left !important; /* 👈 更改为左对齐 */
+        text-align: left !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -257,7 +256,6 @@ with tab1:
         with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: 
             st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
-            # ✨ 👈 完美注入：左对齐的 Contract Address 模块 ✨
             st.markdown('<div class="ca-white-box"><span class="ca-label">Contract Address</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_zh")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -266,7 +264,6 @@ with tab1:
         with c1: st.metric(label="Thermal Guard Lock", value="39°C", delta="Device Protection Barrier", delta_color="inverse")
         with c2: 
             st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
-            # ✨ 👈 完美注入：左对齐的 Contract Address 模块 ✨
             st.markdown('<div class="ca-white-box"><span class="ca-label">Contract Address</span>', unsafe_allow_html=True)
             st.text_input("CA_White", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_input_en")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -323,7 +320,7 @@ with tab1:
             u_wallet_label = "绑定的 Solana 钱包接收地址 (获取空投资产):"
             u_wallet_place = "输入您的 Solana SPL 钱包公钥"
             btn_wl_txt = "锁定创世空投席位 ⚡"
-            msg_empty = "❌ 请完整填写邮箱和钱包地址！"
+            msg_empty = "❌ 请完整填写邮箱 and 钱包地址！"
             msg_success = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
             contact_btn_label = "📧 联系我们"
         else:
@@ -360,22 +357,12 @@ with tab1:
                 st.success(msg_success)
 
 # ==========================================
-# TAB 2: Dashboard 算力控制台
+# TAB 2: Dashboard 算力控制台 (🛠️ 已移除折线图格子)
 # ==========================================
 with tab2:
     st.markdown('<div class="app-container">', unsafe_allow_html=True)
-    
-    if st.session_state.current_user:
-        badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
-        st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
-    else:
-        badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
-        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
 
-    lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
-    selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
-    st.session_state.target_time_index = current_options.index(selected_time_tab2)
-
+    # 1. 状态指示条
     if st.session_state.app_running:
         current_hash = random.uniform(45.5, 49.8)
         current_temp = random.uniform(36.4, 36.9)
@@ -386,20 +373,35 @@ with tab2:
         current_temp = 30.5
         current_power = random.uniform(0.12, 0.18)
         title_status = "DASHBOARD"
-        
-    s_sec = st.session_state.session_seconds
-    time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+
+    st.markdown(f'<div class="app-card" style="margin-bottom: 12px;"><div class="app-title">{title_status}</div><div style="font-size:12px; color:#88929b;">NETWORK HASH RATE (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div></div>', unsafe_allow_html=True)
     
-    st.markdown(f'<div class="app-card"><div class="app-title">{title_status}</div><div style="font-size:12px; color:#88929b;">NETWORK HASH RATE (MH/s): <span class="neon-green-text" style="font-weight:bold;">{current_hash:.2f}</span></div></div>', unsafe_allow_html=True)
-    
+    # 2. 警示/提示横条 (贴在状态条下方)
+    if st.session_state.current_user:
+        badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
+        st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
+    else:
+        badge_txt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
+        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
+
+    # 后台哈希序列历史数据维护（保留内存，删除前端组件渲染）
     if st.session_state.app_running:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(current_hash)
-    st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hash Rate"]), height=85, use_container_width=True)
-    
-    lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
-    st.markdown(f'<div class="app-card" style="margin-top: -5px;"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
 
+    # 3. 运行时间配置
+    lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
+    selected_time_tab2 = st.selectbox(lbl_tgt, current_options, index=st.session_state.target_time_index, key="console_box")
+    st.session_state.target_time_index = current_options.index(selected_time_tab2)
+
+    s_sec = st.session_state.session_seconds
+    time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
+    
+    # 4. 温度显示
+    lbl_safe = "硬件运行温度" if lang=="中文" else "Hardware Temp"
+    st.markdown(f'<div class="app-card"><div class="temp-section"><span class="app-value" style="font-size:16px;">🌡️ {lbl_safe}: {current_temp:.1f}°C</span><span style="background-color:#1e272e; color:#A2FF00; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:5px;">SAFE</span></div></div>', unsafe_allow_html=True)
+
+    # 5. 功耗与电量
     lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
     lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
     st.markdown(f"""
@@ -417,6 +419,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
+    # 6. 收益与运行时长
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
     lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
     
@@ -440,6 +443,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
+    # 7. 控制按钮
     if not st.session_state.app_running:
         btn_start = "激活并启动边缘算力节点" if lang=="中文" else "START COMPUTE SESSION"
         if st.button(btn_start, key="app_start_btn"):
