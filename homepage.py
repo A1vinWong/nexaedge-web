@@ -23,7 +23,7 @@ def init_global_network_server():
         "total_online_viewers": random.randint(102, 125), 
         "device_balances": {},                  
         "user_db": {                            
-            "demo@nexaedge.ai": {
+            "contact@nexaedge.org": {  # 👈 此处已修改为您的官方邮箱
                 "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
                 "score": 1479.0,
                 "reg_time": "2026-05-18 14:22:05"
