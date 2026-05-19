@@ -283,6 +283,7 @@ with tab1:
             btn_wl_txt = "锁定创世空投席位 ⚡"
             msg_empty = "❌ 请完整填写邮箱和钱包地址！"
             msg_success = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
+            contact_btn_label = "📧 联系我们"  # 👈 中文标签
         else:
             st.markdown('<div style="font-size:13px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 Claim Genesis Whitelist & Social Boosting Rewards</div>', unsafe_allow_html=True)
             u_email_label = "Notification Email Address:"
@@ -292,16 +293,17 @@ with tab1:
             btn_wl_txt = "Lock Genesis Seating ⚡"
             msg_empty = "❌ Email and Wallet fields cannot be empty!"
             msg_success = "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot."
+            contact_btn_label = "📧 Contact US"  # 👈 英文标签
 
-        # 👈 此处加入了独立的邮箱点击发送邮件入口 (融合进社交媒体网格中)
-        st.markdown("""
+        # 👈 这里已经将 contact_btn_label 变量融合进 HTML 字符串中了
+        st.markdown(f"""
         <div class="social-grid">
             <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
             <a class="social-btn" href="https://x.com/nexaedge_?s=21&t=8onO0h_fTxzmAGu431ZxXw" target="_blank">🐦 X</a>
             <a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>
             <a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>
             <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
-            <a class="social-btn" href="mailto:contact@nexaedge.org" style="border-color: #00e5ff; color: #00e5ff !important;" title="点击直接发邮件给官方">📧 Contact US</a>
+            <a class="social-btn" href="mailto:contact@nexaedge.org" style="border-color: #00e5ff; color: #00e5ff !important;" title="点击直接发邮件给官方">{contact_btn_label}</a>
         </div>
         """, unsafe_allow_html=True)
         
@@ -539,7 +541,7 @@ if is_admin_active:
             if whitelist_lines:
                 wl_table_html = """
                 <table class="admin-table">
-                    <tr><th>序号</th><th>提交的日志数据 (Email & Wallet & Timestamp)</th></tr>
+                    <tr><th>序号</th><th>提交的日志 data (Email & Wallet & Timestamp)</th></tr>
                 """
                 for idx, line in enumerate(whitelist_lines, 1):
                     wl_table_html += f"""
