@@ -106,6 +106,11 @@ st.markdown("""
     #MainMenu, footer, .styles_viewerBadge__FUChv, [data-testid="manage-app-button"] { display: none !important; }
     header, [data-testid="stHeader"] { background: transparent !important; border: none !important; height: 0 !important; display: none !important; height:0px !important; }
     [data-testid="stVerticalBlock"] > div:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
+    /* 隐藏图表工具栏按钮和顶部分隔线 */
+    [data-testid="StyledFullScreenButton"] { display: none !important; }
+    canvas + div[class*="menu"], .vega-embed summary, .vega-embed details { display: none !important; }
+    .element-container hr, .stMarkdown hr { display: none !important; }
+    [data-testid="stVegaLiteChart"] > div > details { display: none !important; }
     
     .stTabs [data-baseweb="tab-list"] { gap: 8px; background-color: transparent !important; justify-content: center; border: none !important; overflow-x: auto; margin-bottom: 16px; }
     .stTabs [data-baseweb="tab"] { background-color: #11171d !important; color: #bdc3c7 !important; border-radius: 8px !important; border: 1px solid #1e272e !important; padding: 10px 16px !important; font-weight: 700 !important; font-size: 13px !important; white-space: nowrap; transition: all 0.3s; }
@@ -139,7 +144,7 @@ st.markdown("""
         background-color: #161c23;
         border: 1px solid #252e38;
         border-radius: 14px;
-        padding: 6px 0px 0px 0px;
+        padding: 8px 10px 0px 10px;
         margin-top: 4px;
         margin-left: -18px;
         margin-right: 8px;
@@ -147,8 +152,14 @@ st.markdown("""
         box-sizing: border-box;
         overflow: hidden;
     }
-    /* 去掉图表顶部灰色分隔线 */
-    .chart-wrapper hr, .chart-wrapper [data-testid="stHorizontalBlock"] { display: none !important; }
+    /* 隐藏图表顶部灰色分隔线 */
+    .chart-wrapper > div > hr,
+    .stApp hr { display: none !important; }
+    /* 隐藏 Vega 工具栏（表格/全屏按钮） */
+    .chart-wrapper [data-testid="StyledFullScreenButton"],
+    .chart-wrapper summary,
+    .chart-wrapper [class*="toolbar"],
+    .chart-wrapper [class*="Toolbar"] { display: none !important; }
     /* 抵消 Streamlit line_chart 自带的内边距，线条贴紧左边 */
     .chart-wrapper [data-testid="stVegaLiteChart"] {
         margin: -10px 0px -18px -12px !important;
@@ -163,15 +174,14 @@ st.markdown("""
         padding-left: 2px;
     }
 
-    /* 底部 Online/Devices 缩小并排一行 */
-    .bottom-stats-row { display: flex; gap: 8px; margin-top: 4px; }
-    .mini-stat-card { text-align: center; background-color:#141d26; padding: 5px 8px; border-radius: 8px; min-height: 36px; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 8px; flex: 1; }
-    .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; margin: 0; }
-    .mini-stat-value { font-size: 12px !important; font-weight: bold; font-family: monospace; margin: 0; }
+    /* 底部 Online/Devices 单行不换行 */
+    .bottom-stats-row { display: flex; gap: 8px; margin-top: 8px; }
+    .mini-stat-card { text-align: center; background-color:#141d26; padding: 6px 10px; border-radius: 8px; min-height: 32px; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 6px; flex: 1; white-space: nowrap; }
+    .mini-stat-title { font-size: 8px !important; color: #88929b; font-weight: bold; white-space: nowrap; margin: 0; }
+    .mini-stat-value { font-size: 12px !important; font-weight: bold; font-family: monospace; margin: 0; white-space: nowrap; }
 
-    /* Dashboard 卡片间距收紧，balance不截断 */
+    /* Dashboard 卡片 */
     .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
-    .app-card .app-value { font-size: 15px !important; white-space: nowrap; overflow: visible; }
     .user-badge { background: #1e293b; padding: 8px 12px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 8px; font-size: 12px; color: #e2e8f0; line-height: 1.4; }
 
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; color: #cdfaee; }
@@ -413,7 +423,6 @@ with tab2:
     chart_lbl = "📶 边缘节点算力实时波形数据 (Hashrate Chart)" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
     st.markdown(f'<div class="chart-title-lbl">{chart_lbl}</div>', unsafe_allow_html=True)
     
-    # ✅ 修复后的图表区域：去掉负边距，用 overflow:hidden + vega负边距抵消内边距
     st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
     df_chart = pd.DataFrame(st.session_state.chart_history, columns=["Hashrate (G/s)"])
     st.line_chart(df_chart, height=120, use_container_width=True)
