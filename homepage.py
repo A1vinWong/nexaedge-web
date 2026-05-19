@@ -23,7 +23,7 @@ def init_global_network_server():
         "total_online_viewers": random.randint(102, 125), 
         "device_balances": {},                  
         "user_db": {                            
-            "contact@nexaedge.org": {  # 👈 此处已修改为您的官方邮箱
+            "contact@nexaedge.org": {  # 👈 官方邮箱
                 "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
                 "score": 1479.0,
                 "reg_time": "2026-05-18 14:22:05"
@@ -134,8 +134,8 @@ st.markdown("""
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 8px; border: 1px solid #374151; }
     .admin-table td { padding: 8px; border: 1px solid #374151; background-color: #111827; }
     
-    /* 代币合约地址展示定制 */
-    .token-box { background: #161c23; border: 1px dashed #A2FF00; border-radius: 10px; padding: 10px; margin-bottom: 15px; text-align: center; }
+    /* 合约专用美化样式 */
+    .ca-container { background: #161c23; border: 1px solid #252e38; border-radius: 12px; padding: 10px 14px; margin-top: 14px; margin-bottom: 8px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -213,7 +213,7 @@ with intro_right:
 url_admin_param = st.query_params.get("admin", None)
 is_admin_active = (lang == "nexaadmin" or url_admin_param == "nexa_gate")
 
-# --- 🚀 核心三大并行选项卡（聊天大厅已被移去） ---
+# --- 🚀 核心三大并行选项卡 ---
 tab1, tab2, tab4 = st.tabs([
     "🌐 Overview" if lang=="English" else "🌐 项目通识", 
     "📱 Dashboard" if lang=="English" else "📱 算力控制台", 
@@ -224,30 +224,24 @@ tab1, tab2, tab4 = st.tabs([
 # TAB 1: 项目通识 与 全球化白名单表单
 # ==========================================
 with tab1:
-    # 🌟 新增：NEXA 代币合约地址高亮一键复制区域 🌟
-    if lang == "中文":
-        st.markdown("""
-        <div class="token-box">
-            <span style="color:#88929b; font-size:11px; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">🔗 NEXA 官方代币合约地址 (Solana SPL)</span>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class="token-box">
-            <span style="color:#88929b; font-size:11px; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">🔗 NEXA TOKEN CONTRACT ADDRESS (Solana SPL)</span>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.text_input("Token Contract Address (CA)", value="D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2", disabled=True, label_visibility="collapsed")
-    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-
     c1, c2, c3 = st.columns(3)
     if lang == "中文":
         with c1: st.metric(label="智能 hardware 风控", value="39°C", delta="秒级控温预警", delta_color="inverse")
         with c2: st.metric(label="算力结算底座", value="Solana SPL", delta="极速、低 Gas")
         with c3: st.metric(label="分布式共识机制", value="自研轻量级 BFT", delta="2:1 多数投票验证")
+    else:
+        with c1: st.metric(label="Thermal Guard Lock", value="39°C", delta="Device Protection Barrier", delta_color="inverse")
+        with c2: st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
+        with c3: st.metric(label="Network Consensus", value="Proprietary BFT", delta="2:1 Redundant Voting")
         
-        st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
+    # ✨ 👈 合约地址已被完美移动到 Solana SPL 指标的正下方 ✨
+    st.markdown('<div class="ca-container">', unsafe_allow_html=True)
+    st.markdown('<p style="color:#A2FF00; font-size:11px; font-weight:bold; margin:0 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">📋 Contract Address :</p>', unsafe_allow_html=True)
+    st.text_input("Solana SPL Token CA", value="D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2", disabled=True, label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    if lang == "中文":
+        st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:14px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
         selected_time_tab1 = st.selectbox("选择运行时间档位:", current_options, index=st.session_state.target_time_index, key="calc_box_zh")
         st.session_state.target_time_index = current_options.index(selected_time_tab1)
         st.success(f"🎉 预计每月可带来收益: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
@@ -267,11 +261,7 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
     else:
-        with c1: st.metric(label="Thermal Guard Lock", value="39°C", delta="Device Protection Barrier", delta_color="inverse")
-        with c2: st.metric(label="Settlement Engine", value="Solana SPL", delta="Low Gas / High TPS")
-        with c3: st.metric(label="Network Consensus", value="Proprietary BFT", delta="2:1 Redundant Voting")
-        
-        st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:10px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:#A2FF00; font-size:18px; margin-top:14px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
         selected_time_tab1 = st.selectbox("Select Setting Pattern:", current_options, index=st.session_state.target_time_index, key="calc_box_en")
         st.session_state.target_time_index = current_options.index(selected_time_tab1)
         st.success(f"🎉 Estimated Monthly Income: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
@@ -533,7 +523,7 @@ if is_admin_active:
         with c_a2: 
             st.markdown(f'<div class="mini-stat-card" style="border:1px solid #ffb300;"><div class="mini-stat-title">🎁 官网白名单登记量</div><div class="mini-stat-value" style="color:#ffb300;">{whitelist_count} Claims</div></div>', unsafe_allow_html=True)
         with c_a3: 
-            st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 实时活跃算力节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Nodes</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 实时活跃算力节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
         
         adm_sub_tab1, adm_sub_tab2 = st.tabs(["📋 注册用户大表 (User DB)", "🎁 创世白名单明细 (Whitelist.txt)"])
         
