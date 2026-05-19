@@ -79,7 +79,7 @@ if "session_id" not in st.session_state:
     global_server["total_online_viewers"] += 1
 
 if 'app_running' not in st.session_state: st.session_state.app_running = False
-if 'chart_history' not in st.session_state: st.session_state.chart_history = [45.2, 46.8, 45.1, 47.3, 46.0, 48.2, 45.9, 49.1, 47.5, 48.8, 46.2, 47.9]
+if 'chart_history' not in st.session_state: st.session_state.chart_history = [19.2, 20.8, 18.1, 21.3, 19.0, 22.2, 18.9, 21.1, 20.5, 19.8, 18.2, 20.9]
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
@@ -105,8 +105,7 @@ st.markdown("""
     .stTabs [data-baseweb="tab-highlight"] { background-color: #A2FF00 !important; height: 0px !important; }
     
     .app-container { background-color: #11171d; border: 1px solid #1e272e; border-radius: 20px; padding: 14px; margin-bottom: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-    .app-title { font-size: 11px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    
     .app-value { font-family: 'Inter', sans-serif; color: #ffffff; font-size: 24px; font-weight: 700; }
     
     .neon-green-text { color: #A2FF00 !important; }
@@ -119,23 +118,23 @@ st.markdown("""
     div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 5px 12px !important; font-size: 12px !important; width: auto !important; }
     
     [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 18px !important; }
-    .user-badge { background: #1e293b; padding: 10px 14px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 12px; font-size: 13px; color: #e2e8f0; line-height: 1.4; }
-    .mini-stat-card { text-align: center; background-color:#141d26; padding: 10px 6px; border-radius: 10px; min-height: 58px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-    .mini-stat-title { font-size: 9px !important; color: #88929b; font-weight: bold; white-space: nowrap; }
-    .mini-stat-value { font-size: 14px !important; font-weight: bold; font-family: monospace; margin-top: 4px; }
+    
+    
     
     .feature-box { background-color: #11171d; padding: 14px; border-radius: 10px; border-left: 4px solid #A2FF00; margin-bottom: 10px; }
     .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 6px; margin: 6px 0; }
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* ✅ 修复后的图表外框 */
+    /* ✅ 修复后的图表外框 - 整体向左偏移 */
     .chart-wrapper {
         background-color: #161c23;
         border: 1px solid #252e38;
         border-radius: 14px;
         padding: 6px 8px 0px 8px;
         margin-top: 4px;
+        margin-left: -18px;
+        margin-right: 8px;
         margin-bottom: 12px;
         box-sizing: border-box;
         overflow: hidden;
@@ -149,9 +148,19 @@ st.markdown("""
         color: #88929b;
         font-weight: bold;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
+        margin-left: -16px;
         padding-left: 2px;
     }
+
+    /* 底部 Online/Devices 缩小 */
+    .mini-stat-card { text-align: center; background-color:#141d26; padding: 6px 4px; border-radius: 8px; min-height: 42px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .mini-stat-title { font-size: 8px !important; color: #88929b; font-weight: bold; white-space: nowrap; }
+    .mini-stat-value { font-size: 12px !important; font-weight: bold; font-family: monospace; margin-top: 2px; }
+
+    /* Dashboard 卡片间距收紧 */
+    .app-card { background-color: #161c23; border: 1px solid #252e38; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+    .user-badge { background: #1e293b; padding: 8px 12px; border-radius: 10px; border-left: 3px solid #00e5ff; margin-bottom: 8px; font-size: 12px; color: #e2e8f0; line-height: 1.4; }
 
     .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; color: #cdfaee; }
     .admin-table th { background-color: #1f2937; color: #A2FF00; text-align: left; padding: 10px; border: 1px solid #374151; }
@@ -357,7 +366,7 @@ with tab1:
 # ==========================================
 with tab2:
     if st.session_state.app_running:
-        current_hash = random.uniform(45.5, 49.8)
+        current_hash = random.uniform(18.5, 22.8)
         current_temp = random.uniform(36.4, 36.9)
         current_power = random.uniform(4.85, 5.35)
         st.session_state.chart_history.pop(0)
