@@ -132,8 +132,6 @@ st.markdown("""
     
     [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 18px !important; }
     
-    
-    
     .feature-box { background-color: #11171d; padding: 14px; border-radius: 10px; border-left: 4px solid #A2FF00; margin-bottom: 10px; }
     .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 6px; margin: 6px 0; }
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
@@ -346,6 +344,8 @@ with tab1:
             u_email_place = "请输入接收通知的邮箱"
             u_wallet_label = "绑定的 Solana 钱包接收地址 (获取空投资产):"
             u_wallet_place = "输入您的 Solana SPL 钱包公钥"
+            u_ref_label = "推荐码 (选填):"
+            u_ref_place = "如有推荐码，请输入以获得创世加速"
             btn_wl_txt = "锁定创世空投席位 ⚡"
             msg_empty = "❌ 请完整填写邮箱和钱包地址！"
             msg_success = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
@@ -356,6 +356,8 @@ with tab1:
             u_email_place = "e.g., node_miner@gmail.com"
             u_wallet_label = "Bound Solana Wallet Address (For Asset Air-drops):"
             u_wallet_place = "Enter your Solana SPL public key address"
+            u_ref_label = "Referral Code (Optional):"
+            u_ref_place = "Enter code to claim genesis boosting if available"
             btn_wl_txt = "Lock Genesis Seating ⚡"
             msg_empty = "❌ Email and Wallet fields cannot be empty!"
             msg_success = "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot."
@@ -374,6 +376,7 @@ with tab1:
         
         u_email = st.text_input(u_email_label, placeholder=u_email_place, key="wl_mail").strip()
         u_wallet = st.text_input(u_wallet_label, placeholder=u_wallet_place, key="wl_wall").strip()
+        u_ref = st.text_input(u_ref_label, placeholder=u_ref_place, key="wl_ref").strip()
         
         if st.form_submit_button(btn_wl_txt):
             if not u_email or not u_wallet:
@@ -388,7 +391,7 @@ with tab1:
                 global_server["whitelist_emails"].add(u_email.lower())
                 global_server["whitelist_wallets"].add(u_wallet.lower())
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
-                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
                 st.success(msg_success)
 
 # ==========================================
@@ -534,11 +537,14 @@ with tab4:
                 
                 label_mail = "邮箱地址:" if lang == "中文" else "Email Address:"
                 label_pwd = "设置密码:" if lang == "中文" else "Choose Password:"
+                label_reg_ref = "推荐码 (选填):" if lang == "中文" else "Referral Code (Optional):"
                 place_mail = "example@nexa.com"
                 place_pwd = "Enter your secure password"
+                place_reg_ref = "请输入推荐人的推荐码" if lang == "中文" else "e.g., NX-XXX-XXX"
                 
                 r_email = st.text_input(label_mail, placeholder=place_mail).strip()
                 r_pwd = st.text_input(label_pwd, type="password", placeholder=place_pwd)
+                r_ref = st.text_input(label_reg_ref, placeholder=place_reg_ref).strip()
                 
                 btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Profile ⚡"
                 if f_submit := st.form_submit_button(btn_reg_txt):
@@ -553,7 +559,8 @@ with tab4:
                             "password_hash": hashlib.sha256(r_pwd.encode()).hexdigest(),
                             "score": inherited_nexa,
                             "reg_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                            "referral_code": ref_code
+                            "referral_code": ref_code,
+                            "referred_by": r_ref if r_ref else "None" # 记录邀请人
                         }
                         st.session_state.current_user = r_email
                         st.session_state.new_referral_code = ref_code
@@ -614,7 +621,7 @@ if is_admin_active:
             st.markdown("<p style='font-size:11px; font-weight:bold; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
             table_html = """
             <table class="admin-table">
-                <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>注册激活时间</th></tr>
+                <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>绑定的上级推荐码</th><th>注册激活时间</th></tr>
             """
             for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
                 table_html += f"""
@@ -622,6 +629,7 @@ if is_admin_active:
                     <td>{idx}</td>
                     <td>{email}</td>
                     <td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td>
+                    <td style='color:#00e5ff;'>{info.get('referred_by', 'None')}</td>
                     <td>{info['reg_time']}</td>
                 </tr>
                 """
@@ -633,7 +641,7 @@ if is_admin_active:
             if whitelist_lines:
                 wl_table_html = """
                 <table class="admin-table">
-                    <tr><th>序号</th><th>提交的日志 data (Email & Wallet & Timestamp)</th></tr>
+                    <tr><th>序号</th><th>提交的日志 data (Email & Wallet & RefCode & Timestamp)</th></tr>
                 """
                 for idx, line in enumerate(whitelist_lines, 1):
                     wl_table_html += f"""
