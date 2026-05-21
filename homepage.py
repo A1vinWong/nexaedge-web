@@ -5,7 +5,7 @@ import random
 import pandas as pd
 import glob
 import hashlib
-from PIL import Image, ImageDraw, ImageFont  # 👈 新增：用于动态绘制推荐码图片
+from PIL import Image, ImageDraw, ImageFont  # 👈 用于动态绘制推荐码图片
 
 # 💡 在这里统一配置你的新合约地址
 DEFAULT_CA = "D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2"
@@ -44,7 +44,7 @@ def generate_referral_code(email: str) -> str:
     return "NX-" + h[:3] + "-" + h[3:6]
 
 # =========================================================================
-# 🎨 🛠️ 新增：动态绘制专属推荐码海报核心引擎
+# 🎨 🛠️ 动态绘制专属推荐码海报核心引擎
 # =========================================================================
 def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
     """
@@ -202,7 +202,7 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* ✅ 修复后的图表外框 */
+    /* 图表外框 */
     .chart-wrapper {
         background-color: #161c23;
         border: 1px solid #252e38;
@@ -301,6 +301,11 @@ else:
 intro_left, intro_right = st.columns([2, 1])
 
 with intro_left:
+    # 🌟 核心修改点：在这里注入你刚才上传的 logo.png 展现你的品牌形象
+    if os.path.exists("logo.png"):
+        st.image("logo.png", use_container_width=True)
+    
+    # 紧接着展示大背景图/Mockup 图
     if target_image:
         st.image(target_image, use_container_width=True)
 
