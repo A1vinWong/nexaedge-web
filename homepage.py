@@ -211,6 +211,10 @@ dev_id = st.session_state.device_fingerprint
 if "current_user" not in st.session_state:
     st.session_state.current_user = None  
 
+# 💡 初始化白名单专用推荐码 Session 状态
+if "wl_active_ref_code" not in st.session_state:
+    st.session_state.wl_active_ref_code = None
+
 if dev_id not in global_server["device_balances"]:
     global_server["device_balances"][dev_id] = {
         "app_earned": 0.0,
@@ -462,6 +466,7 @@ with tab1:
                 global_server["whitelist_wallets"].add(u_wallet.lower())
                 
                 wl_ref_code = generate_referral_code(u_email)
+                st.session_state.wl_active_ref_code = wl_ref_code  # 👈 记录白名单成功状态和代码
                 wl_img_path = f"wl_invite_{wl_ref_code}.png"
                 generate_referral_image(wl_ref_code, wl_img_path)
                 
@@ -723,6 +728,43 @@ if is_admin_active:
                 st.info("暂无用户提交白名单申请。")
     elif admin_password != "":
         st.error("❌ 越权访问警告：内部授权密码错误，数据保持加密锁定状态！")
+
+
+# =========================================================================
+# 🎁 💡 ✨ 动态追加：检测到注册或提交白名单成功，在物理底盘正上方展示专属推荐网址
+# =========================================================================
+active_display_code = None
+
+# 1. 优先获取当前登录账户的推荐码
+if st.session_state.current_user:
+    u_info = global_server["user_db"].get(st.session_state.current_user, {})
+    active_display_code = u_info.get("referral_code")
+# 2. 如果没登录但刚刚成功提交了白名单，采用白名单推荐码
+elif st.session_state.wl_active_ref_code:
+    active_display_code = st.session_state.wl_active_ref_code
+
+# 如果有任何一种有效推荐状态，渲染酷炫的黑绿发光框
+if active_display_code:
+    base_domain = "nexaedge.org"
+    full_referral_url = f"{base_domain}/?ref={active_display_code}"
+    
+    if lang == "中文":
+        ref_title_html = "🔗 您的专属邀请网址"
+        ref_tip_html = "复制此链接邀请好友，解锁更高代币提速奖励"
+    else:
+        ref_title_html = "🔗 YOUR EXCLUSIVE REFERRAL URL"
+        ref_tip_html = "Copy this link to invite friends & unlock network hyper-boosting rewards"
+        
+    st.markdown(f"""
+    <div style="background-color: #11171d; border: 1px dashed #A2FF00; padding: 10px 14px; border-radius: 12px; margin-top: 15px; margin-bottom: 5px; text-align: center;">
+        <span style="font-size: 10px; color: #88929b; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">{ref_title_html}</span>
+        <div style="font-size: 16px; font-weight: 800; font-family: monospace; color: #ffffff; margin: 4px 0;">
+            nexaedge.org/?ref=<span style="color: #A2FF00;">{active_display_code}</span>
+        </div>
+        <span style="font-size: 10px; color: #62727b;">{ref_tip_html}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 # ==========================================
 # 📊 宏观大盘全局物理底栏
