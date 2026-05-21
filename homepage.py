@@ -553,21 +553,16 @@ with tab4:
         user_info = global_server["user_db"].get(email, {})
         ref_code = user_info.get("referral_code", generate_referral_code(email))
 
-        st.markdown('<div class="app-card" style="text-align:center; padding:15px 10px;">', unsafe_allow_html=True)
+        # 生成专属海报图（含网址+推荐码）
+        user_poster_path = f"user_invite_{ref_code}.png"
+        if not os.path.exists(user_poster_path):
+            generate_referral_image(ref_code, user_poster_path)
 
-        # ✨ 弹窗：仅在注册成功后首次进入时触发（图片已含网址+推荐码）
-        if st.session_state.show_register_modal:
-            reg_img_path = f"user_invite_{ref_code}.png"
-            if not os.path.exists(reg_img_path):
-                generate_referral_image(ref_code, reg_img_path)
-            st.markdown('<div class="modal-overlay"><div class="modal-box">', unsafe_allow_html=True)
-            if os.path.exists(reg_img_path):
-                st.image(reg_img_path, use_container_width=True)
-            st.markdown('</div></div>', unsafe_allow_html=True)
-            close_lbl2 = "✅ 进入账户" if lang=="中文" else "✅ Enter Account"
-            if st.button(close_lbl2, key="close_reg_modal"):
-                st.session_state.show_register_modal = False
-                st.rerun()
+        # 显示海报图
+        if os.path.exists(user_poster_path):
+            st.image(user_poster_path, use_container_width=True)
+
+        st.markdown('<div class="app-card" style="text-align:center; padding:12px 10px; margin-top:8px;">', unsafe_allow_html=True)
 
         lbl_id = f"当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>{email}</span>" if lang=="中文" else f"Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>{email}</span>"
         st.markdown(lbl_id, unsafe_allow_html=True)
@@ -577,17 +572,6 @@ with tab4:
 
         ref_label = "🎟️您的专属推荐码（分享可获加速奖励）" if lang=="中文" else "🎟️ Your Referral Code"
         st.markdown(f'<div style="background:#0d1f0d; border:1px dashed #A2FF00; border-radius:10px; padding:10px; margin:6px 0;"><span style="font-size:9px; color:#88929b; font-weight:bold;">{ref_label}</span><br><span class="glow-ref-code">{ref_code}</span></div>', unsafe_allow_html=True)
-
-        user_poster_path = f"user_invite_{ref_code}.png"
-        generate_referral_image(ref_code, user_poster_path)
-        with open(user_poster_path, "rb") as file:
-            st.download_button(
-                label="📥 Download Invitation Poster / 下载专属海报",
-                data=file,
-                file_name=f"NexaEdge_Invite_{ref_code}.png",
-                mime="image/png",
-                key="user_download_btn"
-            )
 
         st.markdown("<br>", unsafe_allow_html=True)
         btn_logout = "安全退出当前登录账户" if lang=="中文" else "Logout Account Location"
