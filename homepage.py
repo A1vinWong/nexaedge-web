@@ -192,9 +192,9 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
     # 底部半透明黑色渐变条，确保文字可读
     overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     overlay_draw = ImageDraw.Draw(overlay)
-    bar_h = int(height * 0.25)
+    bar_h = int(height * 0.35)
     for i in range(bar_h):
-        alpha = int(200 * (i / bar_h))
+        alpha = int(220 * (i / bar_h))
         overlay_draw.rectangle(
             [(0, height - bar_h + i), (width, height - bar_h + i + 1)],
             fill=(0, 0, 0, alpha)
@@ -202,9 +202,9 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
     img = Image.alpha_composite(img, overlay)
     draw = ImageDraw.Draw(img)
 
-    # 字体大小根据图片尺寸自适应
-    font_size_url  = max(32, int(height * 0.042))
-    font_size_code = max(40, int(height * 0.056))
+    # 字体大小根据图片尺寸自适应（放大版）
+    font_size_url  = max(80, int(height * 0.085))
+    font_size_code = max(100, int(height * 0.110))
 
     font_url  = get_font(font_size_url)
     font_code = get_font(font_size_code)
