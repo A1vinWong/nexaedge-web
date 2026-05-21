@@ -32,7 +32,7 @@ def gen_ref_image(ref_code):
         f36 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
         f18 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
         f13 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 13)
-    except:
+    except Exception:
         f36 = f18 = f13 = ImageFont.load_default()
     t1 = "MY REFERRAL CODE"
     draw.text(((W-draw.textlength(t1,f18))/2, banner_y+10), t1, font=f18, fill=(162,255,0,210))
@@ -41,7 +41,7 @@ def gen_ref_image(ref_code):
     for dx,dy in [(-1,-1),(1,-1),(-1,1),(1,1)]:
         draw.text((cx+dx,cy+dy), ref_code, font=f36, fill=(0,0,0,255))
     draw.text((cx,cy), ref_code, font=f36, fill=(162,255,0,255))
-    hint = "nexaedge.org  •  Powered by NexaEdge Network"
+    hint = "nexaedge.org  Powered by NexaEdge Network"
     draw.text(((W-draw.textlength(hint,f13))/2, banner_y+84), hint, font=f13, fill=(180,195,200,190))
     buf = io.BytesIO()
     img.convert("RGB").save(buf, format="PNG", optimize=True)
@@ -49,20 +49,30 @@ def gen_ref_image(ref_code):
 
 def show_ref_card(img_bytes, ref_code, lang, dl_key):
     b64 = base64.b64encode(img_bytes).decode()
-    title = "📸 您的专属推荐码图片已生成，长按保存！" if lang=="中文" else "📸 Your referral card is ready — tap to save!"
-    st.markdown(f"""
-    <div style="text-align:center;margin:12px 0;">
-        <p style="color:#A2FF00;font-size:12px;font-weight:bold;margin-bottom:8px;">{title}</p>
-        <img src="data:image/png;base64,{b64}"
-             style="border-radius:14px;border:1px solid #A2FF00;max-width:300px;width:100%;
-                    box-shadow:0 0 18px rgba(162,255,0,0.25);" />
-    </div>""", unsafe_allow_html=True)
+    if lang == "zh":
+        title = "your referral card is ready"
+    else:
+        title = "your referral card is ready"
+    st.markdown(
+        '<div style="text-align:center;margin:12px 0;">' +
+        '<p style="color:#A2FF00;font-size:12px;font-weight:bold;margin-bottom:8px;">📸 ' + title + '</p>' +
+        '<img src="data:image/png;base64,' + b64 + '" ' +
+        'style="border-radius:14px;border:1px solid #A2FF00;max-width:300px;width:100%;box-shadow:0 0 18px rgba(162,255,0,0.25);" /></div>',
+        unsafe_allow_html=True
+    )
     st.download_button(
-        label="⬇️ 下载推荐码图片" if lang=="中文" else "⬇️ Download Referral Card",
-        data=img_bytes, file_name=f"NexaEdge_{ref_code}.png", mime="image/png", key=dl_key
+        label="Download Referral Card",
+        data=img_bytes,
+        file_name="NexaEdge_" + ref_code + ".png",
+        mime="image/png",
+        key=dl_key
     )
 
-st.set_page_config(page_title="NexaEdge Network | Official Node Gateway", page_icon="🟢", layout="centered")
+st.set_page_config(
+    page_title="NexaEdge Network | Official Node Gateway",
+    page_icon="🟢",
+    layout="centered"
+)
 
 @st.cache_resource
 def init_server():
@@ -86,21 +96,30 @@ G = init_server()
 
 if "device_fingerprint" not in st.session_state:
     h = st.context.headers
-    fp = f"{h.get('User-Agent','X')}_{h.get('X-Forwarded-For','0')}"
-    st.session_state.device_fingerprint = hashlib.md5(fp.encode()).hexdigest()[:12]
+    ua = h.get("User-Agent", "X")
+    ip = h.get("X-Forwarded-For", "0")
+    st.session_state.device_fingerprint = hashlib.md5((ua + "_" + ip).encode()).hexdigest()[:12]
 
 dev_id = st.session_state.device_fingerprint
 
-for k,v in [("current_user",None),("app_running",False),("last_tick_time",0.0),
-            ("target_time_index",2),("referral_image_bytes",None),
-            ("new_referral_code",None),("wl_referral_image_bytes",None),
-            ("wl_referral_code",None)]:
-    if k not in st.session_state: st.session_state[k] = v
+defaults = {
+    "current_user": None,
+    "app_running": False,
+    "last_tick_time": 0.0,
+    "target_time_index": 2,
+    "referral_image_bytes": None,
+    "new_referral_code": None,
+    "wl_referral_image_bytes": None,
+    "wl_referral_code": None,
+}
+for k, v in defaults.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
 
 if "chart_history" not in st.session_state:
     st.session_state.chart_history = [19.2,20.8,18.1,21.3,19.0,22.2,18.9,21.1,20.5,19.8,18.2,20.9]
 if "session_id" not in st.session_state:
-    st.session_state.session_id = f"node_{dev_id}_{random.randint(1000,9999)}"
+    st.session_state.session_id = "node_" + dev_id + "_" + str(random.randint(1000,9999))
     G["total_online_viewers"] += 1
 if dev_id not in G["device_balances"]:
     G["device_balances"][dev_id] = {"app_earned":0.0,"total_energy_wh":0.0,"session_seconds":0}
@@ -121,11 +140,14 @@ def sync():
             st.session_state.session_seconds = db["session_seconds"]
             st.session_state.last_user = None
 
-if "app_earned" not in st.session_state: sync()
+if "app_earned" not in st.session_state:
+    sync()
 sync()
 
-if st.session_state.app_running: G["active_device_set"].add(st.session_state.session_id)
-else: G["active_device_set"].discard(st.session_state.session_id)
+if st.session_state.app_running:
+    G["active_device_set"].add(st.session_state.session_id)
+else:
+    G["active_device_set"].discard(st.session_state.session_id)
 
 if st.session_state.app_running and st.session_state.last_tick_time > 0:
     gap = int(time.time() - st.session_state.last_tick_time)
@@ -135,8 +157,10 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
         st.session_state.total_energy_wh   += 5.1 * gap / 3600
         st.session_state.last_tick_time     = time.time()
         u = st.session_state.current_user
-        if u: G["user_db"][u]["score"] = st.session_state.app_earned
-        else: G["device_balances"][dev_id]["app_earned"] = st.session_state.app_earned
+        if u:
+            G["user_db"][u]["score"] = st.session_state.app_earned
+        else:
+            G["device_balances"][dev_id]["app_earned"] = st.session_state.app_earned
         G["device_balances"][dev_id]["total_energy_wh"] = st.session_state.total_energy_wh
         G["device_balances"][dev_id]["session_seconds"] = st.session_state.session_seconds
 
@@ -144,7 +168,6 @@ TIME_EN = ["15 Minutes","30 Minutes","1 Hour","2 Hours","4 Hours","8 Hours","12 
 TIME_ZH = ["15分钟","半小时","1小时","2小时","4小时","8小时","12小时","24小时"]
 HOURS   = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
 
-# ── CSS ──────────────────────────────────────────────────────────────────
 st.markdown("""<style>
 .stApp{background:#0b0f12;}
 #MainMenu,footer,.styles_viewerBadge__FUChv,[data-testid="manage-app-button"]{display:none!important;}
@@ -154,145 +177,141 @@ header,[data-testid="stHeader"]{background:transparent!important;border:none!imp
 canvas+div[class*="menu"],.vega-embed summary,.vega-embed details{display:none!important;}
 .element-container hr,.stMarkdown hr{display:none!important;}
 [data-testid="stVegaLiteChart"]>div>details{display:none!important;}
-
-/* Tabs */
 .stTabs [data-baseweb="tab-list"]{gap:8px;background:transparent!important;justify-content:center;border:none!important;overflow-x:auto;margin-bottom:16px;}
 .stTabs [data-baseweb="tab"]{background:#11171d!important;color:#bdc3c7!important;border-radius:8px!important;border:1px solid #1e272e!important;padding:10px 16px!important;font-weight:700!important;font-size:13px!important;white-space:nowrap;transition:all .3s;}
 .stTabs [aria-selected="true"]{color:#0b0f12!important;background:#A2FF00!important;border-top:none!important;}
 .stTabs [data-baseweb="tab-highlight"]{background:#A2FF00!important;height:0!important;}
-
-/* Cards */
-.app-container{background:#11171d;border:1px solid #1e272e;border-radius:20px;padding:14px;margin-bottom:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);}
 .app-card{background:#161c23;border:1px solid #252e38;border-radius:12px;padding:10px 12px;margin-bottom:8px;}
 .user-badge{background:#1e293b;padding:8px 12px;border-radius:10px;border-left:3px solid #00e5ff;margin-bottom:8px;font-size:12px;color:#e2e8f0;line-height:1.4;}
-
-/* Values */
 .app-value{font-family:monospace;color:#fff;font-size:24px;font-weight:700;}
 .neon-green-text{color:#A2FF00!important;}
 .neon-blue-text{color:#00e5ff!important;}
 .temp-section{display:flex;align-items:center;justify-content:space-between;background:#11171d;padding:8px 12px;border-radius:10px;}
-
-/* Buttons */
 div.stButton>button:first-child{background:#A2FF00!important;color:#0b0f12!important;font-weight:800!important;font-size:15px!important;width:100%!important;border-radius:12px!important;border:none!important;padding:12px 18px!important;box-shadow:0 5px 15px rgba(162,255,0,.2);transition:all .2s;}
 div.stButton>button:hover{background:#b5ff33!important;}
 div.stButton>button[key*="app_stop_btn"]{background:#0b0f12!important;color:#fff!important;border:1px solid #f43f5e!important;box-shadow:none!important;}
 div.stButton>button[key*="logout_btn"]{background:#343a40!important;color:#ffc107!important;box-shadow:none!important;padding:5px 12px!important;font-size:12px!important;width:auto!important;}
-
-/* Form */
 [data-testid="stForm"]{background:#161c23!important;border:1px solid #252e38!important;border-radius:16px!important;padding:18px!important;}
-
-/* Feature boxes */
 .feature-box{background:#11171d;padding:14px;border-radius:10px;border-left:4px solid #A2FF00;margin-bottom:10px;}
-
-/* Social */
 .social-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(65px,1fr));gap:6px;margin:6px 0;}
 .social-btn{display:block;text-align:center;padding:6px;background:#11171d;border:1px solid #252e38;border-radius:8px;color:#bdc3c7!important;font-size:11px;font-weight:bold;text-decoration:none;}
 .social-btn:hover{border-color:#A2FF00;color:#A2FF00!important;background:#161c23;}
-
-/* Chart */
 .chart-wrapper{background:#161c23;border:1px solid #252e38;border-radius:14px;padding:8px 10px 0;margin-top:4px;margin-left:-18px;margin-right:8px;margin-bottom:12px;box-sizing:border-box;overflow:hidden;}
-.chart-wrapper>div>hr,.stApp hr{display:none!important;}
 .chart-wrapper [data-testid="StyledFullScreenButton"],.chart-wrapper summary,.chart-wrapper [class*="toolbar"]{display:none!important;}
 .chart-wrapper [data-testid="stVegaLiteChart"]{margin:-10px 0 -18px -12px!important;}
 .chart-title-lbl{font-size:11px;color:#88929b;font-weight:bold;text-transform:uppercase;margin-bottom:4px;margin-left:14px;}
-
-/* Bottom bar */
 .bottom-stats-row{display:flex;gap:8px;margin-top:8px;}
 .mini-stat-card{text-align:center;background:#141d26;padding:6px 10px;border-radius:8px;min-height:32px;display:flex;flex-direction:row;justify-content:center;align-items:center;gap:6px;flex:1;white-space:nowrap;}
 .mini-stat-title{font-size:8px!important;color:#88929b;font-weight:bold;white-space:nowrap;margin:0;}
 .mini-stat-value{font-size:12px!important;font-weight:bold;font-family:monospace;margin:0;white-space:nowrap;}
-
-/* CA input */
 .ca-white-box{background:transparent;border:none;padding:0;margin-top:4px;}
 .ca-label{font-size:11px;color:#88929b;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;display:block;}
 .ca-white-box div[data-testid="stTextInput"] input{color:#fff!important;border-color:#1e2a38!important;background:#161c23!important;font-family:monospace!important;font-size:11px!important;padding:6px 10px!important;}
-
-/* Admin */
 .admin-table{width:100%;border-collapse:collapse;margin-top:15px;font-size:12px;color:#cdfaee;}
 .admin-table th{background:#1f2937;color:#A2FF00;text-align:left;padding:10px;border:1px solid #374151;}
 .admin-table td{padding:10px;border:1px solid #374151;background:#111827;}
-
-/* Referral card */
 .ref-img-card{background:linear-gradient(135deg,#0d1f0d,#111c11);border:1px dashed #A2FF00;border-radius:16px;padding:16px;text-align:center;margin:10px 0;box-shadow:0 0 20px rgba(162,255,0,.1);}
 </style>""", unsafe_allow_html=True)
 
-# ── 顶栏 ─────────────────────────────────────────────────────────────────
+# ── 顶栏 ────────────────────────────────────────────────────────────────
 st.markdown('<h1 style="text-align:center;color:#A2FF00;font-size:32px;font-weight:800;margin-bottom:0;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-lang = st.selectbox("🌐 Language", ["English","中文"], index=0, label_visibility="collapsed")
-opts = TIME_ZH if lang=="中文" else TIME_EN
+lang = st.selectbox("Language", ["English", "中文"], index=0, label_visibility="collapsed")
+is_zh = (lang == "中文")
+opts = TIME_ZH if is_zh else TIME_EN
 
-if lang=="中文":
-    st.markdown('<p style="font-size:14px;color:#A2FF00;font-weight:bold;text-align:center;margin-top:5px;">让全球闲置手机，成为 AI 时代的高纯度分布式算力网络</p>', unsafe_allow_html=True)
+if is_zh:
+    sub = "让全球闲置手机，成为 AI 时代的高纯度分布式算力网络"
 else:
-    st.markdown('<p style="font-size:14px;color:#A2FF00;font-weight:bold;text-align:center;margin-top:5px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
+    sub = "Transforming idle smartphones into high-purity data network for AI Era."
+st.markdown('<p style="font-size:14px;color:#A2FF00;font-weight:bold;text-align:center;margin-top:5px;">' + sub + '</p>', unsafe_allow_html=True)
 
-# ── 顶部全宽图 + 简报（首页区域，所有Tab共享） ──────────────────────────
+# ── 全宽图 + 简报 ────────────────────────────────────────────────────────
+img_html = '<img src="data:image/jpeg;base64,' + EMBEDDED_IMAGE_B64 + '" style="width:100%;border-radius:14px;display:block;margin-bottom:12px;" />'
+st.markdown(img_html, unsafe_allow_html=True)
+
+if is_zh:
+    briefing_title = "⚡ 项目核心简报"
+    briefing_body  = "NexaEdge 赋予普通用户将闲置手机性能变现的完整权利。通过建立端到端的加密去中心化沙盒环境，您的设备可在充电且闲置时自动承接分布式 AI 数据清洗与验证任务，安全赚取行业先锋红利。"
+else:
+    briefing_title = "⚡ Project Briefing"
+    briefing_body  = "NexaEdge empowers users to monetize unutilized smartphone capabilities. By creating an encrypted decentralized sandbox network, your device seamlessly routes localized data verification processes to unlock institutional level rewards while you sleep."
+
 st.markdown(
-    f'<img src="data:image/jpeg;base64,{EMBEDDED_IMAGE_B64}" style="width:100%;border-radius:14px;display:block;margin-bottom:12px;" />',
+    '<div style="background:#11171d;border:1px solid #1e272e;padding:12px;border-radius:14px;margin-bottom:14px;">' +
+    '<p style="color:#A2FF00;font-size:13px;font-weight:800;margin:0 0 6px;text-transform:uppercase;">' + briefing_title + '</p>' +
+    '<p style="color:#fff;font-size:11px;line-height:1.5;margin:0;">' + briefing_body + '</p></div>',
     unsafe_allow_html=True
 )
-if lang=="中文":
-    st.markdown("""<div style="background:#11171d;border:1px solid #1e272e;padding:12px;border-radius:14px;margin-bottom:14px;">
-        <p style="color:#A2FF00;font-size:13px;font-weight:800;margin:0 0 6px;text-transform:uppercase;">⚡ 项目核心简报</p>
-        <p style="color:#fff;font-size:11px;line-height:1.5;margin:0;">NexaEdge 赋予普通用户将闲置手机性能变现的完整权利。通过建立端到端的加密去中心化沙盒环境，您的设备可在充电且闲置时自动承接分布式 AI 数据清洗与验证任务，安全赚取行业先锋红利。</p>
-    </div>""", unsafe_allow_html=True)
-else:
-    st.markdown("""<div style="background:#11171d;border:1px solid #1e272e;padding:12px;border-radius:14px;margin-bottom:14px;">
-        <p style="color:#A2FF00;font-size:13px;font-weight:800;margin:0 0 6px;text-transform:uppercase;">⚡ Project Briefing</p>
-        <p style="color:#fff;font-size:11px;line-height:1.5;margin:0;">NexaEdge empowers users to monetize unutilized smartphone capabilities. By creating an encrypted decentralized sandbox network, your device seamlessly routes localized data verification processes to unlock institutional level rewards while you sleep.</p>
-    </div>""", unsafe_allow_html=True)
 
 url_admin = st.query_params.get("admin", None)
 is_admin  = (lang == "nexaadmin" or url_admin == "nexa_gate")
 
-tab1, tab2, tab4 = st.tabs(
-    ["🌐 Overview","📱 Dashboard","🔑 Auth Portal"] if lang=="English"
-    else ["🌐 项目通识","📱 算力控制台","🔑 账户注册/登录"]
-)
+if is_zh:
+    tab_names = ["🌐 项目通识", "📱 算力控制台", "🔑 账户注册/登录"]
+else:
+    tab_names = ["🌐 Overview", "📱 Dashboard", "🔑 Auth Portal"]
+
+tab1, tab2, tab4 = st.tabs(tab_names)
 
 # ─────────────────────────────────────────────────────────────────────────
 # TAB 1
 # ─────────────────────────────────────────────────────────────────────────
 with tab1:
     c1, c2, c3 = st.columns(3)
-    if lang=="中文":
-        with c1: st.metric("智能硬件风控","39°C","秒级控温预警", delta_color="inverse")
+    if is_zh:
+        with c1:
+            st.metric("智能硬件风控", "39°C", "秒级控温预警", delta_color="inverse")
         with c2:
-            st.metric("算力结算底座","Solana SPL","极速、低 Gas")
+            st.metric("算力结算底座", "Solana SPL", "极速、低 Gas")
             st.markdown('<div class="ca-white-box"><span class="ca-label">智能合约地址</span>', unsafe_allow_html=True)
             st.text_input("ca_zh", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_zh")
             st.markdown('</div>', unsafe_allow_html=True)
-        with c3: st.metric("分布式共识机制","自研轻量级 BFT","2:1 多数投票验证")
+        with c3:
+            st.metric("分布式共识机制", "自研轻量级 BFT", "2:1 多数投票验证")
     else:
-        with c1: st.metric("Thermal Guard Lock","39°C","Device Protection Barrier", delta_color="inverse")
+        with c1:
+            st.metric("Thermal Guard Lock", "39°C", "Device Protection Barrier", delta_color="inverse")
         with c2:
-            st.metric("Settlement Engine","Solana SPL","Low Gas / High TPS")
+            st.metric("Settlement Engine", "Solana SPL", "Low Gas / High TPS")
             st.markdown('<div class="ca-white-box"><span class="ca-label">Contract Address</span>', unsafe_allow_html=True)
             st.text_input("ca_en", value=DEFAULT_CA, disabled=True, label_visibility="collapsed", key="ca_en")
             st.markdown('</div>', unsafe_allow_html=True)
-        with c3: st.metric("Network Consensus","Proprietary BFT","2:1 Redundant Voting")
+        with c3:
+            st.metric("Network Consensus", "Proprietary BFT", "2:1 Redundant Voting")
 
-    if lang=="中文":
-        st.markdown('<h2 style="color:#A2FF00;font-size:18px;margin-top:14px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
-        sel = st.selectbox("选择运行时间档位:", opts, index=st.session_state.target_time_index, key="calc_zh")
+    if is_zh:
+        calc_title = "💰 设备收益计算器"
+        calc_label = "选择运行时间档位:"
+        monthly_label = "预计每月可带来收益"
     else:
-        st.markdown('<h2 style="color:#A2FF00;font-size:18px;margin-top:14px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
-        sel = st.selectbox("Select Setting Pattern:", opts, index=st.session_state.target_time_index, key="calc_en")
-    st.session_state.target_time_index = opts.index(sel)
-    st.success(f"🎉 {"预计每月可带来收益" if lang=="中文" else "Estimated Monthly Income"}: {HOURS[st.session_state.target_time_index]*0.35*30:.2f} USDT")
+        calc_title = "💰 Revenue Calculator"
+        calc_label = "Select Setting Pattern:"
+        monthly_label = "Estimated Monthly Income"
 
-    if lang=="中文":
+    st.markdown('<h2 style="color:#A2FF00;font-size:18px;margin-top:14px;">' + calc_title + '</h2>', unsafe_allow_html=True)
+    sel = st.selectbox(calc_label, opts, index=st.session_state.target_time_index, key="calc_sel")
+    st.session_state.target_time_index = opts.index(sel)
+    est = HOURS[st.session_state.target_time_index] * 0.35 * 30
+    st.success("🎉 " + monthly_label + ": " + str(round(est, 2)) + " USDT")
+
+    if is_zh:
         st.markdown("""
-        <div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">📱 充电即赚 · 睡后收入</h4><p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">只需在夜间充电并连接 Wi-Fi，NexaEdge 的轻量级 WASM 沙盒便会在后台静默运行清洗 AI 语料。</p></div>
-        <div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">🔥 39°C 智能温控屏障</h4><p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p></div>
-        <div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">🛡️ 自研轻量级拜占庭容错机制（BFT）</h4><p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">针对边缘物理节点易作弊的痛点，创新引入 2:1 去中心化多数投票冗余验证，从算法底层锁死任何虚假数据提交。</p></div>
+<div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">📱 充电即赚 · 睡后收入</h4>
+<p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">只需在夜间充电并连接 Wi-Fi，NexaEdge 的轻量级 WASM 沙盒便会在后台静默运行清洗 AI 语料。</p></div>
+<div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">🔥 39°C 智能温控屏障</h4>
+<p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p></div>
+<div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">🛡️ 自研轻量级拜占庭容错机制（BFT）</h4>
+<p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">针对边缘物理节点易作弊的痛点，创新引入 2:1 去中心化多数投票冗余验证，从算法底层锁死任何虚假数据提交。</p></div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">📱 Passive Income via Charging</h4><p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">Just plug in and connect Wi-Fi at night, NexaEdge's lightweight WASM Sandbox cleans AI datasets silently in the background.</p></div>
-        <div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">🔥 39°C Thermal Guard Barrier</h4><p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">Total hardware protection. System auto-throttles load instantly if battery hits 39°C. Zero hardware degradation anxiety.</p></div>
-        <div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">🛡️ Proprietary Byzantine Fault Tolerance (BFT)</h4><p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">To combat untrusted edge environments, NexaEdge utilizes a 2:1 decentralized majority voting redundant verification mechanism to eliminate fraudulent computation mathematically.</p></div>
+<div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">📱 Passive Income via Charging</h4>
+<p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">Just plug in and connect Wi-Fi at night, NexaEdge's lightweight WASM Sandbox cleans AI datasets silently in the background.</p></div>
+<div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">🔥 39°C Thermal Guard Barrier</h4>
+<p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">Total hardware protection. System auto-throttles load instantly if battery hits 39°C. Zero hardware degradation anxiety.</p></div>
+<div class="feature-box"><h4 style="color:white;margin:0;font-size:14px;">🛡️ Proprietary Byzantine Fault Tolerance (BFT)</h4>
+<p style="color:#bdc3c7;font-size:12px;margin:4px 0 0;">To combat untrusted edge environments, NexaEdge utilizes a 2:1 decentralized majority voting redundant verification mechanism to eliminate fraudulent computation mathematically.</p></div>
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -301,27 +320,43 @@ with tab1:
         show_ref_card(st.session_state.wl_referral_image_bytes, st.session_state.wl_referral_code, lang, "wl_dl_p")
 
     with st.form("wl_form"):
-        if lang=="中文":
-            st.markdown('<div style="font-size:13px;font-weight:bold;color:#A2FF00;margin-bottom:2px;">🎁 申领创世白名单与社媒双倍加速奖励</div>', unsafe_allow_html=True)
-            el="申请电子邮箱地址:"; ep="请输入接收通知的邮箱"
-            wl="绑定的 Solana 钱包接收地址 (获取空投资产):"; wp="输入您的 Solana SPL 钱包公钥"
-            rl="推荐码 (选填):"; rp="如有推荐码，请输入以获得创世加速"
-            btn_wl="锁定创世空投席位 ⚡"; cb="📧 联系我们"
+        if is_zh:
+            wl_head    = "🎁 申领创世白名单与社媒双倍加速奖励"
+            el = "申请电子邮箱地址:"; ep = "请输入接收通知的邮箱"
+            wl = "绑定的 Solana 钱包接收地址 (获取空投资产):"; wp = "输入您的 Solana SPL 钱包公钥"
+            rl = "推荐码 (选填):"; rp = "如有推荐码，请输入以获得创世加速"
+            btn_wl = "锁定创世空投席位 ⚡"; cb = "📧 联系我们"
+            msg_ok = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
+            err_email = "❌ 该邮箱已申请过白名单，每个邮箱仅限一次！"
+            err_wallet = "❌ 该钱包地址已申请过白名单，每个钱包仅限一次！"
+            err_empty = "❌ 请完整填写邮箱和钱包地址！"
+            ref_card_title = "📸 您的专属推荐码图片已生成，长按保存！"
+            dl_label = "⬇️ 下载推荐码图片"
         else:
-            st.markdown('<div style="font-size:13px;font-weight:bold;color:#A2FF00;margin-bottom:2px;">🎁 Claim Genesis Whitelist & Social Boosting Rewards</div>', unsafe_allow_html=True)
-            el="Notification Email Address:"; ep="e.g., node_miner@gmail.com"
-            wl="Bound Solana Wallet Address (For Asset Air-drops):"; wp="Enter your Solana SPL public key address"
-            rl="Referral Code (Optional):"; rp="Enter code to claim genesis boosting if available"
-            btn_wl="Lock Genesis Seating ⚡"; cb="📧 Contact US"
+            wl_head    = "🎁 Claim Genesis Whitelist & Social Boosting Rewards"
+            el = "Notification Email Address:"; ep = "e.g., node_miner@gmail.com"
+            wl = "Bound Solana Wallet Address (For Asset Air-drops):"; wp = "Enter your Solana SPL public key address"
+            rl = "Referral Code (Optional):"; rp = "Enter code to claim genesis boosting if available"
+            btn_wl = "Lock Genesis Seating ⚡"; cb = "📧 Contact US"
+            msg_ok = "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot."
+            err_email = "❌ This email has already been registered. One application per email!"
+            err_wallet = "❌ This wallet has already been registered. One application per wallet!"
+            err_empty = "❌ Email and Wallet fields cannot be empty!"
+            ref_card_title = "📸 Your referral card is ready — tap & hold to save!"
+            dl_label = "⬇️ Download Referral Card"
 
-        st.markdown(f"""<div class="social-grid">
-            <a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>
-            <a class="social-btn" href="https://x.com/nexaedge_?s=21" target="_blank">🐦 X</a>
-            <a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>
-            <a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>
-            <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
-            <a class="social-btn" href="mailto:contact@nexaedge.org" style="border-color:#00e5ff;color:#00e5ff!important;">{cb}</a>
-        </div>""", unsafe_allow_html=True)
+        st.markdown('<div style="font-size:13px;font-weight:bold;color:#A2FF00;margin-bottom:2px;">' + wl_head + '</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="social-grid">' +
+            '<a class="social-btn" href="https://www.instagram.com/nexaedge__?igsh=eXp0MTlmdDR6dm10&utm_source=qr" target="_blank">📸 Instagram</a>' +
+            '<a class="social-btn" href="https://x.com/nexaedge_?s=21" target="_blank">🐦 X</a>' +
+            '<a class="social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/?mibextid=wwXIfr" target="_blank">👥 Facebook</a>' +
+            '<a class="social-btn" href="https://www.tiktok.com/@nexaedge7?_r=1&_t=ZS-96QbSMyso5v" target="_blank">🎵 TikTok</a>' +
+            '<a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>' +
+            '<a class="social-btn" href="mailto:contact@nexaedge.org" style="border-color:#00e5ff;color:#00e5ff!important;">' + cb + '</a>' +
+            '</div>',
+            unsafe_allow_html=True
+        )
 
         u_email  = st.text_input(el, placeholder=ep, key="wm").strip()
         u_wallet = st.text_input(wl, placeholder=wp, key="ww").strip()
@@ -329,30 +364,30 @@ with tab1:
 
         if st.form_submit_button(btn_wl):
             if not u_email or not u_wallet:
-                st.error("❌ 请完整填写邮箱和钱包地址！" if lang=="中文" else "❌ Email and Wallet fields cannot be empty!")
+                st.error(err_empty)
             elif u_email.lower() in G["whitelist_emails"]:
-                st.error("❌ 该邮箱已申请过白名单！" if lang=="中文" else "❌ This email has already been registered!")
+                st.error(err_email)
             elif u_wallet.lower() in G["whitelist_wallets"]:
-                st.error("❌ 该钱包已申请过白名单！" if lang=="中文" else "❌ This wallet has already been registered!")
+                st.error(err_wallet)
             else:
                 G["whitelist_emails"].add(u_email.lower())
                 G["whitelist_wallets"].add(u_wallet.lower())
-                with open("whitelist.txt","a",encoding="utf-8") as f:
-                    f.write(f"Email:{u_email}|Wallet:{u_wallet}|Ref:{u_ref or 'None'}|Time:{time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                st.success("🎉 创世节点白名单成功锁定！空投快照前我们会联系您。" if lang=="中文"
-                           else "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot.")
-                wl_rc = gen_ref_code(u_email)
+                with open("whitelist.txt", "a", encoding="utf-8") as f:
+                    ref_val = u_ref if u_ref else "None"
+                    f.write("Email:" + u_email + "|Wallet:" + u_wallet + "|Ref:" + ref_val + "|Time:" + time.strftime("%Y-%m-%d %H:%M:%S") + "\n")
+                st.success(msg_ok)
+                wl_rc  = gen_ref_code(u_email)
                 wl_img = gen_ref_image(wl_rc)
                 st.session_state.wl_referral_image_bytes = wl_img
                 st.session_state.wl_referral_code = wl_rc
                 b64i = base64.b64encode(wl_img).decode()
-                t2 = "📸 您的专属推荐码图片已生成，长按保存！" if lang=="中文" else "📸 Your referral card is ready — tap & hold to save!"
-                st.markdown(f'''<div class="ref-img-card">
-                    <p style="color:#A2FF00;font-size:12px;font-weight:bold;margin:0 0 8px;">{t2}</p>
-                    <img src="data:image/png;base64,{b64i}" style="border-radius:12px;border:1px solid #A2FF00;max-width:280px;width:100%;"/>
-                </div>''', unsafe_allow_html=True)
-                st.download_button("⬇️ 下载推荐码图片" if lang=="中文" else "⬇️ Download Referral Card",
-                    data=wl_img, file_name=f"NexaEdge_Whitelist_{wl_rc}.png", mime="image/png", key="wl_dl_i")
+                st.markdown(
+                    '<div class="ref-img-card">' +
+                    '<p style="color:#A2FF00;font-size:12px;font-weight:bold;margin:0 0 8px;">' + ref_card_title + '</p>' +
+                    '<img src="data:image/png;base64,' + b64i + '" style="border-radius:12px;border:1px solid #A2FF00;max-width:280px;width:100%;"/></div>',
+                    unsafe_allow_html=True
+                )
+                st.download_button(dl_label, data=wl_img, file_name="NexaEdge_Whitelist_" + wl_rc + ".png", mime="image/png", key="wl_dl_i")
 
 # ─────────────────────────────────────────────────────────────────────────
 # TAB 2
@@ -365,76 +400,99 @@ with tab2:
         st.session_state.chart_history.pop(0)
         st.session_state.chart_history.append(cur_hash)
     else:
-        cur_hash = 0.0; cur_temp = 30.5; cur_pwr = random.uniform(0.12, 0.18)
+        cur_hash = 0.0
+        cur_temp = 30.5
+        cur_pwr  = random.uniform(0.12, 0.18)
 
     u = st.session_state.current_user
     if u:
-        bt = f"🟢 {"已成功挂载云端账户" if lang=="中文" else "Connected Cloud Account"}: <b>{u}</b>"
-        st.markdown(f'<div class="user-badge">{bt}</div>', unsafe_allow_html=True)
+        if is_zh:
+            badge_msg = "🟢 已成功挂载云端账户: <b>" + u + "</b>"
+        else:
+            badge_msg = "🟢 Connected Cloud Account: <b>" + u + "</b>"
+        st.markdown('<div class="user-badge">' + badge_msg + '</div>', unsafe_allow_html=True)
     else:
-        bt = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
-        st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300;color:#ffb300;">{bt}</div>', unsafe_allow_html=True)
+        if is_zh:
+            badge_msg = "⚠️ 游客节点运行（当前数量仅存在本地，建议立即去 [账户管理中心] 注册）"
+        else:
+            badge_msg = "⚠️ Running as Visitor (Data stays local, register inside Auth Portal to sync)"
+        st.markdown('<div class="user-badge" style="border-left-color:#ffb300;color:#ffb300;">' + badge_msg + '</div>', unsafe_allow_html=True)
 
-    lbl_rt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
-    sel2 = st.selectbox(lbl_rt, opts, index=st.session_state.target_time_index, key="rt_sel")
+    if is_zh:
+        rt_label = "配置目标运行时间:"
+        chart_label = "📶 边缘节点算力实时波形数据 (Hashrate Chart)"
+        temp_label = "硬件运行温度"
+        p1_label = "实时输入功耗:"
+        p2_label = "🔋 累计电力消耗:"
+        d1_label = "本次运行时长:"
+        d2_label = "当前账户绑定的 NEXA 总数:"
+        btn_start_label = "激活并启动边缘算力节点"
+        btn_stop_label  = "暂停当前算力"
+    else:
+        rt_label = "Set Target Runtime:"
+        chart_label = "📶 Edge Node Real-time Hashrate Trend"
+        temp_label = "Hardware Temp"
+        p1_label = "Input Power:"
+        p2_label = "🔋 Cumulative Energy:"
+        d1_label = "Continuous Runtime:"
+        d2_label = "Your Account Balance:"
+        btn_start_label = "START COMPUTE SESSION"
+        btn_stop_label  = "PAUSE COMPUTE SESSION"
+
+    sel2 = st.selectbox(rt_label, opts, index=st.session_state.target_time_index, key="rt_sel")
     st.session_state.target_time_index = opts.index(sel2)
 
-    clbl = "📶 边缘节点算力实时波形数据 (Hashrate Chart)" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
-    st.markdown(f'<div class="chart-title-lbl">{clbl}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="chart-title-lbl">' + chart_label + '</div>', unsafe_allow_html=True)
     st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
     st.line_chart(pd.DataFrame(st.session_state.chart_history, columns=["Hashrate (G/s)"]), height=120, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    lbl_tmp = "硬件运行温度" if lang=="中文" else "Hardware Temp"
-    st.markdown(f'''<div class="app-card"><div class="temp-section">
-      <span class="app-value" style="font-size:16px;">🌡️ {lbl_tmp}: {cur_temp:.1f}°C</span>
-      <span style="background:#1e272e;color:#A2FF00;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">SAFE</span>
-    </div></div>''', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="app-card"><div class="temp-section">' +
+        '<span class="app-value" style="font-size:16px;">🌡️ ' + temp_label + ': ' + str(round(cur_temp,1)) + '°C</span>' +
+        '<span style="background:#1e272e;color:#A2FF00;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">SAFE</span>' +
+        '</div></div>',
+        unsafe_allow_html=True
+    )
 
-    lbl_p1 = "实时输入功耗:" if lang=="中文" else "Input Power:"
-    lbl_p2 = "🔋 累计电力消耗:" if lang=="中文" else "🔋 Cumulative Energy:"
-    st.markdown(f'''<div class="app-card">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-        <div style="background:#11171d;padding:6px;border-radius:8px;">
-          <div style="font-size:9px;color:#88929b;font-weight:bold;">{lbl_p1}</div>
-          <div class="app-value neon-blue-text" style="font-size:14px;">{cur_pwr:.2f} W</div>
-        </div>
-        <div style="background:#11171d;padding:6px;border-radius:8px;">
-          <div style="font-size:9px;color:#88929b;font-weight:bold;">{lbl_p2}</div>
-          <div class="app-value" style="font-size:14px;color:#fff;">{st.session_state.total_energy_wh:.4f} Wh</div>
-        </div>
-      </div>
-    </div>''', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="app-card"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+        '<div style="background:#11171d;padding:6px;border-radius:8px;">' +
+        '<div style="font-size:9px;color:#88929b;font-weight:bold;">' + p1_label + '</div>' +
+        '<div class="app-value neon-blue-text" style="font-size:14px;">' + str(round(cur_pwr,2)) + ' W</div></div>' +
+        '<div style="background:#11171d;padding:6px;border-radius:8px;">' +
+        '<div style="font-size:9px;color:#88929b;font-weight:bold;">' + p2_label + '</div>' +
+        '<div class="app-value" style="font-size:14px;color:#fff;">' + str(round(st.session_state.total_energy_wh,4)) + ' Wh</div></div>' +
+        '</div></div>',
+        unsafe_allow_html=True
+    )
 
     s = st.session_state.session_seconds
-    tstr = f"{s//3600:02d}:{(s%3600)//60:02d}:{s%60:02d}"
-    lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
-    lbl_d2 = "当前账户绑定的 NEXA 总数:" if lang=="中文" else "Your Account Balance:"
-    sbadge = ('<span style="background:#1e272e;color:#A2FF00;font-size:11px;font-weight:bold;padding:2px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;">ACTIVE</span>'
-              if st.session_state.app_running else
-              '<span style="background:#1e272e;color:#88929b;font-size:11px;font-weight:bold;padding:2px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;">STANDBY</span>')
-    st.markdown(f'''<div class="app-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:10px;color:#88929b;font-weight:bold;">{lbl_d1}</div>
-          <div class="app-value" style="font-size:16px;white-space:nowrap;">{tstr}{sbadge}</div>
-        </div>
-        <div style="text-align:right;flex:1;min-width:0;">
-          <div style="font-size:10px;color:#88929b;font-weight:bold;">{lbl_d2}</div>
-          <div class="app-value neon-green-text" style="font-size:15px;white-space:nowrap;">{st.session_state.app_earned:,.2f} NEXA</div>
-        </div>
-      </div>
-    </div>''', unsafe_allow_html=True)
+    tstr = str(s//3600).zfill(2) + ":" + str((s%3600)//60).zfill(2) + ":" + str(s%60).zfill(2)
+    if st.session_state.app_running:
+        sbadge = '<span style="background:#1e272e;color:#A2FF00;font-size:11px;font-weight:bold;padding:2px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;">ACTIVE</span>'
+    else:
+        sbadge = '<span style="background:#1e272e;color:#88929b;font-size:11px;font-weight:bold;padding:2px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;">STANDBY</span>'
+
+    st.markdown(
+        '<div class="app-card"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;">' +
+        '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:10px;color:#88929b;font-weight:bold;">' + d1_label + '</div>' +
+        '<div class="app-value" style="font-size:16px;white-space:nowrap;">' + tstr + sbadge + '</div></div>' +
+        '<div style="text-align:right;flex:1;min-width:0;">' +
+        '<div style="font-size:10px;color:#88929b;font-weight:bold;">' + d2_label + '</div>' +
+        '<div class="app-value neon-green-text" style="font-size:15px;white-space:nowrap;">' + "{:,.2f}".format(st.session_state.app_earned) + ' NEXA</div></div>' +
+        '</div></div>',
+        unsafe_allow_html=True
+    )
 
     if not st.session_state.app_running:
-        lbl_s = "激活并启动边缘算力节点" if lang=="中文" else "START COMPUTE SESSION"
-        if st.button(lbl_s, key="app_start_btn"):
+        if st.button(btn_start_label, key="app_start_btn"):
             st.session_state.app_running = True
             st.session_state.last_tick_time = time.time()
             st.rerun()
     else:
-        lbl_p = "暂停当前算力" if lang=="中文" else "PAUSE COMPUTE SESSION"
-        if st.button(lbl_p, key="app_stop_btn"):
+        if st.button(btn_stop_label, key="app_stop_btn"):
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
             st.rerun()
@@ -449,62 +507,85 @@ with tab4:
         ref_code = uinfo.get("referral_code", gen_ref_code(email))
 
         if st.session_state.get("new_referral_code"):
-            st.success("🎉 注册成功！您的专属推荐码已生成 👇" if lang=="中文" else "🎉 Registration complete! Your referral code is ready 👇")
+            if is_zh:
+                st.success("🎉 注册成功！您的专属推荐码已生成 👇")
+            else:
+                st.success("🎉 Registration complete! Your referral code is ready 👇")
             st.session_state.new_referral_code = None
 
         st.markdown('<div class="app-card" style="text-align:center;padding:20px 10px;">', unsafe_allow_html=True)
-        ta = "<b>云端端点挂载就绪</b>" if lang=="中文" else "<b>Secure Network Node Engaged</b>"
-        st.markdown(f"🎉 {ta}", unsafe_allow_html=True)
-        li = f"当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>{email}</span>" if lang=="中文" else f"Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>{email}</span>"
-        st.markdown(li, unsafe_allow_html=True)
-        bt2 = f"全网同步累计代币池收益<br><span class='neon-green-text' style='font-size:26px;font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>" if lang=="中文" else f"Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px;font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>"
-        st.markdown(f"<div style='margin:12px 0;background:#11171d;padding:10px;border-radius:10px;'>{bt2}</div>", unsafe_allow_html=True)
 
-        rl2 = "🎟️ 您的专属推荐码（分享给好友可获得加速奖励）" if lang=="中文" else "🎟️ Your Referral Code (Share to earn boosted rewards)"
-        st.markdown(f'''<div style="background:#0d1f0d;border:1px dashed #A2FF00;border-radius:10px;padding:12px;margin:8px 0;">
-          <div style="font-size:10px;color:#88929b;font-weight:bold;margin-bottom:6px;">{rl2}</div>
-          <div style="font-size:22px;font-weight:900;font-family:monospace;color:#A2FF00;letter-spacing:3px;">{ref_code}</div>
-        </div>''', unsafe_allow_html=True)
+        if is_zh:
+            st.markdown("🎉 <b>云端端点挂载就绪</b>", unsafe_allow_html=True)
+            st.markdown("当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>" + email + "</span>", unsafe_allow_html=True)
+            earn_box = "全网同步累计代币池收益<br><span class='neon-green-text' style='font-size:26px;font-weight:bold;'>" + "{:,.2f}".format(st.session_state.app_earned) + " NEXA</span>"
+            ref_lbl  = "🎟️ 您的专属推荐码（分享给好友可获得加速奖励）"
+            gen_lbl  = "🖼️ 生成我的推荐码图片"
+            lo_lbl   = "安全退出当前登录账户"
+        else:
+            st.markdown("🎉 <b>Secure Network Node Engaged</b>", unsafe_allow_html=True)
+            st.markdown("Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>" + email + "</span>", unsafe_allow_html=True)
+            earn_box = "Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px;font-weight:bold;'>" + "{:,.2f}".format(st.session_state.app_earned) + " NEXA</span>"
+            ref_lbl  = "🎟️ Your Referral Code (Share to earn boosted rewards)"
+            gen_lbl  = "🖼️ Generate My Referral Card"
+            lo_lbl   = "Logout Account Location"
+
+        st.markdown('<div style="margin:12px 0;background:#11171d;padding:10px;border-radius:10px;">' + earn_box + '</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div style="background:#0d1f0d;border:1px dashed #A2FF00;border-radius:10px;padding:12px;margin:8px 0;">' +
+            '<div style="font-size:10px;color:#88929b;font-weight:bold;margin-bottom:6px;">' + ref_lbl + '</div>' +
+            '<div style="font-size:22px;font-weight:900;font-family:monospace;color:#A2FF00;letter-spacing:3px;">' + ref_code + '</div></div>',
+            unsafe_allow_html=True
+        )
 
         if st.session_state.referral_image_bytes:
             show_ref_card(st.session_state.referral_image_bytes, ref_code, lang, "reg_dl")
         else:
-            gl = "🖼️ 生成我的推荐码图片" if lang=="中文" else "🖼️ Generate My Referral Card"
-            if st.button(gl, key="gen_img_btn"):
-                with st.spinner("生成中..." if lang=="中文" else "Generating..."):
+            if st.button(gen_lbl, key="gen_img_btn"):
+                with st.spinner("Generating..."):
                     st.session_state.referral_image_bytes = gen_ref_image(ref_code)
                 st.rerun()
 
-        lo = "安全退出当前登录账户" if lang=="中文" else "Logout Account Location"
-        if st.button(lo, key="logout_btn"):
+        if st.button(lo_lbl, key="logout_btn"):
             st.session_state.current_user = None
-            st.session_state.app_running = False
+            st.session_state.app_running  = False
             st.session_state.referral_image_bytes = None
             st.rerun()
+
         st.markdown('</div>', unsafe_allow_html=True)
     else:
-        oa = ["注册新节点账户","登录已有账户"] if lang=="中文" else ["Register Node Account","Login Existing Node"]
+        if is_zh:
+            oa = ["注册新节点账户", "登录已有账户"]
+        else:
+            oa = ["Register Node Account", "Login Existing Node"]
         mode = st.radio("auth_mode", oa, horizontal=True, label_visibility="collapsed")
 
-        if mode in ["注册新节点账户","Register Node Account"]:
+        if mode in ["注册新节点账户", "Register Node Account"]:
             with st.form("reg_form"):
-                ft = "🚀 极简注册（自动继承并合并当前已有 NEXA 数量）" if lang=="中文" else "🚀 Quick Profile Registration (Inherits Current Balance)"
-                st.markdown(f'<div style="font-size:12px;font-weight:bold;color:#A2FF00;margin-bottom:6px;">{ft}</div>', unsafe_allow_html=True)
-                if lang=="中文":
+                if is_zh:
+                    ft = "🚀 极简注册（自动继承并合并当前已有 NEXA 数量）"
+                    st.markdown('<div style="font-size:12px;font-weight:bold;color:#A2FF00;margin-bottom:6px;">' + ft + '</div>', unsafe_allow_html=True)
                     r_email = st.text_input("邮箱地址:", placeholder="example@nexa.com").strip()
                     r_pwd   = st.text_input("设置密码:", type="password", placeholder="Enter your secure password")
                     r_ref   = st.text_input("推荐码 (选填):", placeholder="请输入推荐人的推荐码").strip()
                     btn_r   = "创建全网统一账户 ⚡"
+                    e1 = "❌ 邮箱和密码为必填项！"
+                    e2 = "❌ 该邮箱已被占用！"
                 else:
+                    ft = "🚀 Quick Profile Registration (Inherits Current Balance)"
+                    st.markdown('<div style="font-size:12px;font-weight:bold;color:#A2FF00;margin-bottom:6px;">' + ft + '</div>', unsafe_allow_html=True)
                     r_email = st.text_input("Email Address:", placeholder="example@nexa.com").strip()
                     r_pwd   = st.text_input("Choose Password:", type="password", placeholder="Enter your secure password")
                     r_ref   = st.text_input("Referral Code (Optional):", placeholder="e.g., NX-XXX-XXX").strip()
                     btn_r   = "Create Unified Profile ⚡"
+                    e1 = "❌ Email and Password are mandatory!"
+                    e2 = "❌ Email is already occupied."
+
                 if st.form_submit_button(btn_r):
                     if not r_email or not r_pwd:
-                        st.error("❌ 邮箱和密码为必填项！" if lang=="中文" else "❌ Email and Password are mandatory!")
+                        st.error(e1)
                     elif r_email in G["user_db"]:
-                        st.error("❌ 该邮箱已被占用！" if lang=="中文" else "❌ Email is already occupied.")
+                        st.error(e2)
                     else:
                         rc = gen_ref_code(r_email)
                         G["user_db"][r_email] = {
@@ -512,87 +593,107 @@ with tab4:
                             "score": st.session_state.app_earned,
                             "reg_time": time.strftime("%Y-%m-%d %H:%M:%S"),
                             "referral_code": rc,
-                            "referred_by": r_ref or "None"
+                            "referred_by": r_ref if r_ref else "None"
                         }
                         st.session_state.current_user = r_email
                         st.session_state.new_referral_code = rc
                         st.session_state.referral_image_bytes = gen_ref_image(rc)
-                        time.sleep(0.5); st.rerun()
+                        time.sleep(0.5)
+                        st.rerun()
         else:
             with st.form("login_form"):
-                lt = "🔑 登录 NexaEdge 算力账户" if lang=="中文" else "🔑 Connect Node Endpoint Terminal"
-                st.markdown(f'<div style="font-size:12px;font-weight:bold;color:#00e5ff;margin-bottom:6px;">{lt}</div>', unsafe_allow_html=True)
-                if lang=="中文":
+                if is_zh:
+                    lt = "🔑 登录 NexaEdge 算力账户"
+                    st.markdown('<div style="font-size:12px;font-weight:bold;color:#00e5ff;margin-bottom:6px;">' + lt + '</div>', unsafe_allow_html=True)
                     l_email = st.text_input("登录邮箱:").strip()
                     l_pwd   = st.text_input("验证密码:", type="password")
                     btn_l   = "验证并载入云端档案 ⚡"
+                    ok_msg  = "⚡ 登录成功！"
+                    err_msg = "❌ 账号或密码输入有误！"
                 else:
+                    lt = "🔑 Connect Node Endpoint Terminal"
+                    st.markdown('<div style="font-size:12px;font-weight:bold;color:#00e5ff;margin-bottom:6px;">' + lt + '</div>', unsafe_allow_html=True)
                     l_email = st.text_input("Account Email:").strip()
                     l_pwd   = st.text_input("Verification Password:", type="password")
                     btn_l   = "Authenticate & Load Assets ⚡"
+                    ok_msg  = "⚡ Authentication verified!"
+                    err_msg = "❌ Invalid combinations!"
+
                 if st.form_submit_button(btn_l):
                     ph = hashlib.sha256(l_pwd.encode()).hexdigest()
                     if l_email in G["user_db"] and G["user_db"][l_email]["password_hash"] == ph:
                         st.session_state.current_user = l_email
                         st.session_state.app_earned   = G["user_db"][l_email]["score"]
                         st.session_state.referral_image_bytes = None
-                        st.success("⚡ 登录成功！" if lang=="中文" else "⚡ Authentication verified!")
-                        time.sleep(0.5); st.rerun()
+                        st.success(ok_msg)
+                        time.sleep(0.5)
+                        st.rerun()
                     else:
-                        st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
+                        st.error(err_msg)
 
 # ─────────────────────────────────────────────────────────────────────────
 # Admin
 # ─────────────────────────────────────────────────────────────────────────
 if is_admin:
     st.markdown("---")
-    st.markdown('<div style="font-size:14px;font-weight:bold;color:#f43f5e;margin-bottom:8px;">🔒 核心内网安全端口隐蔽审计大盘 (ADMIN PORTAL DETECTED)</div>', unsafe_allow_html=True)
-    apwd = st.text_input("🔑 请输入内网管理员授权验证密码：", type="password", key="apwd")
+    st.markdown('<div style="font-size:14px;font-weight:bold;color:#f43f5e;margin-bottom:8px;">🔒 ADMIN PORTAL DETECTED</div>', unsafe_allow_html=True)
+    apwd = st.text_input("Admin Password:", type="password", key="apwd")
     if apwd == "NexaAdmin2026":
-        st.toast("🔓 内网大账本数据已成功解密并挂载", icon="🟢")
+        st.toast("🔓 Decrypted", icon="🟢")
         wl_lines = []
         if os.path.exists("whitelist.txt"):
             with open("whitelist.txt","r",encoding="utf-8") as f:
                 wl_lines = [l.strip() for l in f if l.strip()]
         ca1,ca2,ca3 = st.columns(3)
-        with ca1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">👥 算力总注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(G["user_db"])} Users</div></div>', unsafe_allow_html=True)
-        with ca2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #ffb300;"><div class="mini-stat-title">🎁 官网白名单登记量</div><div class="mini-stat-value" style="color:#ffb300;">{len(wl_lines)} Claims</div></div>', unsafe_allow_html=True)
-        with ca3: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 实时活跃算力节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(G["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
-        at1,at2 = st.tabs(["📋 注册用户大表 (User DB)","🎁 创世白名单明细 (Whitelist.txt)"])
+        with ca1:
+            st.markdown('<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">👥 Users</div><div class="mini-stat-value" style="color:#f43f5e;">' + str(len(G["user_db"])) + '</div></div>', unsafe_allow_html=True)
+        with ca2:
+            st.markdown('<div class="mini-stat-card" style="border:1px solid #ffb300;"><div class="mini-stat-title">🎁 Whitelist</div><div class="mini-stat-value" style="color:#ffb300;">' + str(len(wl_lines)) + '</div></div>', unsafe_allow_html=True)
+        with ca3:
+            st.markdown('<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 Active</div><div class="mini-stat-value" style="color:#A2FF00;">' + str(len(G["active_device_set"])) + '</div></div>', unsafe_allow_html=True)
+        at1,at2 = st.tabs(["📋 User DB","🎁 Whitelist"])
         with at1:
-            st.markdown("<p style='font-size:11px;font-weight:bold;color:#A2FF00;'>📋 全网注册节点数据实时审计大表:</p>", unsafe_allow_html=True)
-            rows = "<table class='admin-table'><tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>绑定的上级推荐码</th><th>注册激活时间</th></tr>"
-            rows += "".join(f"<tr><td>{i}</td><td>{e}</td><td style='color:#A2FF00;font-family:monospace;'>{d['score']:,.2f} NEXA</td><td style='color:#00e5ff;'>{d.get('referred_by','-')}</td><td>{d['reg_time']}</td></tr>"
-                            for i,(e,d) in enumerate(G["user_db"].items(),1))
+            rows = "<table class='admin-table'><tr><th>#</th><th>Email</th><th>Score</th><th>Referred By</th><th>Reg Time</th></tr>"
+            for i,(e,d) in enumerate(G["user_db"].items(), 1):
+                rows += "<tr><td>" + str(i) + "</td><td>" + e + "</td>"
+                rows += "<td style='color:#A2FF00;font-family:monospace;'>" + "{:,.2f}".format(d["score"]) + " NEXA</td>"
+                rows += "<td style='color:#00e5ff;'>" + d.get("referred_by","-") + "</td>"
+                rows += "<td>" + d["reg_time"] + "</td></tr>"
             rows += "</table>"
             st.markdown(rows, unsafe_allow_html=True)
         with at2:
-            st.markdown("<p style='font-size:11px;font-weight:bold;color:#ffb300;'>🎁 创世表单提交明细记录:</p>", unsafe_allow_html=True)
             if wl_lines:
-                wt = "<table class='admin-table'><tr><th>序号</th><th>提交的日志 data</th></tr>"
-                wt += "".join(f"<tr><td>{i}</td><td style='font-family:monospace;color:#bdc3c7;'>{l}</td></tr>" for i,l in enumerate(wl_lines,1))
+                wt = "<table class='admin-table'><tr><th>#</th><th>Data</th></tr>"
+                for i,l in enumerate(wl_lines, 1):
+                    wt += "<tr><td>" + str(i) + "</td><td style='font-family:monospace;color:#bdc3c7;'>" + l + "</td></tr>"
                 wt += "</table>"
                 st.markdown(wt, unsafe_allow_html=True)
             else:
-                st.info("暂无用户提交白名单申请。")
+                st.info("No whitelist entries yet.")
     elif apwd:
-        st.error("❌ 越权访问警告：内部授权密码错误，数据保持加密锁定状态！")
+        st.error("❌ Wrong password!")
 
 # ─────────────────────────────────────────────────────────────────────────
 # Bottom bar
 # ─────────────────────────────────────────────────────────────────────────
-lbl_n = "● 全网活跃节点" if lang=="中文" else "● NETWORK ACTIVE NODES"
-lbl_v = "👀 实时在线观众" if lang=="中文" else "👀 LIVE REAL VIEWERS"
-st.markdown(f'''<div class="bottom-stats-row">
-  <div class="mini-stat-card" style="border:1px dashed #A2FF00;">
-    <span class="mini-stat-title">{lbl_n}</span>
-    <span class="mini-stat-value" style="color:#A2FF00;">{len(G["active_device_set"])} Devices</span>
-  </div>
-  <div class="mini-stat-card" style="border:1px dashed #00e5ff;">
-    <span class="mini-stat-title">{lbl_v}</span>
-    <span class="mini-stat-value" style="color:#00e5ff;">{G["total_online_viewers"]} Online</span>
-  </div>
-</div>''', unsafe_allow_html=True)
+if is_zh:
+    lbl_n = "● 全网活跃节点"
+    lbl_v = "👀 实时在线观众"
+else:
+    lbl_n = "● NETWORK ACTIVE NODES"
+    lbl_v = "👀 LIVE REAL VIEWERS"
+
+st.markdown(
+    '<div class="bottom-stats-row">' +
+    '<div class="mini-stat-card" style="border:1px dashed #A2FF00;">' +
+    '<span class="mini-stat-title">' + lbl_n + '</span>' +
+    '<span class="mini-stat-value" style="color:#A2FF00;">' + str(len(G["active_device_set"])) + ' Devices</span></div>' +
+    '<div class="mini-stat-card" style="border:1px dashed #00e5ff;">' +
+    '<span class="mini-stat-title">' + lbl_v + '</span>' +
+    '<span class="mini-stat-value" style="color:#00e5ff;">' + str(G["total_online_viewers"]) + ' Online</span></div>' +
+    '</div>',
+    unsafe_allow_html=True
+)
 
 # ─────────────────────────────────────────────────────────────────────────
 # Refresh kernel
@@ -602,8 +703,10 @@ if st.session_state.app_running:
     st.session_state.session_seconds += 1
     st.session_state.total_energy_wh += 5.1 / 3600
     u = st.session_state.current_user
-    if u: G["user_db"][u]["score"] = st.session_state.app_earned
-    else: G["device_balances"][dev_id]["app_earned"] = st.session_state.app_earned
+    if u:
+        G["user_db"][u]["score"] = st.session_state.app_earned
+    else:
+        G["device_balances"][dev_id]["app_earned"] = st.session_state.app_earned
     st.session_state.last_tick_time = time.time()
     time.sleep(1.0)
     st.rerun()
