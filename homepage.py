@@ -5,7 +5,8 @@ import random
 import pandas as pd
 import glob
 import hashlib
-from PIL import Image, ImageDraw, ImageFont  # 👈 新增：用于动态绘制推荐码图片
+from PIL import Image, ImageDraw, ImageFont  # 👈 引入图像处理库
+import io
 
 # 💡 在这里统一配置你的新合约地址
 DEFAULT_CA = "D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2"
@@ -42,66 +43,6 @@ def generate_referral_code(email: str) -> str:
     """根据邮箱生成唯一推荐码，格式 NX-XXX-XXX"""
     h = hashlib.md5(email.encode()).hexdigest().upper()
     return "NX-" + h[:3] + "-" + h[3:6]
-
-# =========================================================================
-# 🎨 🛠️ 新增：动态绘制专属推荐码海报核心引擎
-# =========================================================================
-def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
-    """
-    读取背景图 image.png，在底部动态绘制:
-    WebApp : nexaedge.org
-    REFERRAL CODE: NX-XXX-XXX
-    """
-    base_img_path = "image.png"
-    if not os.path.exists(base_img_path):
-        # 如果原始图片不存在，创建一个黑底备用图，防止报错
-        img = Image.new("RGBA", (1000, 1000), "#0b0f12")
-        img.save(base_img_path)
-        
-    img = Image.open(base_img_path).convert("RGBA")
-    draw = ImageDraw.Draw(img)
-    width, height = img.size
-
-    # 尝试加载系统自带的等宽英文字体，确保科技感。如果加载失败则使用默认字体
-    font_paths = ["arial.ttf", "DejaVuSans-Bold.ttf", "Helvetica-Bold.ttf", "courbd.ttf"]
-    font_main = None
-    for fp in font_paths:
-        try:
-            font_main = ImageFont.truetype(fp, int(height * 0.045))  # 根据图片高度自适应字体大小
-            break
-        except:
-            continue
-    if font_main is None:
-        font_main = ImageFont.load_default()
-
-    # 要写入的两行标准文本
-    line1 = "WebApp : nexaedge.org"
-    line2 = f"REFERRAL CODE: {ref_code}"
-
-    # 计算文本起始纵坐标（绘制在图片底部 15% 和 7% 的安全区域内）
-    y1 = int(height * 0.86)
-    y2 = int(height * 0.93)
-
-    # 绘制第一行 WebApp 网址 (白色)
-    try:
-        w1 = draw.textlength(line1, font=font_main)
-    except AttributeError:
-        w1 = font_main.getbbox(line1)[2] if hasattr(font_main, "getbbox") else 300
-    x1 = (width - w1) // 2
-    draw.text((x1, y1), line1, fill="#ffffff", font=font_main)
-
-    # 绘制第二行 专属推荐码 (绿色/高亮色)
-    try:
-        w2 = draw.textlength(line2, font=font_main)
-    except AttributeError:
-        w2 = font_main.getbbox(line2)[2] if hasattr(font_main, "getbbox") else 300
-    x2 = (width - w2) // 2
-    draw.text((x2, y2), line2, fill="#A2FF00", font=font_main)
-
-    # 保存最终生成的图片
-    img.save(output_path)
-    return output_path
-
 
 global_server = init_global_network_server()
 
@@ -160,6 +101,54 @@ def get_project_image():
 
 target_image = get_project_image()
 
+# --- 🎨 动态生成用户专属分享卡片函数 ---
+def generate_user_card(base_image_path, ref_code):
+    """在底图下方以完美比例和不破坏原图美感的方式，动态画上新网址和专属推荐码"""
+    if not base_image_path or not os.path.exists(base_image_path):
+        return None
+    try:
+        img = Image.open(base_image_path).convert("RGB")
+        width, height = img.size
+        
+        # 保持设计语言：使用高质感黑色作为底部扩展背景
+        padding_bottom = int(height * 0.18) 
+        new_img = Image.new("RGB", (width, height + padding_bottom), "#0b0f12")
+        new_img.paste(img, (0, 0))
+        
+        draw = ImageDraw.Draw(new_img)
+        
+        # 尝试加载系统自带的无衬线黑体，确保没有豆腐块乱码
+        try:
+            font_url = ImageFont.truetype("arialbd.ttf", int(height * 0.045))
+            font_code = ImageFont.truetype("arialbd.ttf", int(height * 0.048))
+        except IOError:
+            font_url = ImageFont.load_default()
+            font_code = ImageFont.load_default()
+            
+        # ⚡ 文本数据配置：已同步修改为 webapp.nexaedge.org
+        url_text = "webapp.nexaedge.org"
+        code_text = f"REFERRAL CODE: {ref_code}"
+        
+        # 渲染官方网址 (使用与原 logo 呼应的银灰色)
+        w_url = draw.textlength(url_text, font=font_url)
+        x_url = (width - w_url) // 2
+        y_url = height + int(padding_bottom * 0.15)
+        draw.text((x_url, y_url), url_text, fill="#cdfaee", font=font_url)
+        
+        # 渲染专属推荐码 (使用亮眼高贵的白光色)
+        w_code = draw.textlength(code_text, font=font_code)
+        x_code = (width - w_code) // 2
+        y_code = y_url + int(padding_bottom * 0.4)
+        draw.text((x_code, y_code), code_text, fill="#ffffff", font=font_code)
+        
+        # 转换为内存字节流供 Streamlit 按钮直接下载
+        buf = io.BytesIO()
+        new_img.save(buf, format="PNG")
+        byte_im = buf.getvalue()
+        return byte_im
+    except Exception as e:
+        return None
+
 # --- 🟢 CSS 全局注入 ---
 st.markdown("""
     <style>
@@ -191,9 +180,9 @@ st.markdown("""
     div.stButton > button[key*="app_stop_btn"] { background-color: #0b0f12 !important; color: #ffffff !important; border: 1px solid #f43f5e !important; box-shadow: none !important; }
     div.stButton > button[key*="logout_btn"] { background-color: #343a40 !important; color: #ffc107 !important; box-shadow: none !important; padding: 5px 12px !important; font-size: 12px !important; width: auto !important; }
     
-    /* 对下载按钮的特殊统一样式支持 */
+    /* 对下载按钮的样式进行定制，使其符合主色调 */
     div.stDownloadButton > button { background-color: #00e5ff !important; color: #0b0f12 !important; font-weight: 800 !important; font-size: 14px !important; width: 100% !important; border-radius: 12px !important; border: none !important; padding: 10px 15px !important; box-shadow: 0 5px 15px rgba(0, 229, 255, 0.2); transition: all 0.2s; }
-    div.stDownloadButton > button:hover { background-color: #66efff !important; }
+    div.stDownloadButton > button:hover { background-color: #33ecff !important; }
 
     [data-testid="stForm"] { background-color: #161c23 !important; border: 1px solid #252e38 !important; border-radius: 16px !important; padding: 18px !important; }
     
@@ -202,7 +191,7 @@ st.markdown("""
     .social-btn { display: block; text-align: center; padding: 6px; background-color: #11171d; border: 1px solid #252e38; border-radius: 8px; color: #bdc3c7 !important; font-size: 11px; font-weight: bold; text-decoration: none; }
     .social-btn:hover { border-color: #A2FF00; color: #A2FF00 !important; background-color: #161c23; }
 
-    /* ✅ 修复后的图表外框 */
+    /* ✅ 图表外框 */
     .chart-wrapper {
         background-color: #161c23;
         border: 1px solid #252e38;
@@ -218,12 +207,11 @@ st.markdown("""
     /* 隐藏图表顶部灰色分隔线 */
     .chart-wrapper > div > hr,
     .stApp hr { display: none !important; }
-    /* 隐藏 Vega 工具栏（表格/全屏按钮） */
+    /* 隐藏 Vega 工具栏 */
     .chart-wrapper [data-testid="StyledFullScreenButton"],
     .chart-wrapper summary,
     .chart-wrapper [class*="toolbar"],
     .chart-wrapper [class*="Toolbar"] { display: none !important; }
-    /* 抵消 Streamlit line_chart 自带的内边距，线条贴紧左边 */
     .chart-wrapper [data-testid="stVegaLiteChart"] {
         margin: -10px 0px -18px -12px !important;
     }
@@ -455,27 +443,9 @@ with tab1:
             else:
                 global_server["whitelist_emails"].add(u_email.lower())
                 global_server["whitelist_wallets"].add(u_wallet.lower())
-                
-                # 为白名单申请人自动派生推荐码并生成专属海报
-                wl_ref_code = generate_referral_code(u_email)
-                wl_img_path = f"wl_invite_{wl_ref_code}.png"
-                generate_referral_image(wl_ref_code, wl_img_path)
-                
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
-                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | AssignedRef: {wl_ref_code} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
                 st.success(msg_success)
-                
-                # 🌟 成功申请白名单后：在表单下方立即弹出专属推荐图片和下载按钮
-                st.markdown("---")
-                st.markdown("### 🎁 Your Genesis Invitation Poster / 您的专属创世邀请海报")
-                st.image(wl_img_path, caption=f"Code: {wl_ref_code}", use_container_width=True)
-                with open(wl_img_path, "rb") as file:
-                    st.download_button(
-                        label="📥 Download Referral Image / 下载专属海报",
-                        data=file,
-                        file_name=f"NexaEdge_{wl_ref_code}.png",
-                        mime="image/png"
-                    )
 
 # ==========================================
 # TAB 2: Dashboard 算力控制台
@@ -603,19 +573,20 @@ with tab4:
         </div>
         """, unsafe_allow_html=True)
 
-        # 🌟 核心功能追加：在已登录用户的个人中心常驻展示并支持一键下载专属于他的海报
-        user_poster_path = f"user_invite_{ref_code}.png"
-        generate_referral_image(ref_code, user_poster_path) # 实时烘焙
-        
-        st.image(user_poster_path, caption=f"Personal Node Card: {ref_code}", use_container_width=True)
-        with open(user_poster_path, "rb") as file:
-            st.download_button(
-                label="📥 Download Invitation Poster / 下载专属分享海报",
-                data=file,
-                file_name=f"NexaEdge_Invite_{ref_code}.png",
-                mime="image/png",
-                key="user_download_btn"
-            )
+        # 📸 专属卡片动态渲染与下载区域
+        if target_image:
+            user_card_bytes = generate_user_card(target_image, ref_code)
+            if user_card_bytes:
+                st.markdown("<p style='font-size:11px; color:#88929b; margin-top:10px; margin-bottom:4px;'>🖼️ 您的专属邀请海报已生成：</p>", unsafe_allow_html=True)
+                st.image(user_card_bytes, use_container_width=True)
+                
+                dl_btn_label = "📥 下载专属海报图片" if lang == "中文" else "📥 Download Invitation Poster"
+                st.download_button(
+                    label=dl_btn_label,
+                    data=user_card_bytes,
+                    file_name=f"NexaEdge_Invite_{ref_code}.png",
+                    mime="image/png"
+                )
 
         st.markdown("<br>", unsafe_allow_html=True)
         btn_logout = "安全退出当前登录账户" if lang=="中文" else "Logout Account Location"
@@ -653,10 +624,6 @@ with tab4:
                     else:
                         inherited_nexa = st.session_state.app_earned
                         ref_code = generate_referral_code(r_email)
-                        
-                        # 触发海报动态生成
-                        generate_referral_image(ref_code, f"user_invite_{ref_code}.png")
-                        
                         global_server["user_db"][r_email] = {
                             "password_hash": hashlib.sha256(r_pwd.encode()).hexdigest(),
                             "score": inherited_nexa,
@@ -723,15 +690,14 @@ if is_admin_active:
             st.markdown("<p style='font-size:11px; font-weight:bold; color:#A2FF00;'>📋 全网注册节点数据实时审计大表 (Live View):</p>", unsafe_allow_html=True)
             table_html = """
             <table class="admin-table">
-                <tr><th>序号</th><th>用户注册邮箱</th><th>生成专属邀请码</th><th>当前实测累计算力</th><th>绑定的上级推荐码</th><th>注册激活时间</th></tr>
+                <tr><th>序号</th><th>用户注册邮箱</th><th>当前实测累计算力</th><th>绑定的上级推荐码</th><th>注册激活时间</th></tr>
             """
             for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
                 table_html += f"""
                 <tr>
                     <td>{idx}</td>
                     <td>{email}</td>
-                    <td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info.get('referral_code', 'N/A')}</td>
-                    <td style='color:#ffffff; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td>
+                    <td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td>
                     <td style='color:#00e5ff;'>{info.get('referred_by', 'None')}</td>
                     <td>{info['reg_time']}</td>
                 </tr>
