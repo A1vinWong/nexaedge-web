@@ -305,6 +305,22 @@ st.markdown('<div style="max-height:280px; overflow:hidden; border-radius:12px; 
 st.image("logo.png", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
+# PROJECT BRIEFING 框
+if lang == "中文":
+    st.markdown('''
+    <div style="background:#11171d; border:1px solid #1e272e; border-radius:12px; padding:12px 14px; margin:6px 0 8px 0;">
+        <div style="color:#A2FF00; font-size:13px; font-weight:900; letter-spacing:1px; margin-bottom:6px;">⚡ 项目简介</div>
+        <div style="color:#bdc3c7; font-size:12px; line-height:1.6;">NexaEdge 让用户将闲置手机算力变现。通过构建加密去中心化沙盒网络，您的设备在睡眠时无缝处理本地数据验证任务，解锁机构级收益回报。</div>
+    </div>
+    ''', unsafe_allow_html=True)
+else:
+    st.markdown('''
+    <div style="background:#11171d; border:1px solid #1e272e; border-radius:12px; padding:12px 14px; margin:6px 0 8px 0;">
+        <div style="color:#A2FF00; font-size:13px; font-weight:900; letter-spacing:1px; margin-bottom:6px;">⚡ PROJECT BRIEFING</div>
+        <div style="color:#bdc3c7; font-size:12px; line-height:1.6;">NexaEdge empowers users to monetize unutilized smartphone capabilities. By creating an encrypted decentralized sandbox network, your device seamlessly routes localized data verification processes to unlock institutional level rewards while you sleep.</div>
+    </div>
+    ''', unsafe_allow_html=True)
+
 url_admin_param = st.query_params.get("admin", None)
 is_admin_active = (lang == "nexaadmin" or url_admin_param == "nexa_gate")
 
