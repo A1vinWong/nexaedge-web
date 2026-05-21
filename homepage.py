@@ -196,8 +196,8 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
             w = (bbox[2] - bbox[0]) if bbox else 300
         return max(0, (width - int(w)) // 2)
 
-    # nexaedge.org 覆盖在 DECENTRALIZED 位置，推荐码紧贴下方
-    y1 = int(height * 0.818)
+    # nexaedge.org 在 DECENTRALIZED 下方，推荐码紧贴下方
+    y1 = int(height * 0.850)
     y2 = y1 + 75 + 10
 
     def outlined(pos, text, font, fill):
