@@ -151,35 +151,6 @@ def generate_referral_code(email: str) -> str:
 # =========================================================================
 # 🎨 动态绘制专属推荐码海报核心引擎 (使用 IMG_7859.jpeg，叠加网址+推荐码)
 # =========================================================================
-def get_font(size):
-    """获取字体：优先系统字体，没有则从 Google Fonts 下载 DejaVu Bold"""
-    font_file = "NotoSans-Bold.ttf"
-    # 系统常见路径
-    system_paths = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
-        "/System/Library/Fonts/Helvetica.ttc",
-        "arial.ttf", "DejaVuSans-Bold.ttf",
-    ]
-    for p in system_paths:
-        try:
-            return ImageFont.truetype(p, size)
-        except:
-            continue
-    # 下载 DejaVu Bold 作为备用
-    if not os.path.exists(font_file):
-        try:
-            import urllib.request
-            url = "https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans-Bold.ttf"
-            urllib.request.urlretrieve(url, font_file)
-        except:
-            pass
-    try:
-        return ImageFont.truetype(font_file, size)
-    except:
-        return ImageFont.load_default()
-
 def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
     base_img_path = "IMG_7859.jpeg"
     if not os.path.exists(base_img_path):
@@ -188,55 +159,45 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
 
     img = Image.open(base_img_path).convert("RGBA")
     width, height = img.size
-
-    # 底部半透明黑色渐变条，确保文字可读
-    overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    overlay_draw = ImageDraw.Draw(overlay)
-    bar_h = int(height * 0.35)
-    for i in range(bar_h):
-        alpha = int(220 * (i / bar_h))
-        overlay_draw.rectangle(
-            [(0, height - bar_h + i), (width, height - bar_h + i + 1)],
-            fill=(0, 0, 0, alpha)
-        )
-    img = Image.alpha_composite(img, overlay)
     draw = ImageDraw.Draw(img)
 
-    # 字体大小根据图片尺寸自适应（放大版）
-    font_size_url  = max(80, int(height * 0.085))
-    font_size_code = max(100, int(height * 0.110))
+    font_path = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+    def load_font(size):
+        try:
+            return ImageFont.truetype(font_path, size)
+        except:
+            return ImageFont.load_default()
 
-    font_url  = get_font(font_size_url)
-    font_code = get_font(font_size_code)
+    font_url  = load_font(60)
+    font_code = load_font(75)
 
     line1 = "nexaedge.org"
     line2 = ref_code
 
-    def text_x(text, font):
+    def cx(text, font):
         try:
             w = draw.textlength(text, font=font)
         except AttributeError:
             bbox = font.getbbox(text)
-            w = (bbox[2] - bbox[0]) if bbox else len(text) * font_size_url // 2
+            w = (bbox[2] - bbox[0]) if bbox else 300
         return max(0, (width - int(w)) // 2)
 
-    y1 = int(height * 0.845)   # 网址
-    y2 = int(height * 0.908)   # 推荐码
+    # nexaedge.org 覆盖在 DECENTRALIZED 位置，推荐码紧贴下方
+    y1 = int(height * 0.818)
+    y2 = y1 + 75 + 10
 
-    def draw_outlined(pos, text, font, fill, outline=(0, 0, 0)):
+    def outlined(pos, text, font, fill):
         ox, oy = pos
         for dx in range(-3, 4):
             for dy in range(-3, 4):
-                if dx != 0 or dy != 0:
-                    draw.text((ox + dx, oy + dy), text, font=font, fill=outline)
+                if dx or dy:
+                    draw.text((ox+dx, oy+dy), text, font=font, fill=(0,0,0))
         draw.text(pos, text, font=font, fill=fill)
 
-    draw_outlined((text_x(line1, font_url),  y1), line1, font_url,  fill=(255,255,255))
-    draw_outlined((text_x(line2, font_code), y2), line2, font_code, fill=(162,255,0))
+    outlined((cx(line1, font_url),  y1), line1, font_url,  fill=(255,255,255))
+    outlined((cx(line2, font_code), y2), line2, font_code, fill=(162,255,0))
 
-    # 转回 RGB 保存
-    final = img.convert("RGB")
-    final.save(output_path)
+    img.convert("RGB").save(output_path)
     return output_path
 
 
