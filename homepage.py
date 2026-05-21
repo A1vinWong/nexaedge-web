@@ -157,14 +157,28 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
         img = Image.new("RGB", (1080, 1920), "#0b0f12")
         img.save(base_img_path)
 
+    # 每次都从原图重新生成，不用缓存
     img = Image.open(base_img_path).convert("RGBA")
     width, height = img.size
     draw = ImageDraw.Draw(img)
 
-    font_path = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+    # 尝试多个字体路径，确保 Streamlit Cloud 上能找到
+    font_candidates = [
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
+    ]
     def load_font(size):
+        for fp in font_candidates:
+            try:
+                return ImageFont.truetype(fp, size)
+            except:
+                continue
+        # 最后备用：用 load_default 但放大（PIL 8+支持 size 参数）
         try:
-            return ImageFont.truetype(font_path, size)
+            return ImageFont.load_default(size=size)
         except:
             return ImageFont.load_default()
 
@@ -519,10 +533,9 @@ with tab4:
         user_info = global_server["user_db"].get(email, {})
         ref_code = user_info.get("referral_code", generate_referral_code(email))
 
-        # 生成专属海报图（含网址+推荐码）
+        # 每次都重新生成海报图（确保文字正确叠加）
         user_poster_path = f"user_invite_{ref_code}.png"
-        if not os.path.exists(user_poster_path):
-            generate_referral_image(ref_code, user_poster_path)
+        generate_referral_image(ref_code, user_poster_path)
 
         # 显示海报图
         if os.path.exists(user_poster_path):
