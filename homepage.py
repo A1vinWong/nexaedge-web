@@ -431,7 +431,12 @@ with tab1:
                 generate_referral_image(wl_ref_code, wl_img_path)
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | AssignedRef: {wl_ref_code} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                st.rerun()
+                st.session_state.wl_success_img = wl_img_path
+
+    # 申请成功后直接显示图片（含网址+推荐码）
+    if st.session_state.get("wl_success_img") and os.path.exists(st.session_state.wl_success_img):
+        st.image(st.session_state.wl_success_img, use_container_width=True)
+
 
 # ==========================================
 # TAB 2: Dashboard 算力控制台
@@ -595,7 +600,6 @@ with tab4:
                         }
                         st.session_state.current_user = r_email
                         # ✨ 触发注册成功弹窗标志
-                        st.session_state.show_register_modal = True
                         time.sleep(0.5)
                         st.rerun()
         else:
