@@ -211,6 +211,9 @@ div.stButton>button[key*="logout_btn"]{background:#343a40!important;color:#ffc10
 .admin-table th{background:#1f2937;color:#A2FF00;text-align:left;padding:10px;border:1px solid #374151;}
 .admin-table td{padding:10px;border:1px solid #374151;background:#111827;}
 .ref-img-card{background:linear-gradient(135deg,#0d1f0d,#111c11);border:1px dashed #A2FF00;border-radius:16px;padding:16px;text-align:center;margin:10px 0;box-shadow:0 0 20px rgba(162,255,0,.1);}
+iframe{display:none!important;}
+[data-testid="stIFrame"]{display:none!important;}
+.element-container:has(iframe){display:none!important;}
 </style>""", unsafe_allow_html=True)
 
 # ── 顶栏 ────────────────────────────────────────────────────────────────
@@ -481,7 +484,7 @@ with tab2:
         '<div class="app-value" style="font-size:16px;white-space:nowrap;">' + tstr + sbadge + '</div></div>' +
         '<div style="text-align:right;flex:1;min-width:0;">' +
         '<div style="font-size:10px;color:#88929b;font-weight:bold;">' + d2_label + '</div>' +
-        '<div class="app-value neon-green-text" style="font-size:15px;white-space:nowrap;">' + "{:,.2f}".format(st.session_state.app_earned) + ' NEXA</div></div>' +
+        '<div class="app-value neon-green-text" style="font-size:15px;white-space:nowrap;">' + format(st.session_state.app_earned, ",.2f") + ' NEXA</div></div>' +
         '</div></div>',
         unsafe_allow_html=True
     )
@@ -518,14 +521,14 @@ with tab4:
         if is_zh:
             st.markdown("🎉 <b>云端端点挂载就绪</b>", unsafe_allow_html=True)
             st.markdown("当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>" + email + "</span>", unsafe_allow_html=True)
-            earn_box = "全网同步累计代币池收益<br><span class='neon-green-text' style='font-size:26px;font-weight:bold;'>" + "{:,.2f}".format(st.session_state.app_earned) + " NEXA</span>"
+            earn_box = "全网同步累计代币池收益<br><span class='neon-green-text' style='font-size:26px;font-weight:bold;'>" + format(st.session_state.app_earned, ",.2f") + " NEXA</span>"
             ref_lbl  = "🎟️ 您的专属推荐码（分享给好友可获得加速奖励）"
             gen_lbl  = "🖼️ 生成我的推荐码图片"
             lo_lbl   = "安全退出当前登录账户"
         else:
             st.markdown("🎉 <b>Secure Network Node Engaged</b>", unsafe_allow_html=True)
             st.markdown("Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>" + email + "</span>", unsafe_allow_html=True)
-            earn_box = "Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px;font-weight:bold;'>" + "{:,.2f}".format(st.session_state.app_earned) + " NEXA</span>"
+            earn_box = "Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:26px;font-weight:bold;'>" + format(st.session_state.app_earned, ",.2f") + " NEXA</span>"
             ref_lbl  = "🎟️ Your Referral Code (Share to earn boosted rewards)"
             gen_lbl  = "🖼️ Generate My Referral Card"
             lo_lbl   = "Logout Account Location"
@@ -656,7 +659,7 @@ if is_admin:
             rows = "<table class='admin-table'><tr><th>#</th><th>Email</th><th>Score</th><th>Referred By</th><th>Reg Time</th></tr>"
             for i,(e,d) in enumerate(G["user_db"].items(), 1):
                 rows += "<tr><td>" + str(i) + "</td><td>" + e + "</td>"
-                rows += "<td style='color:#A2FF00;font-family:monospace;'>" + "{:,.2f}".format(d["score"]) + " NEXA</td>"
+                rows += "<td style='color:#A2FF00;font-family:monospace;'>" + format(d["score"], ",.2f") + " NEXA</td>"
                 rows += "<td style='color:#00e5ff;'>" + d.get("referred_by","-") + "</td>"
                 rows += "<td>" + d["reg_time"] + "</td></tr>"
             rows += "</table>"
