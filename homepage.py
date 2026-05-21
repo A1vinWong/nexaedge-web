@@ -8,7 +8,7 @@ import hashlib
 from PIL import Image, ImageDraw, ImageFont  # 👈 用于动态绘制推荐码图片
 
 # 💡 在这里统一配置你的新合约地址
-DEFAULT_CA = "D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2"
+DEFAULT_CA = "D7h9MvFDkVxPYeJWSTcE7VKkXo6mygCHYph36P8oeic2"
 
 # 1. 全局页面基础配置
 st.set_page_config(
@@ -381,6 +381,10 @@ with tab1:
             <h4 style="color:white; margin:0; font-size:13px;">🔥 39°C 智能温控屏障</h4>
             <p style="color:#bdc3c7; font-size:11px; margin:2px 0 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p>
         </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:13px;">🔒 2:1 智能防作弊系统</h4>
+            <p style="color:#bdc3c7; font-size:11px; margin:2px 0 0 0;">自研轻量级 BFT 验证共识，配合 2:1 冗余投票核验，从底层确保数据诚实度与节点防女巫攻击信用。</p>
+        </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown('<h2 style="color:#A2FF00; font-size:16px; margin-top:8px; margin-bottom:4px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
@@ -396,6 +400,10 @@ with tab1:
         <div class="feature-box">
             <h4 style="color:white; margin:0; font-size:13px;">🔥 39°C Thermal Guard Barrier</h4>
             <p style="color:#bdc3c7; font-size:11px; margin:2px 0 0 0;">Total hardware protection. System auto-throttles load instantly if battery hits 39°C.</p>
+        </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:13px;">🔒 2:1 Anti-Cheat Smart System</h4>
+            <p style="color:#bdc3c7; font-size:11px; margin:2px 0 0 0;">Proprietary BFT verification protocol with 2:1 Redundant Voting ensures absolute data honesty, node credibility, and sybil resistance.</p>
         </div>
         """, unsafe_allow_html=True)
 
