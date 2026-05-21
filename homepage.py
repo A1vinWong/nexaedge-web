@@ -301,7 +301,9 @@ else:
 
 # 🖼️ 固定 Logo 展示（语言选择下方，始终显示）
 # ⚠️ 确保 logo.png 已上传到 app 根目录（与 app.py 同级）
+st.markdown('<div style="max-height:280px; overflow:hidden; border-radius:12px; margin-bottom:4px;">', unsafe_allow_html=True)
 st.image("logo.png", use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 url_admin_param = st.query_params.get("admin", None)
 is_admin_active = (lang == "nexaadmin" or url_admin_param == "nexa_gate")
