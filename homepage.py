@@ -150,10 +150,10 @@ def generate_referral_code(email: str) -> str:
     return "NX-" + h[:3] + "-" + h[3:6]
 
 # =========================================================================
-# 🎨 🛠️ 动态绘制专属推荐码海报核心引擎 (保持原样不动)
+# 🎨 🛠️ 动态绘制专属推荐码海报核心引擎 (使用当前目录下的 logo.png 进行绘制)
 # =========================================================================
 def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
-    base_img_path = "image.png"
+    base_img_path = "logo.png"  # 👈 统一使用固定的图片名
     if not os.path.exists(base_img_path):
         img = Image.new("RGBA", (1000, 1000), "#0b0f12")
         img.save(base_img_path)
@@ -244,12 +244,8 @@ if 'chart_history' not in st.session_state: st.session_state.chart_history = [19
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2 
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
-def get_project_image():
-    if os.path.exists("image.png"): return "image.png"
-    png_files = glob.glob("*.png")
-    return png_files[0] if png_files else None
-
-target_image = get_project_image()
+# 🛠️ 修复图片读取规则：锁定读取根目录下的 logo.png
+target_image = "logo.png" if os.path.exists("logo.png") else None
 
 if st.session_state.app_running:
     global_server["active_device_set"].add(st.session_state.session_id)
@@ -288,31 +284,48 @@ if lang == "中文":
 else:
     st.markdown('<p style="font-size: 13px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 2px; margin-bottom:8px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
-# ==========================================
-# 👑 2:1 顶层多媒体网格与简报 (专为移动端紧凑适配优化)
-# ==========================================
-intro_left, intro_right = st.columns([1.8, 1.2])
-
-with intro_left:
-    # 优先展示大背景图/Mockup 图以适应您的原本业务逻辑
-    if target_image:
+# =========================================================================
+# 👑 动态多媒体网格：如果图片不存在，右侧简报自动全宽展示，绝不留白
+# =========================================================================
+if target_image:
+    intro_left, intro_right = st.columns([1.8, 1.2])
+    with intro_left:
         st.image(target_image, use_container_width=True)
-
-with intro_right:
+    with intro_right:
+        if lang == "中文":
+            st.markdown("""
+            <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 10px; border-radius: 12px; height: 100%;">
+                <p style="color:#A2FF00; font-size:12px; font-weight:800; margin-bottom:4px; text-transform:uppercase;">⚡ 项目核心简报</p>
+                <p style="color:#ffffff; font-size:10.5px; line-height:1.35; margin:0;">
+                    NexaEdge 允许将闲置手机性能变现。在充电且闲置时自动承接分布式 AI 数据清洗与验证，安全赚取红利。
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 10px; border-radius: 12px; height: 100%;">
+                <p style="color:#A2FF00; font-size:12px; font-weight:800; margin-bottom:4px; text-transform:uppercase;">⚡ Project Briefing</p>
+                <p style="color:#ffffff; font-size:10.5px; line-height:1.35; margin:0;">
+                    NexaEdge empowers users to monetize unutilized smartphone capabilities via encrypted decentralized sandbox networks easily.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+else:
+    # 💡 备用降级方案：图片丢失时完美撑满，不留一丝空白
     if lang == "中文":
         st.markdown("""
-        <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 10px; border-radius: 12px; height: 100%;">
-            <p style="color:#A2FF00; font-size:12px; font-weight:800; margin-bottom:4px; text-transform:uppercase;">⚡ 项目核心简报</p>
-            <p style="color:#ffffff; font-size:10.5px; line-height:1.35; margin:0;">
+        <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 14px; border-radius: 12px; margin-bottom: 10px;">
+            <p style="color:#A2FF00; font-size:14px; font-weight:800; margin-bottom:6px; text-transform:uppercase;">⚡ 项目核心简报</p>
+            <p style="color:#ffffff; font-size:12px; line-height:1.4; margin:0;">
                 NexaEdge 允许将闲置手机性能变现。在充电且闲置时自动承接分布式 AI 数据清洗与验证，安全赚取红利。
             </p>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 10px; border-radius: 12px; height: 100%;">
-            <p style="color:#A2FF00; font-size:12px; font-weight:800; margin-bottom:4px; text-transform:uppercase;">⚡ Project Briefing</p>
-            <p style="color:#ffffff; font-size:10.5px; line-height:1.35; margin:0;">
+        <div style="background-color: #11171d; border: 1px solid #1e272e; padding: 14px; border-radius: 12px; margin-bottom: 10px;">
+            <p style="color:#A2FF00; font-size:14px; font-weight:800; margin-bottom:6px; text-transform:uppercase;">⚡ Project Briefing</p>
+            <p style="color:#ffffff; font-size:12px; line-height:1.4; margin:0;">
                 NexaEdge empowers users to monetize unutilized smartphone capabilities via encrypted decentralized sandbox networks easily.
             </p>
         </div>
@@ -487,7 +500,7 @@ with tab2:
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
     
-    chart_lbl = "📶 边缘节点算力实时波形数据" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
+    chart_lbl = "📶 边缘节点算力实时波形 data" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
     st.markdown(f'<div class="chart-title-lbl">{chart_lbl}</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
