@@ -269,10 +269,7 @@ if 'chart_history' not in st.session_state: st.session_state.chart_history = [19
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
-# ✨ 新增：控制弹窗显示的 session_state 标志
-if 'show_whitelist_modal' not in st.session_state: st.session_state.show_whitelist_modal = False
-if 'show_register_modal' not in st.session_state: st.session_state.show_register_modal = False
-if 'modal_ref_code' not in st.session_state: st.session_state.modal_ref_code = ""
+
 
 if st.session_state.app_running:
     global_server["active_device_set"].add(st.session_state.session_id)
@@ -375,18 +372,6 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-    # ✨ 弹窗展示区：仅在白名单提交成功后触发（图片已含网址+推荐码）
-    if st.session_state.show_whitelist_modal:
-        wl_ref_code = st.session_state.modal_ref_code
-        wl_img_path = f"wl_invite_{wl_ref_code}.png"
-        st.markdown('<div class="modal-overlay"><div class="modal-box">', unsafe_allow_html=True)
-        if os.path.exists(wl_img_path):
-            st.image(wl_img_path, use_container_width=True)
-        st.markdown('</div></div>', unsafe_allow_html=True)
-        close_lbl = "✅ 关闭" if lang=="中文" else "✅ Close"
-        if st.button(close_lbl, key="close_wl_modal"):
-            st.session_state.show_whitelist_modal = False
-            st.rerun()
 
     with st.form("unified_whitelist_form"):
         if lang == "中文":
@@ -446,9 +431,6 @@ with tab1:
                 generate_referral_image(wl_ref_code, wl_img_path)
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | AssignedRef: {wl_ref_code} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                # ✨ 触发弹窗标志（不显示 confirmation 文字）
-                st.session_state.show_whitelist_modal = True
-                st.session_state.modal_ref_code = wl_ref_code
                 st.rerun()
 
 # ==========================================
