@@ -149,49 +149,76 @@ def generate_referral_code(email: str) -> str:
     return "NX-" + h[:3] + "-" + h[3:6]
 
 # =========================================================================
-# 🎨 动态绘制专属推荐码海报核心引擎 (使用 IMG_7859.jpeg)
+# 🎨 动态绘制专属推荐码海报核心引擎 (使用 IMG_7859.jpeg，叠加网址+推荐码)
 # =========================================================================
 def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
-    base_img_path = "IMG_7859.jpeg"  # 👈 统一使用指定图片
+    base_img_path = "IMG_7859.jpeg"
     if not os.path.exists(base_img_path):
-        img = Image.new("RGBA", (1000, 1000), "#0b0f12")
+        img = Image.new("RGB", (1080, 1920), "#0b0f12")
         img.save(base_img_path)
 
     img = Image.open(base_img_path).convert("RGBA")
-    draw = ImageDraw.Draw(img)
     width, height = img.size
 
-    font_paths = ["arial.ttf", "DejaVuSans-Bold.ttf", "Helvetica-Bold.ttf", "courbd.ttf"]
-    font_main = None
-    for fp in font_paths:
+    # 在底部绘制半透明黑色渐变条，确保文字可读
+    overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    overlay_draw = ImageDraw.Draw(overlay)
+    bar_h = int(height * 0.22)
+    for i in range(bar_h):
+        alpha = int(210 * (i / bar_h))
+        overlay_draw.rectangle(
+            [(0, height - bar_h + i), (width, height - bar_h + i + 1)],
+            fill=(0, 0, 0, alpha)
+        )
+    img = Image.alpha_composite(img, overlay)
+    draw = ImageDraw.Draw(img)
+
+    # 字体大小：网址稍小，推荐码更大更突出
+    font_size_url  = max(28, int(height * 0.038))
+    font_size_code = max(36, int(height * 0.052))
+    font_paths = ["DejaVuSans-Bold.ttf", "arial.ttf", "Helvetica-Bold.ttf", "courbd.ttf"]
+
+    def load_font(size):
+        for fp in font_paths:
+            try:
+                return ImageFont.truetype(fp, size)
+            except:
+                continue
+        return ImageFont.load_default()
+
+    font_url  = load_font(font_size_url)
+    font_code = load_font(font_size_code)
+
+    line1 = "nexaedge.org"
+    line2 = f"{ref_code}"
+
+    def text_x(text, font):
         try:
-            font_main = ImageFont.truetype(fp, int(height * 0.045))
-            break
-        except:
-            continue
-    if font_main is None:
-        font_main = ImageFont.load_default()
+            w = draw.textlength(text, font=font)
+        except AttributeError:
+            bbox = font.getbbox(text)
+            w = bbox[2] - bbox[0] if bbox else 300
+        return (width - w) // 2
 
-    line1 = "WebApp : nexaedge.org"
-    line2 = f"REFERRAL CODE: {ref_code}"
-    y1 = int(height * 0.86)
-    y2 = int(height * 0.93)
+    # 位置：底部往上排列
+    y2 = int(height * 0.905)   # 推荐码
+    y1 = int(height * 0.848)   # 网址
 
-    try:
-        w1 = draw.textlength(line1, font=font_main)
-    except AttributeError:
-        w1 = font_main.getbbox(line1)[2] if hasattr(font_main, "getbbox") else 300
-    x1 = (width - w1) // 2
-    draw.text((x1, y1), line1, fill="#ffffff", font=font_main)
+    # 描边效果让文字在任何背景下都清晰
+    def draw_text_with_outline(pos, text, font, fill, outline=(0,0,0)):
+        ox, oy = pos
+        for dx in [-2, -1, 0, 1, 2]:
+            for dy in [-2, -1, 0, 1, 2]:
+                if dx != 0 or dy != 0:
+                    draw.text((ox+dx, oy+dy), text, font=font, fill=outline)
+        draw.text(pos, text, font=font, fill=fill)
 
-    try:
-        w2 = draw.textlength(line2, font=font_main)
-    except AttributeError:
-        w2 = font_main.getbbox(line2)[2] if hasattr(font_main, "getbbox") else 300
-    x2 = (width - w2) // 2
-    draw.text((x2, y2), line2, fill="#A2FF00", font=font_main)
+    draw_text_with_outline((text_x(line1, font_url),  y1), line1, font_url,  fill=(255,255,255))
+    draw_text_with_outline((text_x(line2, font_code), y2), line2, font_code, fill=(162,255,0))
 
-    img.save(output_path)
+    # 转回 RGB 保存
+    final = img.convert("RGB")
+    final.save(output_path)
     return output_path
 
 
@@ -282,6 +309,10 @@ if lang == "中文":
 else:
     st.markdown('<p style="font-size: 13px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 2px; margin-bottom:8px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
+# 🖼️ 固定 Logo 展示（语言选择下方，始终显示）
+# ⚠️ 确保 logo.png 已上传到 app 根目录（与 app.py 同级）
+st.image("logo.png", use_container_width=True)
+
 url_admin_param = st.query_params.get("admin", None)
 is_admin_active = (lang == "nexaadmin" or url_admin_param == "nexa_gate")
 
@@ -344,28 +375,14 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-    # ✨ 弹窗展示区：仅在白名单提交成功后触发
+    # ✨ 弹窗展示区：仅在白名单提交成功后触发（图片已含网址+推荐码）
     if st.session_state.show_whitelist_modal:
-        wl_pop_title = "🎉 Genesis 白名单卡片" if lang=="中文" else "🎉 Genesis Whitelist Node Card"
-        st.markdown(f"""
-        <div class="modal-overlay">
-            <div class="modal-box">
-                <div class="modal-title">{wl_pop_title}</div>
-        """, unsafe_allow_html=True)
-        st.image("IMG_7859.jpeg", use_container_width=True)
-        st.markdown("</div></div>", unsafe_allow_html=True)
-
         wl_ref_code = st.session_state.modal_ref_code
         wl_img_path = f"wl_invite_{wl_ref_code}.png"
+        st.markdown('<div class="modal-overlay"><div class="modal-box">', unsafe_allow_html=True)
         if os.path.exists(wl_img_path):
-            with open(wl_img_path, "rb") as file:
-                st.download_button(
-                    label="📥 Download Referral Image / 下载专属海报",
-                    data=file,
-                    file_name=f"NexaEdge_{wl_ref_code}.png",
-                    mime="image/png",
-                    key="wl_download_btn"
-                )
+            st.image(wl_img_path, use_container_width=True)
+        st.markdown('</div></div>', unsafe_allow_html=True)
         close_lbl = "✅ 关闭" if lang=="中文" else "✅ Close"
         if st.button(close_lbl, key="close_wl_modal"):
             st.session_state.show_whitelist_modal = False
@@ -429,8 +446,7 @@ with tab1:
                 generate_referral_image(wl_ref_code, wl_img_path)
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | AssignedRef: {wl_ref_code} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                st.success(msg_success)
-                # ✨ 触发弹窗标志
+                # ✨ 触发弹窗标志（不显示 confirmation 文字）
                 st.session_state.show_whitelist_modal = True
                 st.session_state.modal_ref_code = wl_ref_code
                 st.rerun()
@@ -539,16 +555,15 @@ with tab4:
 
         st.markdown('<div class="app-card" style="text-align:center; padding:15px 10px;">', unsafe_allow_html=True)
 
-        # ✨ 弹窗：仅在注册成功后首次进入时触发（通过 show_register_modal 标志控制）
+        # ✨ 弹窗：仅在注册成功后首次进入时触发（图片已含网址+推荐码）
         if st.session_state.show_register_modal:
-            pop_title = "🟢 账户节点已就绪" if lang=="中文" else "🟢 Node Identity Confirmed"
-            st.markdown(f"""
-            <div class="modal-overlay">
-                <div class="modal-box">
-                    <div class="modal-title">{pop_title}</div>
-            """, unsafe_allow_html=True)
-            st.image("IMG_7859.jpeg", use_container_width=True)
-            st.markdown("</div></div>", unsafe_allow_html=True)
+            reg_img_path = f"user_invite_{ref_code}.png"
+            if not os.path.exists(reg_img_path):
+                generate_referral_image(ref_code, reg_img_path)
+            st.markdown('<div class="modal-overlay"><div class="modal-box">', unsafe_allow_html=True)
+            if os.path.exists(reg_img_path):
+                st.image(reg_img_path, use_container_width=True)
+            st.markdown('</div></div>', unsafe_allow_html=True)
             close_lbl2 = "✅ 进入账户" if lang=="中文" else "✅ Enter Account"
             if st.button(close_lbl2, key="close_reg_modal"):
                 st.session_state.show_register_modal = False
