@@ -348,6 +348,10 @@ with tab1:
             <h4 style="color:white; margin:0; font-size:13px;">🔥 39°C 智能温控屏障</h4>
             <p style="color:#bdc3c7; font-size:11px; margin:2px 0 0 0;">坚守绝不伤机底线。一旦手机运行温度触及 39°C 临界点，系统自动下发降载指令，打消损耗焦虑。</p>
         </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:13px;">🔗 自研轻量级拜占庭容错共识</h4>
+            <p style="color:#bdc3c7; font-size:11px; margin:2px 0 0 0;">专为边缘不可信设备设计，采用 2:1 去中心化多数投票冗余验证机制，确保每一份算力贡献真实可信、不可篡改。</p>
+        </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown('<h2 style="color:#A2FF00; font-size:16px; margin-top:8px; margin-bottom:4px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
@@ -362,6 +366,10 @@ with tab1:
         <div class="feature-box">
             <h4 style="color:white; margin:0; font-size:13px;">🔥 39°C Thermal Guard Barrier</h4>
             <p style="color:#bdc3c7; font-size:11px; margin:2px 0 0 0;">Total hardware protection. System auto-throttles load instantly if battery hits 39°C.</p>
+        </div>
+        <div class="feature-box">
+            <h4 style="color:white; margin:0; font-size:13px;">🔗 Proprietary Lightweight BFT Consensus</h4>
+            <p style="color:#bdc3c7; font-size:11px; margin:2px 0 0 0;">Built for untrusted edge devices — 2:1 Decentralized Majority Voting Redundant Verification ensures every compute contribution is authentic and tamper-proof.</p>
         </div>
         """, unsafe_allow_html=True)
 
