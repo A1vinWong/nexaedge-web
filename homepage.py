@@ -176,7 +176,6 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
                 return ImageFont.truetype(fp, size)
             except:
                 continue
-        # 最后备用：用 load_default 但放大（PIL 8+支持 size 参数）
         try:
             return ImageFont.load_default(size=size)
         except:
@@ -196,7 +195,6 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
             w = (bbox[2] - bbox[0]) if bbox else 300
         return max(0, (width - int(w)) // 2)
 
-    # nexaedge.org 在 DECENTRALIZED 下方，推荐码紧贴下方
     y1 = int(height * 0.890)
     y2 = y1 + 75 + 10
 
@@ -212,6 +210,29 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
     outlined((cx(line2, font_code), y2), line2, font_code, fill=(162,255,0))
 
     img.convert("RGB").save(output_path)
+    return output_path
+
+
+# =========================================================================
+# ✅ 修复：带缓存的海报生成函数，避免每次 rerun 都重新绘制导致闪烁
+# =========================================================================
+def get_cached_poster(ref_code: str, cache_key_name: str, cache_ref_key_name: str) -> str:
+    """
+    只在 ref_code 变化时重新生成海报，否则直接返回缓存路径。
+    cache_key_name: session_state 中存路径的 key
+    cache_ref_key_name: session_state 中存上次 ref_code 的 key
+    """
+    cached_path = st.session_state.get(cache_key_name)
+    cached_ref  = st.session_state.get(cache_ref_key_name)
+
+    if cached_path and cached_ref == ref_code and os.path.exists(cached_path):
+        return cached_path  # 直接返回，不重新生成
+
+    # 需要重新生成
+    output_path = f"poster_{ref_code}.png"
+    generate_referral_image(ref_code, output_path)
+    st.session_state[cache_key_name] = output_path
+    st.session_state[cache_ref_key_name] = ref_code
     return output_path
 
 
@@ -299,8 +320,7 @@ if lang == "中文":
 else:
     st.markdown('<p style="font-size: 13px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 2px; margin-bottom:8px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
-# 🖼️ 固定 Logo 展示（语言选择下方，始终显示）
-# ⚠️ 确保 logo.png 已上传到 app 根目录（与 app.py 同级）
+# 🖼️ 固定 Logo 展示
 st.markdown('<div style="max-height:280px; overflow:hidden; border-radius:12px; margin-bottom:4px;">', unsafe_allow_html=True)
 st.image("logo.png", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
@@ -446,15 +466,14 @@ with tab1:
                 global_server["whitelist_emails"].add(u_email.lower())
                 global_server["whitelist_wallets"].add(u_wallet.lower())
                 wl_ref_code = generate_referral_code(u_email)
-                wl_img_path = f"wl_invite_{wl_ref_code}.png"
-                generate_referral_image(wl_ref_code, wl_img_path)
+                # ✅ 修复：白名单申请成功后也用缓存方式生成海报，避免重复绘制闪烁
+                wl_img_path = get_cached_poster(wl_ref_code, "wl_success_img", "wl_success_ref")
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | AssignedRef: {wl_ref_code} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                st.session_state.wl_success_img = wl_img_path
 
-    # 申请成功后直接显示图片（含网址+推荐码）
-    if st.session_state.get("wl_success_img") and os.path.exists(st.session_state.wl_success_img):
-        st.image(st.session_state.wl_success_img, use_container_width=True)
+    # ✅ 修复：直接从 session_state 读取缓存路径，不再每次重新生成
+    if st.session_state.get("wl_success_img") and os.path.exists(st.session_state["wl_success_img"]):
+        st.image(st.session_state["wl_success_img"], use_container_width=True)
 
 
 # ==========================================
@@ -559,11 +578,10 @@ with tab4:
         user_info = global_server["user_db"].get(email, {})
         ref_code = user_info.get("referral_code", generate_referral_code(email))
 
-        # 每次都重新生成海报图（确保文字正确叠加）
-        user_poster_path = f"user_invite_{ref_code}.png"
-        generate_referral_image(ref_code, user_poster_path)
+        # ✅ 修复核心：使用缓存函数，只在 ref_code 变化时才重新生成图片
+        # 每次 rerun（包括每秒自动刷新）不再重复绘制，彻底消除闪烁
+        user_poster_path = get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
 
-        # 显示海报图
         if os.path.exists(user_poster_path):
             st.image(user_poster_path, use_container_width=True)
 
@@ -581,6 +599,9 @@ with tab4:
         st.markdown("<br>", unsafe_allow_html=True)
         btn_logout = "安全退出当前登录账户" if lang=="中文" else "Logout Account Location"
         if st.button(btn_logout, key="logout_btn"):
+            # ✅ 退出时清理海报缓存，下次登录其他账户不会显示旧图
+            st.session_state.pop("user_poster_path_cache", None)
+            st.session_state.pop("user_poster_ref_cache", None)
             st.session_state.current_user = None
             st.session_state.app_running = False
             st.rerun()
@@ -608,7 +629,8 @@ with tab4:
                     else:
                         inherited_nexa = st.session_state.app_earned
                         ref_code = generate_referral_code(r_email)
-                        generate_referral_image(ref_code, f"user_invite_{ref_code}.png")
+                        # ✅ 修复：注册时提前生成并缓存海报，rerun 后直接读缓存不闪烁
+                        get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
                         global_server["user_db"][r_email] = {
                             "password_hash": hashlib.sha256(r_pwd.encode()).hexdigest(),
                             "score": inherited_nexa,
@@ -617,7 +639,6 @@ with tab4:
                             "referred_by": r_ref if r_ref else "None"
                         }
                         st.session_state.current_user = r_email
-                        # ✨ 触发注册成功弹窗标志
                         time.sleep(0.5)
                         st.rerun()
         else:
@@ -630,6 +651,9 @@ with tab4:
                 if st.form_submit_button(btn_l_txt):
                     p_hash = hashlib.sha256(l_pwd.encode()).hexdigest()
                     if l_email in global_server["user_db"] and global_server["user_db"][l_email]["password_hash"] == p_hash:
+                        ref_code = global_server["user_db"][l_email].get("referral_code", generate_referral_code(l_email))
+                        # ✅ 修复：登录时提前生成并缓存海报，rerun 后直接读缓存不闪烁
+                        get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
                         st.session_state.current_user = l_email
                         st.session_state.app_earned = global_server["user_db"][l_email]["score"]
                         st.success("⚡ 登录成功！" if lang=="中文" else "⚡ Authentication verified!")
