@@ -356,16 +356,27 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
 # --- 顶栏 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:30px; font-weight:800; margin-bottom:0px; padding-top:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
 
-# ✅ 新增：全局免责声明栏
-st.markdown('''
-<div class="disclaimer-bar">
-    🚧 Pre-Launch Demo · NexaEdge is currently in testnet simulation phase.
-    All earnings displayed are simulated and do not represent real token issuance.
-    No tokens have been distributed. Whitelist registration is for early community access only.
-</div>
-''', unsafe_allow_html=True)
-
 lang = st.selectbox("🌐 Language", ["English", "中文"], index=0, label_visibility="collapsed")
+
+# ✅ 全局免责声明栏（随语言切换）
+if lang == "中文":
+    st.markdown(
+        '''<div class="disclaimer-bar">
+        🚧 预发布演示版 · NexaEdge 当前处于测试网模拟阶段。
+        所有收益数据均为模拟展示，不代表真实代币发行。
+        目前尚未分发任何代币，白名单登记仅代表早期社区资格。
+        </div>''',
+        unsafe_allow_html=True
+    )
+else:
+    st.markdown(
+        '''<div class="disclaimer-bar">
+        🚧 Pre-Launch Demo · NexaEdge is currently in testnet simulation phase.
+        All earnings displayed are simulated and do not represent real token issuance.
+        No tokens have been distributed. Whitelist registration is for early community access only.
+        </div>''',
+        unsafe_allow_html=True
+    )
 
 TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
 TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"]
@@ -797,13 +808,24 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ✅ 新增：页脚免责声明
-st.markdown('''
-<div style="text-align:center; font-size:9px; color:#3a5068; margin-top:12px; line-height:1.6; padding: 0 8px;">
-    NexaEdge Network is currently in pre-launch demo phase. All metrics shown are simulated for demonstration purposes only.
-    Whitelist registration does not constitute a token offering, investment contract, or guarantee of future rewards.
-    © 2026 NexaEdge Network. All rights reserved.
-</div>
-''', unsafe_allow_html=True)
+if lang == "中文":
+    st.markdown(
+        '''<div style="text-align:center; font-size:9px; color:#3a5068; margin-top:12px; line-height:1.6; padding: 0 8px;">
+        NexaEdge Network 当前处于预发布演示阶段。所有展示数据均为模拟，仅供演示目的使用。
+        白名单登记不构成代币发行、投资合同或任何未来收益承诺。
+        © 2026 NexaEdge Network. All rights reserved.
+        </div>''',
+        unsafe_allow_html=True
+    )
+else:
+    st.markdown(
+        '''<div style="text-align:center; font-size:9px; color:#3a5068; margin-top:12px; line-height:1.6; padding: 0 8px;">
+        NexaEdge Network is currently in pre-launch demo phase. All metrics shown are simulated for demonstration purposes only.
+        Whitelist registration does not constitute a token offering, investment contract, or guarantee of future rewards.
+        © 2026 NexaEdge Network. All rights reserved.
+        </div>''',
+        unsafe_allow_html=True
+    )
 
 # ✅ 后台刷新：用 st_autorefresh 替代 time.sleep + st.rerun
 # 不锁死线程，多用户并发时服务器不会 CPU 飙升
