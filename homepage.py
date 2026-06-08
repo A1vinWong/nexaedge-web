@@ -805,15 +805,18 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-# 后台刷新
+# ✅ 后台刷新：用 st_autorefresh 替代 time.sleep + st.rerun
+# 不锁死线程，多用户并发时服务器不会 CPU 飙升
 if st.session_state.app_running:
-    st.session_state.app_earned += execute_secure_wasm_task(1)
-    st.session_state.session_seconds += 1
-    st.session_state.total_energy_wh += (5.1 / 3600.0)
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=3000, key="nexaedge_autorefresh")
+
+    # 每次页面自动刷新时更新数据（3秒一次）
+    st.session_state.app_earned += execute_secure_wasm_task(3)
+    st.session_state.session_seconds += 3
+    st.session_state.total_energy_wh += (5.1 * 3 / 3600.0)
     if st.session_state.current_user:
         global_server["user_db"][st.session_state.current_user]["score"] = st.session_state.app_earned
     else:
         global_server["device_balances"][dev_id]["app_earned"] = st.session_state.app_earned
     st.session_state.last_tick_time = time.time()
-    time.sleep(1.0)
-    st.rerun()
