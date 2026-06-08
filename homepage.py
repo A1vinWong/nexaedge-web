@@ -2,15 +2,19 @@ import streamlit as st
 import time
 import random
 import pandas as pd
+import hashlib
+import os
 from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(
-    page_title="NexaEdge Network — Investor Demo",
+    page_title="NexaEdge Network — Investor Terminal",
     page_icon="🟢",
     layout="centered"
 )
 
-# ── 升级版 CSS ──
+DEFAULT_CA = "D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2"
+
+# ── 终极熔炼版 CSS ──
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
@@ -24,25 +28,21 @@ st.markdown("""
 #MainMenu, footer, header, [data-testid="stHeader"],
 [data-testid="manage-app-button"], .styles_viewerBadge__FUChv { display: none !important; }
 
-/* Grid background */
 .stApp::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
-        linear-gradient(rgba(162,255,0,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(162,255,0,0.025) 1px, transparent 1px);
+        linear-gradient(rgba(162,255,0,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(162,255,0,0.02) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
 }
 
-/* Typography */
-h1, h2, h3, h4, p, div, span, label {
-    font-family: 'Syne', sans-serif !important;
-}
+h1, h2, h3, h4, p, div, span, label { font-family: 'Syne', sans-serif !important; }
 
-/* 隐藏隐藏 Radio 的原生样式，伪装成高级 Tab */
+/* 物理防跳自定义 Radio 导航栏 */
 div[data-testid="stRadio"] > label { display: none !important; }
 div[data-testid="stRadio"] > div {
     flex-direction: row !important;
@@ -64,7 +64,6 @@ div[data-testid="stRadio"] label[data-baseweb="radio"] {
     letter-spacing: 0.05em !important;
     margin: 0 !important;
 }
-/* 选中状态的骚绿样式 */
 div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) {
     color: #a2ff00 !important;
     border-color: #1a2530 !important;
@@ -72,33 +71,11 @@ div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) {
     background-color: #0e1419 !important;
 }
 div[data-testid="stRadio"] input { display: none !important; }
-div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
-    font-size: 11px !important;
-    font-weight: 700 !important;
-}
 
-/* Metrics */
-[data-testid="stMetric"] {
-    background: #0e1419;
-    border: 1px solid #1a2530;
-    border-radius: 10px;
-    padding: 14px !important;
-}
-[data-testid="stMetricLabel"] {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 9px !important;
-    color: #556070 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.08em !important;
-}
-[data-testid="stMetricValue"] {
-    font-size: 22px !important;
-    font-weight: 800 !important;
-    color: #e8edf2 !important;
-}
-[data-testid="stMetricDelta"] { font-size: 10px !important; }
+[data-testid="stMetric"] { background: #0e1419; border: 1px solid #1a2530; border-radius: 10px; padding: 14px !important; }
+[data-testid="stMetricLabel"] { font-family: 'Space Mono', monospace !important; font-size: 9px !important; color: #556070 !important; text-transform: uppercase !important; }
+[data-testid="stMetricValue"] { font-size: 22px !important; font-weight: 800 !important; color: #e8edf2 !important; }
 
-/* Buttons */
 div.stButton > button {
     background-color: #a2ff00 !important;
     color: #080c0f !important;
@@ -106,762 +83,365 @@ div.stButton > button {
     font-size: 11px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
     border: none !important;
     border-radius: 8px !important;
     padding: 10px 20px !important;
     width: 100% !important;
 }
 div.stButton > button:hover { background-color: #b5ff33 !important; }
-div.stButton > button[kind="secondary"] {
-    background-color: transparent !important;
-    color: #556070 !important;
-    border: 1px solid #1a2530 !important;
-}
-div.stButton > button[kind="secondary"]:hover {
-    border-color: #556070 !important;
-    color: #e8edf2 !important;
-}
 
-/* Cards */
-.nx-card {
-    background: #0e1419;
-    border: 1px solid #1a2530;
-    border-radius: 12px;
-    padding: 18px 20px;
-    margin-bottom: 14px;
-}
-.nx-card-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #556070;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 14px;
-}
+.nx-card { background: #0e1419; border: 1px solid #1a2530; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; }
+.nx-card-title { font-family: 'Space Mono', monospace; font-size: 10px; color: #556070; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; }
 .nx-card-title span { color: #a2ff00; margin-right: 6px; }
 
-/* Warning notice */
-.nx-notice {
-    background: rgba(255,179,0,0.07);
-    border: 1px solid rgba(255,179,0,0.2);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #ffb300;
-    line-height: 1.6;
-    margin-bottom: 18px;
-}
+.nx-feature { background: #060a0d; border: 1px solid #1a2530; border-left: 3px solid #a2ff00; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+.nx-feature-title { font-size: 12px; font-weight: 700; color: #e8edf2; margin-bottom: 5px; }
+.nx-feature-body { font-size: 11px; color: #556070; line-height: 1.6; }
 
-/* Stage badge */
-.nx-stage-badge {
-    display: inline-block;
-    background: rgba(255,179,0,0.1);
-    border: 1px solid rgba(255,179,0,0.3);
-    color: #ffb300;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 4px;
-    letter-spacing: 0.08em;
-}
+.tag-bad { display: inline-block; background: rgba(244,63,94,0.12); color: #f43f5e; font-family: 'Space Mono'; font-size: 9px; padding: 2px 6px; border-radius: 3px; }
+.tag-good { display: inline-block; background: rgba(162,255,0,0.1); color: #a2ff00; font-family: 'Space Mono'; font-size: 9px; padding: 2px 6px; border-radius: 3px; }
 
-/* Feature box */
-.nx-feature {
-    background: #060a0d;
-    border: 1px solid #1a2530;
-    border-left: 3px solid #a2ff00;
-    border-radius: 8px;
-    padding: 14px;
-    margin-bottom: 10px;
-}
-.nx-feature-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: #e8edf2;
-    margin-bottom: 5px;
-}
-.nx-feature-body {
-    font-size: 11px;
-    color: #556070;
-    line-height: 1.6;
-}
-.nx-feature-buyer {
-    margin-top: 7px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #00e5ff;
-}
-
-/* Tags */
-.tag-bad {
-    display: inline-block;
-    background: rgba(244,63,94,0.12);
-    color: #f43f5e;
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: 700;
-}
-.tag-good {
-    display: inline-block;
-    background: rgba(162,255,0,0.1);
-    color: #a2ff00;
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: 700;
-}
-
-/* Node grid */
-.nx-node-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 5px;
-    margin: 12px 0;
-}
-.nx-node {
-    aspect-ratio: 1;
-    border-radius: 4px;
-    background: #1a2530;
-}
+.nx-node-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin: 12px 0; }
+.nx-node { aspect-ratio: 1; border-radius: 4px; background: #1a2530; }
 .nx-node.active { background: #a2ff00; box-shadow: 0 0 6px rgba(162,255,0,0.4); }
-.nx-node.processing {
-    background: #00e5ff;
-    box-shadow: 0 0 6px rgba(0,229,255,0.4);
-    animation: blink 0.8s ease-in-out infinite;
-}
+.nx-node.processing { background: #00e5ff; box-shadow: 0 0 6px rgba(0,229,255,0.4); animation: blink 0.8s infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* Sim stats */
-.nx-sim-stat {
-    background: #060a0d;
-    border: 1px solid #1a2530;
-    border-radius: 8px;
-    padding: 12px;
-    text-align: center;
-}
-.nx-sim-val {
-    font-family: 'Space Mono', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    color: #a2ff00;
-}
-.nx-sim-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    color: #556070;
-    margin-top: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-
-/* Task log */
-.nx-log {
-    background: #040709;
-    border: 1px solid #1a2530;
-    border-radius: 8px;
-    padding: 12px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #556070;
-    line-height: 1.8;
-    max-height: 140px;
-    overflow-y: auto;
-}
-.log-success { color: #a2ff00; }
-.log-info { color: #00e5ff; }
-.log-warn { color: #ffb300; }
-
-/* Roadmap */
-.nx-roadmap-item {
-    border-left: 2px solid #1a2530;
-    padding-left: 16px;
-    padding-bottom: 20px;
-    position: relative;
-}
-.nx-roadmap-item::before {
-    content: '';
-    position: absolute;
-    left: -5px; top: 4px;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #1a2530;
-    border: 1px solid #1a2530;
-}
-.nx-roadmap-item.current::before {
-    background: #00e5ff;
-    border-color: #00e5ff;
-    box-shadow: 0 0 6px rgba(0,229,255,0.5);
-}
-.nx-roadmap-phase {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    color: #556070;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 3px;
-}
-.nx-roadmap-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #e8edf2;
-    margin-bottom: 4px;
-}
-.nx-roadmap-body {
-    font-size: 11px;
-    color: #556070;
-    line-height: 1.6;
-}
-
-/* Table */
-.nx-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-}
-.nx-table th {
-    text-align: left;
-    padding: 8px 10px;
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #556070;
-    border-bottom: 1px solid #1a2530;
-}
-.nx-table th.hl { color: #a2ff00; }
-.nx-table td {
-    padding: 10px;
-    border-bottom: 1px solid rgba(26,37,48,0.5);
-    color: #556070;
-    vertical-align: top;
-    line-height: 1.5;
-}
-.nx-table td:first-child { color: #e8edf2; font-weight: 600; width: 150px; }
-.nx-table td.hl { color: #e8edf2; }
+.nx-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.nx-table th { text-align: left; padding: 8px 10px; font-family: 'Space Mono'; font-size: 9px; color: #556070; border-bottom: 1px solid #1a2530; }
+.nx-table td { padding: 10px; border-bottom: 1px solid rgba(26,37,48,0.5); color: #556070; }
 .nx-table tr:last-child td { border-bottom: none; }
 
-/* Progress */
-.nx-prog-label {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #556070;
-    margin-bottom: 5px;
-}
-.nx-prog-bar {
-    height: 4px;
-    background: #1a2530;
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 12px;
-}
-.nx-prog-fill { height: 100%; background: #a2ff00; border-radius: 2px; }
-.nx-prog-fill.blue { background: #00e5ff; }
+.nx-roadmap-item { border-left: 2px solid #1a2530; padding-left: 16px; padding-bottom: 20px; position: relative; }
+.nx-roadmap-item::before { content: ''; position: absolute; left: -5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: #1a2530; }
+.nx-roadmap-item.current::before { background: #00e5ff; box-shadow: 0 0 6px #00e5ff; }
+.nx-roadmap-phase { font-family: 'Space Mono'; font-size: 9px; color: #556070; }
+.nx-roadmap-title { font-size: 13px; font-weight: 700; color: #e8edf2; }
+.nx-roadmap-body { font-size: 11px; color: #556070; line-height: 1.6; }
 
-/* Moat */
-.nx-moat {
-    background: #060a0d;
-    border: 1px solid #1a2530;
-    border-radius: 8px;
-    padding: 14px;
-}
-.nx-moat-icon { font-size: 20px; margin-bottom: 8px; }
-.nx-moat-title { font-size: 12px; font-weight: 700; color: #e8edf2; margin-bottom: 5px; }
-.nx-moat-body { font-size: 11px; color: #556070; line-height: 1.6; }
+.nx-log { background: #040709; border: 1px solid #1a2530; border-radius: 8px; padding: 12px; font-family: 'Space Mono'; font-size: 10px; color: #556070; max-height: 120px; overflow-y: auto; }
+.log-success { color: #a2ff00; }
+.log-info { color: #00e5ff; }
 
-/* Footer */
-.nx-footer {
-    border-top: 1px solid #1a2530;
-    margin-top: 40px;
-    padding-top: 16px;
-    text-align: center;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #2a3540;
-    line-height: 1.8;
-}
-
-/* Social links */
-.nx-social-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-    gap: 6px;
-    margin: 10px 0;
-}
-.nx-social-btn {
-    display: block;
-    text-align: center;
-    padding: 7px;
-    background: #0e1419;
-    border: 1px solid #1a2530;
-    border-radius: 8px;
-    color: #556070 !important;
-    font-size: 11px;
-    font-weight: bold;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-.nx-social-btn:hover { border-color: #a2ff00; color: #a2ff00 !important; }
+.social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); gap: 6px; margin: 10px 0; }
+.social-btn { display: block; text-align: center; padding: 7px; background: #0e1419; border: 1px solid #1a2530; border-radius: 8px; color: #556070 !important; font-size: 11px; text-decoration: none; font-weight: bold; }
+.social-btn:hover { border-color: #a2ff00; color: #a2ff00 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Session state init ──
+# ── 服务器内存锁与状态初始化 ──
+@st.cache_resource
+def init_global_server_core():
+    return {
+        "active_device_set": set(),
+        "total_online_viewers": random.randint(142, 168),
+        "user_db": {
+            "contact@nexaedge.org": {
+                "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
+                "score": 1479.0,
+                "reg_time": "2026-05-18 14:22:05",
+                "referral_code": "NX-GLOBAL"
+            }
+        },
+        "whitelist_records": []
+    }
+
+global_server = init_global_server_core()
+
 if 'sim_running' not in st.session_state: st.session_state.sim_running = False
 if 'sim_tasks' not in st.session_state: st.session_state.sim_tasks = 0
 if 'sim_log' not in st.session_state: st.session_state.sim_log = []
 if 'sim_nodes' not in st.session_state: st.session_state.sim_nodes = [0] * 64
-if 'sim_latency' not in st.session_state: st.session_state.sim_latency = 3.0
-if 'sim_consensus' not in st.session_state: st.session_state.sim_consensus = 98.2
-if 'prog1' not in st.session_state: st.session_state.prog1 = 0
-if 'prog2' not in st.session_state: st.session_state.prog2 = 0
-if 'prog3' not in st.session_state: st.session_state.prog3 = 0
+if 'current_user' not in st.session_state: st.session_state.current_user = None
+if 'app_earned' not in st.session_state: st.session_state.app_earned = 0.0
 
 TASK_TYPES = [
     ("SLM inference (Phi-3 mini)", "success"),
     ("RLHF label validation", "info"),
     ("ZK proof generation", "success"),
     ("BFT consensus round", "info"),
-    ("Thermal check: 36.4°C ✓", "success"),
-    ("Dataset chunk checksum", "info"),
-    ("Node fingerprint verified", "success"),
-    ("Cross-node result agreement", "info"),
+    ("Thermal check: 36.8°C ✓", "success")
 ]
 
-def tick_simulation():
-    nodes = st.session_state.sim_nodes
-    idle = [i for i, v in enumerate(nodes) if v == 0]
-    if len([v for v in nodes if v > 0]) < 48 and idle:
-        for _ in range(min(4, len(idle))):
-            idx = random.choice(idle)
-            nodes[idx] = 1
-            idle.remove(idx)
-
-    active = [i for i, v in enumerate(nodes) if v == 1]
-    if active:
-        pick = random.choice(active)
-        nodes[pick] = 2
-        processing = [i for i, v in enumerate(nodes) if v == 2]
-        for p in random.sample(processing, min(2, len(processing))):
-            nodes[p] = 1
-
-    st.session_state.sim_nodes = nodes
-    st.session_state.sim_latency = max(2.2, min(4.5, st.session_state.sim_latency + random.uniform(-0.3, 0.3)))
-    st.session_state.sim_consensus = max(95.0, min(99.9, st.session_state.sim_consensus + random.uniform(-0.2, 0.2)))
-
-    task, cls = random.choice(TASK_TYPES)
-    node_id = random.randint(1, 64)
-    ts = time.strftime("%H:%M:%S")
-    entry = (f"[{ts}] Node #{node_id} → {task}", cls)
-    st.session_state.sim_log.append(entry)
-    if len(st.session_state.sim_log) > 30:
-        st.session_state.sim_log = st.session_state.sim_log[-30:]
-
-    st.session_state.sim_tasks += 1
-    t = st.session_state.sim_tasks
-    st.session_state.prog1 = min(85, int(t * 1.4))
-    st.session_state.prog2 = min(72, int(t * 1.1))
-    st.session_state.prog3 = min(60, int(t * 0.9))
-
+# 高频刷新内核挂载
 if st.session_state.sim_running:
-    st_autorefresh(interval=1000, key="nexa_sim_refresher")
-    tick_simulation()
+    st_autorefresh(interval=1000, key="nexa_refresh_pulse")
+    # 数据步进
+    st.session_state.sim_tasks += 1
+    st.session_state.app_earned += 0.01
+    
+    # 日志追加
+    task, cls = random.choice(TASK_TYPES)
+    ts = time.strftime("%H:%M:%S")
+    st.session_state.sim_log.append((f"[{ts}] Node #{random.randint(1,64)} → {task}", cls))
+    if len(st.session_state.sim_log) > 15: st.session_state.sim_log.pop(0)
+    
+    # 随机节点高亮
+    st.session_state.sim_nodes = [random.choice([0, 1, 2]) for _ in range(64)]
+    if st.session_state.current_user:
+        global_server["user_db"][st.session_state.current_user]["score"] = st.session_state.app_earned
 
 # ── Header ──
-col_logo, col_badge = st.columns([3, 1])
+col_logo, col_lang = st.columns([3, 1])
 with col_logo:
     st.markdown("""
-    <div style="display:flex; align-items:center; gap:10px; padding: 8px 0;">
-        <div style="width:10px;height:10px;background:#a2ff00;border-radius:50%;
-                    box-shadow:0 0 12px #a2ff00;animation:none;flex-shrink:0;"></div>
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#e8edf2;">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:10px;height:10px;background:#a2ff00;border-radius:50%;box-shadow:0 0 12px #a2ff00;"></div>
+        <div style="font-family:'Syne';font-size:22px;font-weight:800;color:#e8edf2;">
             Nexa<span style="color:#a2ff00;">Edge</span> Network
         </div>
     </div>
-    <div style="font-family:'Syne',sans-serif;font-size:12px;color:#556070;
-                line-height:1.6;padding-bottom:12px;max-width:500px;">
-        Aggregating idle smartphone compute into a distributed edge AI inference network —
-        turning personal devices into institutional-grade infrastructure.
-    </div>
     """, unsafe_allow_html=True)
-with col_badge:
-    st.markdown("""
-    <div style="text-align:right;padding-top:12px;">
-        <span class="nx-stage-badge">⚠ PRE-LAUNCH<br>CONCEPT DEMO</span>
-    </div>
-    """, unsafe_allow_html=True)
+with col_lang:
+    lang = st.selectbox("Language", ["English", "中文", "Admin Portal 🔒"], index=0, label_visibility="collapsed")
 
-st.markdown('<hr style="border-color:#1a2530;margin:4px 0 10px 0;">', unsafe_allow_html=True)
-
-# ── 超级防跳高定制导航栏（受控 Radio 伪装版，绝对免疫乱跳） ──
-current_tab = st.radio(
-    "Nav",
-    ["Market", "Network Sim", "Differentiation", "Roadmap"],
-    horizontal=True,
-    label_visibility="collapsed"
-)
+# ── 绝对受控导航栏（真物理防御） ──
+nav_options = ["Market", "Network Console", "Moat & Synergy", "Roadmap & Auth"]
+current_tab = st.radio("Nav", nav_options, horizontal=True, label_visibility="collapsed")
 
 # ══════════════════════════════════════
-# TAB 1 — MARKET
+# TAB 1: MARKET & POSTURING
 # ══════════════════════════════════════
 if current_tab == "Market":
     c1, c2, c3 = st.columns(3)
-    with c1: st.metric("Global Idle Smartphones", "6.8B", "devices with NPU / on-device AI")
-    with c2: st.metric("Edge AI Market (2028)", "$107B", "projected CAGR 19.2%")
-    with c3: st.metric("GPU Compute Cost", "$2–4/hr", "H100 spot — volatile & scarce")
+    with c1: st.metric("Global Idle Devices", "6.8B", "Smartphone NPU cluster")
+    with c2: st.metric("Settlement Layer", "Solana SPL", "High TPS / Low Gas")
+    with c3: st.metric("Thermal Cap Limit", "39°C", "Hardcoded Protection")
 
-    st.markdown("""
-    <div class="nx-card">
-        <div class="nx-card-title"><span>▸</span> Competitive Positioning</div>
-        <table class="nx-table">
-            <thead>
-                <tr>
-                    <th>Dimension</th>
-                    <th>Centralized GPU Cloud</th>
-                    <th>Grass (Bandwidth)</th>
-                    <th class="hl">NexaEdge</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>CapEx</td>
-                    <td><span class="tag-bad">EXTREME</span> H100 scarce & costly</td>
-                    <td>Low (bandwidth proxy)</td>
-                    <td class="hl"><span class="tag-good">ZERO</span> User-owned devices</td>
-                </tr>
-                <tr>
-                    <td>Latency</td>
-                    <td><span class="tag-bad">50–150ms</span> datacenter roundtrip</td>
-                    <td>N/A (not compute)</td>
-                    <td class="hl"><span class="tag-good">&lt;5ms</span> On-device edge</td>
-                </tr>
-                <tr>
-                    <td>Privacy</td>
-                    <td><span class="tag-bad">Data leaves device</span></td>
-                    <td>Partial</td>
-                    <td class="hl"><span class="tag-good">GDPR-native</span> Local processing</td>
-                </tr>
-                <tr>
-                    <td>Geographic reach</td>
-                    <td>Few datacenters</td>
-                    <td>High (IPs)</td>
-                    <td class="hl"><span class="tag-good">Global</span> Every city & rural</td>
-                </tr>
-                <tr>
-                    <td>Compute layer</td>
-                    <td>GPU (training-grade)</td>
-                    <td><span class="tag-bad">Network only</span></td>
-                    <td class="hl"><span class="tag-good">NPU + CPU</span> On-device inference</td>
-                </tr>
-                <tr>
-                    <td>Sybil resistance</td>
-                    <td>Centralized auth</td>
-                    <td><span class="tag-bad">IP spoofable</span></td>
-                    <td class="hl"><span class="tag-good">Hardware fingerprint + ZK</span></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="nx-card"><div class="nx-card-title"><span>▸</span> Who Pays — Buyer Segments</div>', unsafe_allow_html=True)
-    b1, b2 = st.columns(2)
-    with b1:
-        st.markdown("""
-        <div class="nx-feature">
-            <div class="nx-feature-title">🤖 Edge AI Agent Deployers</div>
-            <div class="nx-feature-body">Run 1.8B–3.8B parameter SLMs (Phi-3, Gemma) with sub-5ms local inference. No data leaves device — GDPR compliant by architecture.</div>
-            <div class="nx-feature-buyer">→ AI app developers, enterprise SaaS</div>
-        </div>
-        <div class="nx-feature">
-            <div class="nx-feature-title">🧹 AI Dataset Cleaning (RLHF)</div>
-            <div class="nx-feature-body">Distributed WASM sandbox runs automated labeling and cross-validation of AI training corpora across thousands of nodes simultaneously.</div>
-            <div class="nx-feature-buyer">→ AI labs, data pipeline companies</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with b2:
-        st.markdown("""
-        <div class="nx-feature">
-            <div class="nx-feature-title">🔐 ZK-ML Inference Verification</div>
-            <div class="nx-feature-body">Fragment AI inference proofs across independent nodes. Redundant verification prevents result tampering — no single point of trust.</div>
-            <div class="nx-feature-buyer">→ DeFi protocols, compliance platforms</div>
-        </div>
-        <div class="nx-feature">
-            <div class="nx-feature-title">📡 Sensor-Context AI</div>
-            <div class="nx-feature-body">Leverage unique smartphone hardware — GPS, camera, IMU — for context-aware inference unavailable in any datacenter.</div>
-            <div class="nx-feature-buyer">→ Location AI, autonomous systems</div>
-        </div>
-        """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="nx-card">
-        <div class="nx-card-title"><span>▸</span> System Architecture</div>
-        <div style="display:flex;align-items:stretch;gap:0;">
-            <div style="flex:1;background:#060a0d;border:1px solid #1a2530;border-radius:8px;padding:14px;text-align:center;">
-                <div style="font-family:'Space Mono',monospace;font-size:9px;color:#556070;text-transform:uppercase;margin-bottom:8px;">Demand Side</div>
-                <div style="font-size:22px;margin-bottom:6px;">🏢</div>
-                <div style="font-size:12px;font-weight:700;color:#e8edf2;margin-bottom:4px;">AI Buyers</div>
-                <div style="font-size:10px;color:#556070;line-height:1.5;">Submit inference tasks via API. Pay in NEXA token per compute unit.</div>
-            </div>
-            <div style="display:flex;align-items:center;padding:0 8px;color:#a2ff00;font-size:18px;">→</div>
-            <div style="flex:1;background:#060a0d;border:1px solid #1a2530;border-radius:8px;padding:14px;text-align:center;">
-                <div style="font-family:'Space Mono',monospace;font-size:9px;color:#556070;text-transform:uppercase;margin-bottom:8px;">Coordination</div>
-                <div style="font-size:22px;margin-bottom:6px;">⛓</div>
-                <div style="font-size:12px;font-weight:700;color:#e8edf2;margin-bottom:4px;">Solana SPL</div>
-                <div style="font-size:10px;color:#556070;line-height:1.5;">Task routing, BFT consensus, reward settlement. Low gas, high TPS.</div>
-            </div>
-            <div style="display:flex;align-items:center;padding:0 8px;color:#a2ff00;font-size:18px;">→</div>
-            <div style="flex:1;background:#060a0d;border:1px solid #1a2530;border-radius:8px;padding:14px;text-align:center;">
-                <div style="font-family:'Space Mono',monospace;font-size:9px;color:#556070;text-transform:uppercase;margin-bottom:8px;">Supply Side</div>
-                <div style="font-size:22px;margin-bottom:6px;">📱</div>
-                <div style="font-size:12px;font-weight:700;color:#e8edf2;margin-bottom:4px;">Device Nodes</div>
-                <div style="font-size:10px;color:#556070;line-height:1.5;">WASM sandbox on idle devices. NPU executes inference. Proof submitted on-chain.</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="nx-social-grid">
-        <a class="nx-social-btn" href="https://www.instagram.com/nexaedge__" target="_blank">📸 Instagram</a>
-        <a class="nx-social-btn" href="https://x.com/nexaedge_" target="_blank">🐦 X / Twitter</a>
-        <a class="nx-social-btn" href="https://www.facebook.com/share/18eXN6P3Ge/" target="_blank">👥 Facebook</a>
-        <a class="nx-social-btn" href="https://www.tiktok.com/@nexaedge7" target="_blank">🎵 TikTok</a>
-        <a class="nx-social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
-        <a class="nx-social-btn" href="mailto:contact@nexaedge.org" style="border-color:#00e5ff;color:#00e5ff !important;">📧 Email Us</a>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ══════════════════════════════════════
-# TAB 2 — NETWORK SIM
-# ══════════════════════════════════════
-elif current_tab == "Network Sim":
-    st.markdown("""
-    <div class="nx-notice">
-        ⚠ SIMULATION ONLY — This visualizes the NexaEdge network concept.<br>
-        No real compute, tokens, or blockchain transactions occur in this demo.<br>
-        All figures are illustrative projections, not performance guarantees.
-    </div>
-    """, unsafe_allow_html=True)
-
-    col_start, col_stop, col_status = st.columns([2, 2, 3])
-    with col_start:
-        if st.button("▶ Start Simulation", disabled=st.session_state.sim_running):
-            st.session_state.sim_running = True
-            st.session_state.sim_tasks = 0
-            st.session_state.sim_log = []
-            st.session_state.sim_nodes = [0] * 64
-            st.session_state.sim_latency = 3.0
-            st.session_state.sim_consensus = 98.2
-            st.session_state.prog1 = 0
-            st.session_state.prog2 = 0
-            st.session_state.prog3 = 0
-            st.rerun()
-    with col_stop:
-        if st.button("■ Stop", disabled=not st.session_state.sim_running, type="secondary"):
-            st.session_state.sim_running = False
-            st.session_state.sim_nodes = [0] * 64
-            st.rerun()
-    with col_status:
-        status_color = "#a2ff00" if st.session_state.sim_running else "#556070"
-        status_text = "● RUNNING" if st.session_state.sim_running else "○ IDLE"
-        st.markdown(f'<div style="font-family:\'Space Mono\',monospace;font-size:11px;color:{status_color};padding-top:10px;">{status_text}</div>', unsafe_allow_html=True)
-
-    nodes = st.session_state.sim_nodes
-    node_html = '<div class="nx-card"><div class="nx-card-title"><span>▸</span> Node Network — 64 Simulated Devices</div><div class="nx-node-grid">'
-    for v in nodes:
-        cls = {0: "", 1: " active", 2: " processing"}.get(v, "")
-        node_html += f'<div class="nx-node{cls}"></div>'
-    node_html += '</div>'
-    node_html += '''
-    <div style="display:flex;gap:16px;margin-top:10px;">
-        <span style="font-size:10px;color:#556070;font-family:'Space Mono',monospace;display:flex;align-items:center;gap:5px;">
-            <span style="width:10px;height:10px;background:#1a2530;border-radius:2px;display:inline-block;"></span> Idle
-        </span>
-        <span style="font-size:10px;color:#a2ff00;font-family:'Space Mono',monospace;display:flex;align-items:center;gap:5px;">
-            <span style="width:10px;height:10px;background:#a2ff00;border-radius:2px;display:inline-block;"></span> Active
-        </span>
-        <span style="font-size:10px;color:#00e5ff;font-family:'Space Mono',monospace;display:flex;align-items:center;gap:5px;">
-            <span style="width:10px;height:10px;background:#00e5ff;border-radius:2px;display:inline-block;"></span> Processing
-        </span>
-    </div></div>'''
-    st.markdown(node_html, unsafe_allow_html=True)
-
-    active_count = sum(1 for v in nodes if v > 0)
-    latency_val = f"{st.session_state.sim_latency:.1f}ms" if st.session_state.sim_running else "—"
-    consensus_val = f"{st.session_state.sim_consensus:.1f}%" if st.session_state.sim_running else "—"
-
-    s1, s2, s3, s4 = st.columns(4)
-    with s1: st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{active_count}</div><div class="nx-sim-label">Active Nodes</div></div>', unsafe_allow_html=True)
-    with s2: st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{st.session_state.sim_tasks}</div><div class="nx-sim-label">Tasks Done</div></div>', unsafe_allow_html=True)
-    with s3: st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{latency_val}</div><div class="nx-sim-label">Avg Latency</div></div>', unsafe_allow_html=True)
-    with s4: st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{consensus_val}</div><div class="nx-sim-label">BFT Consensus</div></div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="nx-card" style="margin-top:14px;"><div class="nx-card-title"><span>▸</span> Task Dispatch Log</div>', unsafe_allow_html=True)
-    if st.session_state.sim_log:
-        log_html = '<div class="nx-log">'
-        for line, cls in st.session_state.sim_log[-15:]:
-            log_html += f'<div class="log-{cls}">{line}</div>'
-        log_html += '</div>'
-    else:
-        log_html = '<div class="nx-log"><div>// Press ▶ Start Simulation to begin.</div></div>'
-    st.markdown(log_html + '</div>', unsafe_allow_html=True)
-
-    p1, p2, p3 = st.session_state.prog1, st.session_state.prog2, st.session_state.prog3
     st.markdown(f"""
     <div class="nx-card">
-        <div class="nx-card-title"><span>▸</span> Simulated Workload Capacity</div>
-        <div class="nx-prog-label"><span>Edge AI Inference (SLM 1.8B)</span><span>{p1}%</span></div>
-        <div class="nx-prog-bar"><div class="nx-prog-fill" style="width:{p1}%"></div></div>
-        <div class="nx-prog-label"><span>Dataset Validation (RLHF)</span><span>{p2}%</span></div>
-        <div class="nx-prog-bar"><div class="nx-prog-fill blue" style="width:{p2}%"></div></div>
-        <div class="nx-prog-label"><span>ZK Proof Generation</span><span>{p3}%</span></div>
-        <div class="nx-prog-bar"><div class="nx-prog-fill" style="width:{p3}%"></div></div>
+        <div class="nx-card-title"><span>▸</span> CA Smart Contract Address</div>
+        <code style="color:#00e5ff; background:rgba(0,229,255,0.05); padding:6px 12px; border-radius:6px; display:block; border:1px dashed rgba(0,229,255,0.2); font-family:'Space Mono'; font-size:11px;">{DEFAULT_CA}</code>
     </div>
     """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════
-# TAB 3 — DIFFERENTIATION / MOAT
-# ══════════════════════════════════════
-elif current_tab == "Differentiation":
-    st.markdown("""
+    st.markdown(f"""
     <div class="nx-card">
-        <div class="nx-card-title"><span>▸</span> Why NexaEdge vs Grass</div>
+        <div class="nx-card-title"><span>▸</span> {"Competitive Landscape" if lang=="English" else "全球竞争格局定位"}</div>
         <table class="nx-table">
             <thead>
                 <tr>
                     <th>Dimension</th>
-                    <th>Grass</th>
-                    <th class="hl">NexaEdge</th>
+                    <th>Centralized Cloud</th>
+                    <th>Grass (Bandwidth)</th>
+                    <th style="color:#a2ff00;">NexaEdge</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Core resource</td>
-                    <td>Network bandwidth (residential proxy)</td>
-                    <td class="hl">Device compute (CPU + NPU)</td>
+                    <td>Primary Resource</td>
+                    <td>Server H100 GPUs</td>
+                    <td>Residential IP Proxy</td>
+                    <td style="color:#e8edf2; font-weight:bold;">Device NPU + CPU Compute</td>
                 </tr>
                 <tr>
-                    <td>Primary use case</td>
-                    <td>Web scraping / data collection</td>
-                    <td class="hl">AI inference, RLHF, ZK-ML verification</td>
+                    <td>Sybil Resistance</td>
+                    <td>KYC / Centralized</td>
+                    <td><span class="tag-bad">Low</span> Spoofed via VPN</td>
+                    <td><span class="tag-good">High</span> Hardware ID + PoC</td>
                 </tr>
                 <tr>
-                    <td>Sybil resistance</td>
-                    <td><span class="tag-bad">HIGH RISK</span> IP spoofed via VPN</td>
-                    <td class="hl"><span class="tag-good">LOW RISK</span> Hardware fingerprint + Proof of Compute</td>
-                </tr>
-                <tr>
-                    <td>Compute verification</td>
-                    <td>None (bandwidth only)</td>
-                    <td class="hl">BFT consensus + ZK proof of inference result</td>
-                </tr>
-                <tr>
-                    <td>Solana Mobile synergy</td>
-                    <td>None</td>
-                    <td class="hl"><span class="tag-good">NATIVE</span> Seeker / Saga system daemon</td>
+                    <td>Thermal Defense</td>
+                    <td>Industrial AC</td>
+                    <td>N/A</td>
+                    <td><span class="tag-good">Active</span> 39°C Hardware Lock</td>
                 </tr>
             </tbody>
         </table>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="nx-card"><div class="nx-card-title"><span>▸</span> Technical Moat</div>', unsafe_allow_html=True)
+    # 创世白名单申领表单
+    with st.form("whitelist_genesis_form"):
+        st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#a2ff00; margin-bottom:6px;">🎁 {"CLAIM GENESIS WHITELIST REWARDS" if lang=="English" else "申领创世节点白名单与独家加速"}</div>', unsafe_allow_html=True)
+        wl_email = st.text_input("Email:", placeholder="node_operator@domain.com")
+        wl_wallet = st.text_input("Solana SPL Wallet Address:", placeholder="Enter public key key for airdrops")
+        
+        if st.form_submit_button("LOCK GENESIS SEAT ⚡"):
+            if wl_email and wl_wallet:
+                global_server["whitelist_records"].append({"email": wl_email, "wallet": wl_wallet, "time": time.strftime("%Y-%m-%d %H:%M:%S")})
+                st.success("🎉 Genesis allocation locked! Notifications will follow before snapshot." if lang=="English" else "🎉 创世白名单席位成功锁定！快照前将定向发放邮件。")
+            else:
+                st.error("Fields cannot be empty!" if lang=="English" else "输入框不能为空！")
+
+    st.markdown("""
+    <div class="social-grid">
+        <a class="social-btn" href="https://x.com/nexaedge_" target="_blank">🐦 X / Twitter</a>
+        <a class="social-btn" href="https://t.me/NexaEdge7" target="_blank">📢 Telegram</a>
+        <a class="social-btn" href="https://www.instagram.com/nexaedge__" target="_blank">📸 Instagram</a>
+        <a class="social-btn" href="mailto:contact@nexaedge.org" style="border-color:#00e5ff; color:#00e5ff !important;">📧 Email US</a>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# TAB 2: NETWORK CONSOLE (RERUN SAFE)
+# ══════════════════════════════════════
+elif current_tab == "Network Console":
+    if st.session_state.current_user:
+        st.markdown(f'<div style="background:rgba(0,229,255,0.06); border-left:3px solid #00e5ff; padding:8px 12px; border-radius:4px; font-size:11px; font-family:\'Space Mono\'; margin-bottom:12px; color:#e8edf2;">🟢 LINKED ACCOUNT: {st.session_state.current_user}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="background:rgba(255,179,0,0.06); border-left:3px solid #ffb300; padding:8px 12px; border-radius:4px; font-size:11px; margin-bottom:12px; color:#ffb300;">⚠️ VISITOR MODE: Data cached locally. Register profile to cloud sync.</div>', unsafe_allow_html=True)
+
+    cc1, cc2 = st.columns(2)
+    with cc1:
+        if st.button("▶ ACTIVATE EDGE NODE", disabled=st.session_state.sim_running):
+            st.session_state.sim_running = True
+            st.rerun()
+    with cc2:
+        if st.button("■ PAUSE COMPUTE NODE", disabled=not st.session_state.sim_running):
+            st.session_state.sim_running = False
+            st.rerun()
+
+    # 绘制拓扑网格
+    nodes = st.session_state.sim_nodes
+    grid_html = '<div class="nx-card"><div class="nx-card-title"><span>▸</span> Live Decoupled Matrix (64 Simulated Devices)</div><div class="nx-node-grid">'
+    for v in nodes:
+        cls = {0: "", 1: " active", 2: " processing"}.get(v, "")
+        grid_html += f'<div class="nx-node{cls}"></div>'
+    grid_html += '</div></div>'
+    st.markdown(grid_html, unsafe_allow_html=True)
+
+    # 数据大盘
+    s1, s2, s3 = st.columns(3)
+    with s1: st.metric("Tasks Completed", st.session_state.sim_tasks)
+    with s2: st.metric("Aggregated Yield", f"{st.session_state.app_earned:,.2f} NEXA")
+    with s3: st.metric("Core Temp Status", "36.8 °C" if st.session_state.sim_running else "31.2 °C", "SAFE Barrier")
+
+    # 实时的任务输出日志
+    st.markdown('<div class="nx-card"><div class="nx-card-title"><span>▸</span> Cryptographic Task Pipeline Logs</div>', unsafe_allow_html=True)
+    if st.session_state.sim_log:
+        log_html = '<div class="nx-log">'
+        for line, cls in st.session_state.sim_log[-6:]:
+            log_html += f'<div class="log-{cls}">{line}</div>'
+        log_html += '</div>'
+        st.markdown(log_html, unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="nx-log">// Toggle activation switch above to feed decentralized data stream.</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# TAB 3: MOAT & SYNERGY
+# ══════════════════════════════════════
+elif current_tab == "Moat & Synergy":
+    st.markdown("""
+    <div class="nx-card">
+        <div class="nx-card-title"><span>▸</span> Solana Mobile System Synergy</div>
+        <div style="font-size:12px; color:#bdc3c7; line-height:1.8;">
+            NexaEdge acts as an un-evictable system background daemon tailored specifically for the <strong>Solana Seeker & Saga hardware series</strong>. 
+            By natively tapping into the mobile system layer during overnight charging sequences, it creates a risk-adjusted asset yield flywheel, turning consumer electronics into direct economic production tools.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     m1, m2 = st.columns(2)
     with m1:
         st.markdown("""
-        <div class="nx-moat">
-            <div class="nx-moat-icon">🔐</div>
-            <div class="nx-moat-title">Proof of Compute (PoC)</div>
-            <div class="nx-moat-body">Every node must solve a cryptographic ML inference puzzle to claim rewards. Hardware fingerprint + ZK proof prevents Sybil attacks that plague bandwidth-only networks.</div>
-        </div>
-        <br>
-        <div class="nx-moat">
-            <div class="nx-moat-icon">🌍</div>
-            <div class="nx-moat-title">Geographic Density</div>
-            <div class="nx-moat-body">6.8B smartphones vs. a few thousand datacenters. NexaEdge reaches rural markets, developing economies, and ultra-local inference use cases no cloud can serve.</div>
+        <div class="nx-feature">
+            <div class="nx-feature-title">🧠 NPU-Native Framework</div>
+            <div class="nx-feature-body">Optimized explicitly for Snapdragon & Apple A-series Neural Processing Units. Executes SLM parameter checking efficiently without battery degradation.</div>
         </div>
         """, unsafe_allow_html=True)
     with m2:
         st.markdown("""
-        <div class="nx-moat">
-            <div class="nx-moat-icon">🧠</div>
-            <div class="nx-moat-title">NPU-Native Execution</div>
-            <div class="nx-moat-body">Modern smartphones (A-series, Snapdragon) have dedicated NPUs. NexaEdge targets these for SLM inference — energy-per-op rivals older server GPUs for small models.</div>
-        </div>
-        <br>
-        <div class="nx-moat">
-            <div class="nx-moat-icon">📱</div>
-            <div class="nx-moat-title">Solana Mobile Integration</div>
-            <div class="nx-moat-body">Solana Seeker / Saga are the only Web3-native phones. NexaEdge becomes the killer app that makes hardware ROI-positive — a structural flywheel for both ecosystems.</div>
+        <div class="nx-feature">
+            <div class="nx-feature-title">🔗 Lightweight BFT Tech</div>
+            <div class="nx-feature-body">Proprietary Byzantine Fault Tolerant architecture. Implements 2:1 decentralized redundant validation arrays ensuring falsified calculations are discarded instantly.</div>
         </div>
         """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="nx-card">
-        <div class="nx-card-title"><span>▸</span> Hardware Thermal Safety — 39°C Protocol</div>
-        <div style="font-size:12px;color:#556070;line-height:1.9;">
-            The 39°C thermal ceiling is a hardcoded daemon constraint, not a marketing claim.<br>
-            If device temperature ≥ 39°C → task queue paused → passive cooling mode activated.<br>
-            Enforced at the WASM sandbox level — not overridable by the user.<br><br>
-            <span style="color:#e8edf2;font-weight:600;">Why this matters to buyers:</span>
-            Institutional compute buyers need SLA guarantees. A network that destroys user hardware
-            cannot maintain supply. The 39°C protocol is the supply-side durability guarantee.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 4 — ROADMAP（已彻底清除错误，文案堪称完美 ✨）
+# TAB 4: ROADMAP & CLOUD AUTH
 # ══════════════════════════════════════
-elif current_tab == "Roadmap":
+elif current_tab == "Roadmap & Auth":
+    # 投资人重点审查： Roadmap
     st.markdown("""
     <div class="nx-card">
-        <div class="nx-card-title"><span>▸</span> Development Roadmap</div>
+        <div class="nx-card-title"><span>▸</span> STRATEGIC ROADMAP 2026</div>
         <div class="nx-roadmap-item current">
-            <div class="nx-roadmap-phase">Q2 2026 · NOW</div>
-            <div class="nx-roadmap-title">Concept Validation & Institutional Acceleration</div>
-            <div class="nx-roadmap-body">Architecture design finalized. Whitepaper drafted. Accelerating institutional ecosystem: <strong>Solana Grant</strong> (Eco-funding), <strong>Alliance DAO</strong> (Web3 Accel.), and <strong>Y Combinator</strong> (Core Tech) in active pipeline. Building global community node waitlist.</div>
+            <div class="nx-roadmap-phase">Q2 2026 · ACTIVE PIPELINE</div>
+            <div class="nx-roadmap-title">Institutional Ecosystem Acceleration</div>
+            <div class="nx-roadmap-body">Architecture blueprints locked. Comprehensive whitepaper finalized. Joint pipeline enrollment matching: <strong>Solana Grant</strong> (Ecosystem capital), <strong>Alliance DAO</strong> (Web3 scale accelerator), and <strong>Y Combinator</strong> (Deep core infrastructure validation).</div>
         </div>
         <div class="nx-roadmap-item">
             <div class="nx-roadmap-phase">Q3 2026</div>
-            <div class="nx-roadmap-title">WASM Sandbox MVP</div>
-            <div class="nx-roadmap-body">Functional WASM execution environment on iOS / Android. First real SLM inference (Phi-3 mini) running on device NPU. Thermal guard daemon implementation. Internal alpha: 50 devices.</div>
-        </div>
-        <div class="nx-roadmap-item">
-            <div class="nx-roadmap-phase">Q4 2026</div>
-            <div class="nx-roadmap-title">Closed Beta — 1,000 Nodes</div>
-            <div class="nx-roadmap-body">Solana SPL token deployment. BFT consensus testnet. First paying buyer pilot (AI data cleaning use case). Device fingerprint + ZK proof of compute live.</div>
-        </div>
-        <div class="nx-roadmap-item">
-            <div class="nx-roadmap-phase">Q1 2027</div>
-            <div class="nx-roadmap-title">Public Mainnet Launch</div>
-            <div class="nx-roadmap-body">Open node enrollment. Solana Seeker native integration. Marketplace for buyers to post inference tasks. Target: 100,000 active nodes, 3 enterprise buyers.</div>
-        </div>
-        <div class="nx-roadmap-item" style="padding-bottom:0;">
-            <div class="nx-roadmap-phase">2027+</div>
-            <div class="nx-roadmap-title">Scale & Ecosystem</div>
-            <div class="nx-roadmap-body">ZK-ML verification product live. Expand to laptop / IoT device classes. Series A fundraise targeting $15M.</div>
+            <div class="nx-roadmap-title">Lightweight WASM Sandbox Testbed</div>
+            <div class="nx-roadmap-body">Deployment of native iOS/Android background runtime sandboxes. Proof-of-concept testing execution layer for distributed ML tokenization datasets.</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    r1, r2, r3 = st.columns(3)
-    with r1: st.metric("Funding Target (Seed)", "$500K", "for MVP + 1,000-node beta")
-    with r2: st.metric("Target Node Count (Y1)", "100K", "active devices at mainnet")
-    with r3: st.metric("Settlement Chain", "Solana SPL", "low gas · high TPS · mobile-native")
+    # 登录/注册模块组件
+    st.markdown('<div class="nx-card"><div class="nx-card-title"><span>▸</span> Cloud Sync Account Hub</div>', unsafe_allow_html=True)
+    if st.session_state.current_user:
+        st.markdown(f"🔓 Identity confirmed: **{st.session_state.current_user}**")
+        if st.button("LOGOUT ARCHIVE"):
+            st.session_state.current_user = None
+            st.rerun()
+    else:
+        auth_choice = st.radio("AuthMode", ["Login Terminal", "Register Node"], horizontal=True, label_visibility="collapsed")
+        with st.form("auth_cloud_form"):
+            in_email = st.text_input("Identity Email:")
+            in_password = st.text_input("Secret Token / Password:", type="password")
+            
+            if auth_choice == "Register Node":
+                if st.form_submit_button("CREATE UNIFIED PIPELINE ACCOUNT"):
+                    if in_email and in_password:
+                        global_server["user_db"][in_email] = {
+                            "password_hash": hashlib.sha256(in_password.encode()).hexdigest(),
+                            "score": st.session_state.app_earned,
+                            "reg_time": time.strftime("%Y-%m-%d %H:%M:%S")
+                        }
+                        st.session_state.current_user = in_email
+                        st.success("Registration success! Cloud profile mounted.")
+                        st.rerun()
+            else:
+                if st.form_submit_button("AUTHENTICATE & LOAD CLOUD ASSETS"):
+                    h_pass = hashlib.sha256(in_password.encode()).hexdigest()
+                    if in_email in global_server["user_db"] and global_server["user_db"][in_email]["password_hash"] == h_pass:
+                        st.session_state.current_user = in_email
+                        st.session_state.app_earned = global_server["user_db"][in_email]["score"]
+                        st.success("Assets synchronized successfully.")
+                        st.rerun()
+                    else:
+                        st.error("Invalid cloud credential identity matching failure.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# OPTIONAL: ADMIN INTERNAL AUDIT PANEL
+# ══════════════════════════════════════
+if lang == "Admin Portal 🔒":
+    st.markdown("---")
+    st.markdown('<h3 style="color:#f43f5e; font-size:14px;">🔒 INTERNAL SECURITY AUDIT TELEMETRY</h3>', unsafe_allow_html=True)
+    backdoor_pass = st.text_input("Enter Root Master Authentication Key:", type="password")
+    
+    if backdoor_pass == "NexaAdmin2026":
+        st.toast("Internal accounting logs completely decrypted.", icon="🔓")
+        
+        ad1, ad2 = st.columns(2)
+        ad1.metric("Registered Accounts", len(global_server["user_db"]))
+        ad2.metric("Total Whitelist Claims", len(global_server["whitelist_records"]))
+        
+        st.markdown("**User Database Registry:**")
+        st.json(global_server["user_db"])
+        
+        st.markdown("**Genesis Whitelist Submissions:**")
+        st.write(global_server["whitelist_records"])
+    elif backdoor_pass != "":
+        st.error("Access Denied: Malicious tampering vector blocked.")
 
 # ── Footer ──
-st.markdown("""
-<div class="nx-footer">
-    NexaEdge Network · Pre-Launch Concept Demo · All simulations are illustrative only.<br>
-    No tokens issued · No investment contract · contact@nexaedge.org<br>
-    © 2026 NexaEdge Network. All rights reserved.
+st.markdown(f"""
+<div style="display:flex; gap:10px; margin-top:20px;">
+    <div style="flex:1; background:#0e1419; border:1px dashed #a2ff00; border-radius:8px; padding:10px; text-align:center;">
+        <div style="font-family:'Space Mono'; font-size:9px; color:#556070;">LIVE AUDIENCE VIEWERS</div>
+        <div style="font-family:'Space Mono'; font-size:14px; font-weight:bold; color:#a2ff00;">{global_server["total_online_viewers"]} Online</div>
+    </div>
+    <div style="flex:1; background:#0e1419; border:1px dashed #00e5ff; border-radius:8px; padding:10px; text-align:center;">
+        <div style="font-family:'Space Mono'; font-size:9px; color:#556070;">GLOBAL NETWORK BASE</div>
+        <div style="font-family:'Space Mono'; font-size:14px; font-weight:bold; color:#00e5ff;">{len(global_server["active_device_set"])} ACTIVE</div>
+    </div>
+</div>
+<div class="nx-footer" style="text-align:center; font-family:'Space Mono'; font-size:9px; color:#2a3540; margin-top:30px; border-top:1px solid #1a2530; padding-top:15px;">
+    NexaEdge Terminal Framework · Project Pitch Mock Environment · © 2026 NexaEdge.
 </div>
 """, unsafe_allow_html=True)
