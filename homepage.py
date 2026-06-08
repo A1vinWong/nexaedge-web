@@ -499,7 +499,7 @@ with col_badge:
 
 st.markdown('<hr style="border-color:#1a2530;margin:4px 0 10px 0;">', unsafe_allow_html=True)
 
-# ── 超级防跳高定制导航栏（本质是Radio，通过CSS伪装成Tab，绝不乱跳） ──
+# ── 超级防跳高定制导航栏（受控 Radio 伪装版，绝不乱跳） ──
 current_tab = st.radio(
     "Nav",
     ["Market", "Network Sim", "Differentiation", "Roadmap"],
@@ -725,9 +725,9 @@ elif current_tab == "Network Sim":
     </div>
     """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════
+# ──════════════════════════════════════
 # TAB 3 — DIFFERENTIATION / MOAT
-# ══════════════════════════════════════
+# ──════════════════════════════════════
 elif current_tab == "Differentiation":
     st.markdown("""
     <div class="nx-card">
@@ -818,7 +818,7 @@ elif current_tab == "Differentiation":
     """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 4 — ROADMAP
+# TAB 4 — ROADMAP (已为您升级文案 🚀)
 # ══════════════════════════════════════
 elif current_tab == "Roadmap":
     st.markdown("""
@@ -826,8 +826,8 @@ elif current_tab == "Roadmap":
         <div class="nx-card-title"><span>▸</span> Development Roadmap</div>
         <div class="nx-roadmap-item current">
             <div class="nx-roadmap-phase">Q2 2026 · NOW</div>
-            <div class="nx-roadmap-title">Concept Validation & Grant Applications</div>
-            <div class="nx-roadmap-body">Architecture design finalized. Whitepaper drafted. Applied to Solana Grant, Alliance DAO, Y Combinator. Building community waitlist.</div>
+            <div class="nx-roadmap-title">Concept Validation & Institutional Acceleration</div>
+            <div class="nx-roadmap-body">Architecture design finalized. Whitepaper drafted. Accelerating institutional ecosystem: <strong>Solana Grant</strong> (Eco-funding), <strong>Alliance DAO</strong> (Web3 Accel.), and <strong>YouTube / Y Combinator</strong> (Core Tech) in active pipeline. Building global community node waitlist.</div>
         </div>
         <div class="nx-roadmap-item">
             <div class="nx-roadmap-phase">Q3 2026</div>
