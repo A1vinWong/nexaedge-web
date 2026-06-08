@@ -4,10 +4,51 @@ import time
 import random
 import pandas as pd
 import hashlib
+import json
 from PIL import Image, ImageDraw, ImageFont
 from streamlit_autorefresh import st_autorefresh
 
 DEFAULT_CA = "D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2"
+DB_FILE = "nexa_users_db.json"
+
+# 初始化本地 JSON 数据库，确保数据持久化且多用户隔离
+def load_local_db():
+    if not os.path.exists(DB_FILE):
+        default_db = {
+            "user_db": {
+                "contact@nexaedge.org": {
+                    "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
+                    "score": 1479.0,
+                    "reg_time": "2026-05-18 14:22:05",
+                    "referral_code": "NX-OFF-ICL"
+                }
+            },
+            "whitelist_emails": [],
+            "whitelist_wallets": []
+        }
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(default_db, f, ensure_ascii=False, indent=4)
+        return default_db
+    try:
+        with open(DB_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return {"user_db": {}, "whitelist_emails": [], "whitelist_wallets": []}
+
+def save_local_db(db_data):
+    with open(DB_FILE, "w", encoding="utf-8") as f:
+        json.dump(db_data, f, ensure_ascii=False, indent=4)
+
+# 仅保留非敏感的模拟运行时全局大盘统计
+@st.cache_resource
+def init_global_runtime_stats():
+    return {
+        "active_device_set": set(),
+        "total_online_viewers": random.randint(102, 125)
+    }
+
+global_db = load_local_db()
+runtime_stats = init_global_runtime_stats()
 
 st.set_page_config(
     page_title="NexaEdge Network | Official Node Gateway",
@@ -15,6 +56,7 @@ st.set_page_config(
     layout="centered"
 )
 
+# 样式注入保持不变
 st.markdown("""
     <style>
     .main .block-container { padding-top:1.0rem !important; padding-bottom:0.5rem !important; padding-left:0.8rem !important; padding-right:0.8rem !important; max-width:100% !important; }
@@ -69,29 +111,75 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-@st.cache_resource
-def init_global_network_server():
-    return {
-        "active_device_set": set(),
-        "total_online_viewers": random.randint(102, 125),
-        "device_balances": {},
-        "user_db": {
-            "contact@nexaedge.org": {
-                "password_hash": hashlib.sha256("nexa2026".encode()).hexdigest(),
-                "score": 1479.0,
-                "reg_time": "2026-05-18 14:22:05",
-                "referral_code": "NX-OFF-ICL"
-            }
-        },
-        "whitelist_emails": set(),
-        "whitelist_wallets": set(),
-    }
+# 安全提取设备指纹与 Header 兜底
+if "device_fingerprint" not in st.session_state:
+    try:
+        ctx_headers = st.context.headers
+        user_agent = ctx_headers.get("User-Agent", "Unknown-Device")
+        remote_ip = ctx_headers.get("X-Forwarded-For", "127.0.0.1")
+    except:
+        user_agent, remote_ip = "Fallback-Device", "127.0.0.1"
+    st.session_state.device_fingerprint = hashlib.md5(f"{user_agent}_{remote_ip}".encode()).hexdigest()[:12]
+
+dev_id = st.session_state.device_fingerprint
+
+if "current_user" not in st.session_state:
+    st.session_state.current_user = None
+
+if "session_id" not in st.session_state:
+    st.session_state.session_id = f"node_{dev_id}_{random.randint(1000, 9999)}"
+    runtime_stats["total_online_viewers"] += 1
+
+# 初始化 Session 局部变量
+if 'app_running' not in st.session_state: st.session_state.app_running = False
+if 'chart_history' not in st.session_state: st.session_state.chart_history = [19.2, 20.8, 18.1, 21.3, 19.0, 22.2, 18.9, 21.1, 20.5, 19.8, 18.2, 20.9]
+if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2
+if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
+
+if 'app_earned' not in st.session_state: st.session_state.app_earned = 0.0
+if 'total_energy_wh' not in st.session_state: st.session_state.total_energy_wh = 0.0
+if 'session_seconds' not in st.session_state: st.session_state.session_seconds = 0
+if 'last_user' not in st.session_state: st.session_state.last_user = "init_flag"
+
+# 账户切换或首次加载时，从持久化数据库同步状态
+if st.session_state.current_user:
+    email = st.session_state.current_user
+    if st.session_state.last_user != email:
+        st.session_state.app_earned = global_db["user_db"].get(email, {}).get("score", 0.0)
+        st.session_state.session_seconds = 0
+        st.session_state.total_energy_wh = 0.0
+        st.session_state.last_user = email
+else:
+    if st.session_state.last_user is not None:
+        st.session_state.app_earned = 0.0
+        st.session_state.session_seconds = 0
+        st.session_state.total_energy_wh = 0.0
+        st.session_state.last_user = None
+
+# 【核心重构逻辑】基于时间差的统一种子计算，杜绝双重累加
+if st.session_state.app_running and st.session_state.last_tick_time > 0:
+    current_unix = time.time()
+    elapsed_gap = int(current_unix - st.session_state.last_tick_time)
+    if elapsed_gap >= 1:
+        st.session_state.session_seconds += elapsed_gap
+        st.session_state.app_earned += elapsed_gap * 0.01
+        st.session_state.total_energy_wh += 5.1 * (elapsed_gap / 3600.0)
+        st.session_state.last_tick_time = current_unix
+        
+        if st.session_state.current_user:
+            global_db["user_db"][st.session_state.current_user]["score"] = st.session_state.app_earned
+            save_local_db(global_db)
+
+if st.session_state.app_running:
+    runtime_stats["active_device_set"].add(st.session_state.session_id)
+else:
+    runtime_stats["active_device_set"].discard(st.session_state.session_id)
 
 def generate_referral_code(email: str) -> str:
     h = hashlib.md5(email.encode()).hexdigest().upper()
     return "NX-" + h[:3] + "-" + h[3:6]
 
-def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
+def generate_referral_image(ref_code: str, output_path: str):
     base_img_path = "IMG_7859.jpeg"
     if not os.path.exists(base_img_path):
         img = Image.new("RGB", (1080, 1920), "#0b0f12")
@@ -108,34 +196,33 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
     ]
     def load_font(size):
         for fp in font_candidates:
-            try:
-                return ImageFont.truetype(fp, size)
-            except:
-                continue
-        try:
-            return ImageFont.load_default(size=size)
-        except:
-            return ImageFont.load_default()
+            try: return ImageFont.truetype(fp, size)
+            except: continue
+        try: return ImageFont.load_default(size=size)
+        except: return ImageFont.load_default()
+        
     font_url = load_font(60)
     font_code = load_font(75)
     line1 = "nexaedge.org"
     line2 = ref_code
+    
     def cx(text, font):
-        try:
-            w = draw.textlength(text, font=font)
+        try: w = draw.textlength(text, font=font)
         except AttributeError:
             bbox = font.getbbox(text)
             w = (bbox[2] - bbox[0]) if bbox else 300
         return max(0, (width - int(w)) // 2)
+        
     y1 = int(height * 0.890)
     y2 = y1 + 75 + 10
+    
     def outlined(pos, text, font, fill):
         ox, oy = pos
         for dx in range(-3, 4):
             for dy in range(-3, 4):
-                if dx or dy:
-                    draw.text((ox+dx, oy+dy), text, font=font, fill=(0,0,0))
+                if dx or dy: draw.text((ox+dx, oy+dy), text, font=font, fill=(0,0,0))
         draw.text(pos, text, font=font, fill=fill)
+        
     outlined((cx(line1, font_url), y1), line1, font_url, fill=(255,255,255))
     outlined((cx(line2, font_code), y2), line2, font_code, fill=(162,255,0))
     img.convert("RGB").save(output_path)
@@ -146,94 +233,21 @@ def get_cached_poster(ref_code: str, cache_key_name: str, cache_ref_key_name: st
     cached_ref  = st.session_state.get(cache_ref_key_name)
     if cached_path and cached_ref == ref_code and os.path.exists(cached_path):
         return cached_path
-    output_path = f"poster_{ref_code}.png"
+    output_path = f"poster_{hashlib.md5(ref_code.encode()).hexdigest()[:8]}.png"
     generate_referral_image(ref_code, output_path)
     st.session_state[cache_key_name] = output_path
     st.session_state[cache_ref_key_name] = ref_code
     return output_path
 
-
-global_server = init_global_network_server()
-
-if "device_fingerprint" not in st.session_state:
-    ctx_headers = st.context.headers
-    user_agent = ctx_headers.get("User-Agent", "Unknown-Device")
-    remote_ip = ctx_headers.get("X-Forwarded-For", "127.0.0.1")
-    st.session_state.device_fingerprint = hashlib.md5(f"{user_agent}_{remote_ip}".encode()).hexdigest()[:12]
-
-dev_id = st.session_state.device_fingerprint
-
-if "current_user" not in st.session_state:
-    st.session_state.current_user = None
-
-if dev_id not in global_server["device_balances"]:
-    global_server["device_balances"][dev_id] = {"app_earned": 0.0, "total_energy_wh": 0.0, "session_seconds": 0}
-
-def sync_data_from_source():
-    if st.session_state.current_user:
-        email = st.session_state.current_user
-        if 'app_earned' not in st.session_state or st.session_state.get('last_user') != email:
-            st.session_state.app_earned = global_server["user_db"][email]["score"]
-            st.session_state.total_energy_wh = global_server["device_balances"][dev_id]["total_energy_wh"]
-            st.session_state.session_seconds = global_server["device_balances"][dev_id]["session_seconds"]
-            st.session_state.last_user = email
-    else:
-        if 'app_earned' not in st.session_state or st.session_state.get('last_user') is not None:
-            st.session_state.app_earned = global_server["device_balances"][dev_id]["app_earned"]
-            st.session_state.total_energy_wh = global_server["device_balances"][dev_id]["total_energy_wh"]
-            st.session_state.session_seconds = global_server["device_balances"][dev_id]["session_seconds"]
-            st.session_state.last_user = None
-
-sync_data_from_source()
-
-if "session_id" not in st.session_state:
-    st.session_state.session_id = f"node_{dev_id}_{random.randint(1000, 9999)}"
-    global_server["total_online_viewers"] += 1
-
-if 'app_running' not in st.session_state: st.session_state.app_running = False
-if 'chart_history' not in st.session_state: st.session_state.chart_history = [19.2, 20.8, 18.1, 21.3, 19.0, 22.2, 18.9, 21.1, 20.5, 19.8, 18.2, 20.9]
-if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2
-if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
-
-if st.session_state.app_running:
-    global_server["active_device_set"].add(st.session_state.session_id)
-else:
-    global_server["active_device_set"].discard(st.session_state.session_id)
-
-if st.session_state.app_running and st.session_state.last_tick_time > 0:
-    current_unix = time.time()
-    elapsed_gap = int(current_unix - st.session_state.last_tick_time)
-    if elapsed_gap >= 1:
-        st.session_state.session_seconds += elapsed_gap
-        st.session_state.app_earned += elapsed_gap * 0.01
-        st.session_state.total_energy_wh += 5.1 * (elapsed_gap / 3600.0)
-        st.session_state.last_tick_time = current_unix
-        if st.session_state.current_user:
-            global_server["user_db"][st.session_state.current_user]["score"] = st.session_state.app_earned
-        else:
-            global_server["device_balances"][dev_id]["app_earned"] = st.session_state.app_earned
-        global_server["device_balances"][dev_id]["total_energy_wh"] = st.session_state.total_energy_wh
-        global_server["device_balances"][dev_id]["session_seconds"] = st.session_state.session_seconds
-
 # ── 顶栏 ──
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:30px; font-weight:800; margin-bottom:0px; padding-top:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
-
 lang = st.selectbox("🌐 Language", ["English", "中文"], index=0, label_visibility="collapsed")
 
-# ✅ 免责声明栏（双语）
 if lang == "中文":
     st.markdown('<div class="disclaimer-bar">🚧 预发布演示版 · NexaEdge 当前处于测试网模拟阶段。所有收益数据均为模拟展示，不代表真实代币发行。目前尚未分发任何代币，白名单登记仅代表早期社区资格。</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="disclaimer-bar">🚧 Pre-Launch Demo · NexaEdge is currently in testnet simulation phase. All earnings displayed are simulated and do not represent real token issuance. No tokens have been distributed. Whitelist registration is for early community access only.</div>', unsafe_allow_html=True)
-
-TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
-TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"]
-HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
-current_options = TIME_OPTIONS_ZH if lang == "中文" else TIME_OPTIONS_EN
-
-if lang == "中文":
     st.markdown('<p style="font-size:13px; color:#A2FF00; font-weight:bold; text-align:center; margin-top:2px; margin-bottom:8px;">让全球闲置手机，成为 AI 时代的高纯度分布式算力网络</p>', unsafe_allow_html=True)
 else:
+    st.markdown('<div class="disclaimer-bar">🚧 Pre-Launch Demo · NexaEdge is currently in testnet simulation phase. All earnings displayed are simulated and do not represent real token issuance. No tokens have been distributed. Whitelist registration is for early community access only.</div>', unsafe_allow_html=True)
     st.markdown('<p style="font-size:13px; color:#A2FF00; font-weight:bold; text-align:center; margin-top:2px; margin-bottom:8px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
 st.markdown('<div style="max-height:280px; overflow:hidden; border-radius:12px; margin-bottom:4px;">', unsafe_allow_html=True)
@@ -253,6 +267,11 @@ tab1, tab2, tab4 = st.tabs([
     "📱 Dashboard" if lang=="English" else "📱 算力控制台",
     "🔑 Auth Portal" if lang=="English" else "🔑 账户注册/登录"
 ])
+
+TIME_OPTIONS_EN = ["15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours"]
+TIME_OPTIONS_ZH = ["15分钟", "半小时", "1小时", "2小时", "4小时", "8小时", "12小时", "24小时"]
+HOURS_MAP = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
+current_options = TIME_OPTIONS_ZH if lang == "中文" else TIME_OPTIONS_EN
 
 # ── TAB 1 ──
 with tab1:
@@ -329,17 +348,18 @@ with tab1:
         if st.form_submit_button(btn_wl_txt):
             if not u_email or not u_wallet:
                 st.error(msg_empty)
-            elif u_email.lower() in global_server["whitelist_emails"]:
+            elif u_email.lower() in global_db["whitelist_emails"]:
                 st.error("❌ 该邮箱已申请过！" if lang=="中文" else "❌ This email has already been registered.")
-            elif u_wallet.lower() in global_server["whitelist_wallets"]:
+            elif u_wallet.lower() in global_db["whitelist_wallets"]:
                 st.error("❌ 该钱包地址已申请过！" if lang=="中文" else "❌ This wallet has already been registered.")
             else:
-                global_server["whitelist_emails"].add(u_email.lower())
-                global_server["whitelist_wallets"].add(u_wallet.lower())
+                global_db["whitelist_emails"].append(u_email.lower())
+                global_db["whitelist_wallets"].append(u_wallet.lower())
                 wl_ref_code = generate_referral_code(u_email)
                 get_cached_poster(wl_ref_code, "wl_success_img", "wl_success_ref")
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | AssignedRef: {wl_ref_code} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                save_local_db(global_db)
                 st.success(msg_success)
 
     if st.session_state.get("wl_success_img") and os.path.exists(st.session_state["wl_success_img"]):
@@ -414,7 +434,7 @@ with tab2:
 with tab4:
     if st.session_state.current_user:
         email = st.session_state.current_user
-        user_info = global_server["user_db"].get(email, {})
+        user_info = global_db["user_db"].get(email, {})
         ref_code = user_info.get("referral_code", generate_referral_code(email))
         user_poster_path = get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
         if os.path.exists(user_poster_path):
@@ -447,18 +467,19 @@ with tab4:
                 if st.form_submit_button("创建早鸟账户 ⚡" if lang=="中文" else "Create Early Access Account ⚡"):
                     if not r_email or not r_pwd:
                         st.error("❌ 邮箱和密码为必填项！" if lang=="中文" else "❌ Email and Password are mandatory!")
-                    elif r_email in global_server["user_db"]:
+                    elif r_email in global_db["user_db"]:
                         st.error("❌ 该邮箱已被占用！" if lang=="中文" else "❌ Email is already occupied.")
                     else:
                         ref_code = generate_referral_code(r_email)
                         get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
-                        global_server["user_db"][r_email] = {
+                        global_db["user_db"][r_email] = {
                             "password_hash": hashlib.sha256(r_pwd.encode()).hexdigest(),
                             "score": st.session_state.app_earned,
                             "reg_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                             "referral_code": ref_code,
                             "referred_by": r_ref if r_ref else "None"
                         }
+                        save_local_db(global_db)
                         st.session_state.current_user = r_email
                         time.sleep(0.5)
                         st.rerun()
@@ -469,11 +490,11 @@ with tab4:
                 l_pwd = st.text_input("验证密码:" if lang=="中文" else "Verification Password:", type="password")
                 if st.form_submit_button("验证并载入云端档案 ⚡" if lang=="中文" else "Authenticate & Load Assets ⚡"):
                     p_hash = hashlib.sha256(l_pwd.encode()).hexdigest()
-                    if l_email in global_server["user_db"] and global_server["user_db"][l_email]["password_hash"] == p_hash:
-                        ref_code = global_server["user_db"][l_email].get("referral_code", generate_referral_code(l_email))
+                    if l_email in global_db["user_db"] and global_db["user_db"][l_email]["password_hash"] == p_hash:
+                        ref_code = global_db["user_db"][l_email].get("referral_code", generate_referral_code(l_email))
                         get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
                         st.session_state.current_user = l_email
-                        st.session_state.app_earned = global_server["user_db"][l_email]["score"]
+                        st.session_state.app_earned = global_db["user_db"][l_email]["score"]
                         st.success("⚡ 登录成功！" if lang=="中文" else "⚡ Authentication verified!")
                         time.sleep(0.5)
                         st.rerun()
@@ -481,7 +502,7 @@ with tab4:
                         st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 
-# ── Admin ──
+# ── Admin 核心审计大盘 ──
 if is_admin_active:
     st.markdown("---")
     st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口隐蔽审计大盘 (ADMIN PORTAL DETECTED)</div>', unsafe_allow_html=True)
@@ -493,13 +514,13 @@ if is_admin_active:
             with open("whitelist.txt", "r", encoding="utf-8") as f:
                 whitelist_lines = [l.strip() for l in f.readlines() if l.strip()]
         c_a1, c_a2, c_a3 = st.columns(3)
-        with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">👥 用户注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Users</div></div>', unsafe_allow_html=True)
+        with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">👥 用户注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_db["user_db"])} Users</div></div>', unsafe_allow_html=True)
         with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #ffb300;"><div class="mini-stat-title">🎁 白名单登记</div><div class="mini-stat-value" style="color:#ffb300;">{len(whitelist_lines)} Claims</div></div>', unsafe_allow_html=True)
-        with c_a3: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 活跃节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
+        with c_a3: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 活跃节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(runtime_stats["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
         adm_sub_tab1, adm_sub_tab2 = st.tabs(["📋 注册用户大表", "🎁 创世白名单明细"])
         with adm_sub_tab1:
             table_html = """<table class="admin-table"><tr><th>序号</th><th>用户注册邮箱</th><th>生成专属邀请码</th><th>模拟累计积分</th><th>绑定的上级推荐码</th><th>注册激活时间</th></tr>"""
-            for idx, (em, info) in enumerate(global_server["user_db"].items(), 1):
+            for idx, (em, info) in enumerate(global_db["user_db"].items(), 1):
                 table_html += f"<tr><td>{idx}</td><td>{em}</td><td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info.get('referral_code','N/A')}</td><td style='color:#ffffff; font-weight:bold; font-family:monospace;'>{info['score']:,.2f}</td><td style='color:#00e5ff;'>{info.get('referred_by','None')}</td><td>{info['reg_time']}</td></tr>"
             st.markdown(table_html + "</table>", unsafe_allow_html=True)
         with adm_sub_tab2:
@@ -517,22 +538,13 @@ if is_admin_active:
 # ── 底栏 ──
 lbl_active_nodes = "● 全网活跃节点" if lang=="中文" else "● NETWORK ACTIVE NODES"
 lbl_real_viewers = "👀 实时在线观众" if lang=="中文" else "👀 LIVE REAL VIEWERS"
-st.markdown(f'<div class="bottom-stats-row"><div class="mini-stat-card" style="border:1px dashed #A2FF00;"><span class="mini-stat-title">{lbl_active_nodes}</span><span class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</span></div><div class="mini-stat-card" style="border:1px dashed #00e5ff;"><span class="mini-stat-title">{lbl_real_viewers}</span><span class="mini-stat-value" style="color:#00e5ff;">{global_server["total_online_viewers"]} Online</span></div></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="bottom-stats-row"><div class="mini-stat-card" style="border:1px dashed #A2FF00;"><span class="mini-stat-title">{lbl_active_nodes}</span><span class="mini-stat-value" style="color:#A2FF00;">{len(runtime_stats["active_device_set"])} Devices</span></div><div class="mini-stat-card" style="border:1px dashed #00e5ff;"><span class="mini-stat-title">{lbl_real_viewers}</span><span class="mini-stat-value" style="color:#00e5ff;">{runtime_stats["total_online_viewers"]} Online</span></div></div>', unsafe_allow_html=True)
 
-# ✅ 页脚免责声明（双语）
 if lang == "中文":
     st.markdown('<div style="text-align:center; font-size:9px; color:#3a5068; margin-top:12px; line-height:1.6; padding:0 8px;">NexaEdge Network 当前处于预发布演示阶段。所有展示数据均为模拟，仅供演示目的使用。白名单登记不构成代币发行、投资合同或任何未来收益承诺。© 2026 NexaEdge Network. All rights reserved.</div>', unsafe_allow_html=True)
 else:
     st.markdown('<div style="text-align:center; font-size:9px; color:#3a5068; margin-top:12px; line-height:1.6; padding:0 8px;">NexaEdge Network is currently in pre-launch demo phase. All metrics shown are simulated for demonstration purposes only. Whitelist registration does not constitute a token offering, investment contract, or guarantee of future rewards. © 2026 NexaEdge Network. All rights reserved.</div>', unsafe_allow_html=True)
 
-# ✅ 自动刷新（替代 time.sleep + st.rerun 死循环）
+# 纯粹触发刷新器，不再在底部添加任何容易导致加倍叠加的运算
 if st.session_state.app_running:
     st_autorefresh(interval=3000, key="nexaedge_autorefresh")
-    st.session_state.app_earned += 0.01 * 3
-    st.session_state.session_seconds += 3
-    st.session_state.total_energy_wh += (5.1 * 3 / 3600.0)
-    if st.session_state.current_user:
-        global_server["user_db"][st.session_state.current_user]["score"] = st.session_state.app_earned
-    else:
-        global_server["device_balances"][dev_id]["app_earned"] = st.session_state.app_earned
-    st.session_state.last_tick_time = time.time()
