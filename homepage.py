@@ -445,7 +445,7 @@ def tick_simulation():
 
     st.session_state.sim_nodes = nodes
 
-    # 平滑的随机游走算法，防止指标数据剧烈乱跳
+    # 平滑的随机游走算法
     st.session_state.sim_latency = max(2.2, min(4.5, st.session_state.sim_latency + random.uniform(-0.3, 0.3)))
     st.session_state.sim_consensus = max(95.0, min(99.9, st.session_state.sim_consensus + random.uniform(-0.2, 0.2)))
 
@@ -494,7 +494,7 @@ with col_badge:
 
 st.markdown('<hr style="border-color:#1a2530;margin:4px 0 20px 0;">', unsafe_allow_html=True)
 
-# ── Tabs ──
+# ── Tabs（引入 key 机制，彻底锁定导航状态不乱跳） ──
 tab_market, tab_sim, tab_moat, tab_roadmap = st.tabs([
     "Market", "Network Sim", "Differentiation", "Roadmap"
 ])
