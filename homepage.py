@@ -10,6 +10,7 @@ st.set_page_config(
     layout="centered"
 )
 
+# ── 升级版 CSS ──
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
@@ -41,32 +42,40 @@ h1, h2, h3, h4, p, div, span, label {
     font-family: 'Syne', sans-serif !important;
 }
 
-/* Tabs */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 6px;
-    background-color: transparent !important;
+/* 隐藏隐藏 Radio 的原生样式，伪装成高级 Tab */
+div[data-testid="stRadio"] > label { display: none !important; }
+div[data-testid="stRadio"] > div {
+    flex-direction: row !important;
+    gap: 6px !important;
     border-bottom: 1px solid #1a2530 !important;
+    padding-bottom: 8px;
     margin-bottom: 20px;
 }
-.stTabs [data-baseweb="tab"] {
+div[data-testid="stRadio"] label[data-baseweb="radio"] {
     background-color: #0e1419 !important;
     color: #556070 !important;
     border-radius: 6px 6px 0 0 !important;
     border: 1px solid #1a2530 !important;
-    border-bottom: none !important;
     padding: 8px 16px !important;
     font-family: 'Space Mono', monospace !important;
     font-size: 11px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
+    margin: 0 !important;
 }
-.stTabs [aria-selected="true"] {
+/* 选中状态的骚绿样式 */
+div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) {
     color: #a2ff00 !important;
-    background-color: #0e1419 !important;
+    border-color: #1a2530 !important;
     border-bottom-color: #0e1419 !important;
+    background-color: #0e1419 !important;
 }
-.stTabs [data-baseweb="tab-highlight"] { display: none !important; }
+div[data-testid="stRadio"] input { display: none !important; }
+div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+}
 
 /* Metrics */
 [data-testid="stMetric"] {
@@ -426,7 +435,6 @@ TASK_TYPES = [
 ]
 
 def tick_simulation():
-    """Advance simulation state by one tick with smooth state walk."""
     nodes = st.session_state.sim_nodes
     idle = [i for i, v in enumerate(nodes) if v == 0]
     if len([v for v in nodes if v > 0]) < 48 and idle:
@@ -444,8 +452,6 @@ def tick_simulation():
             nodes[p] = 1
 
     st.session_state.sim_nodes = nodes
-
-    # 平滑的随机游走算法
     st.session_state.sim_latency = max(2.2, min(4.5, st.session_state.sim_latency + random.uniform(-0.3, 0.3)))
     st.session_state.sim_consensus = max(95.0, min(99.9, st.session_state.sim_consensus + random.uniform(-0.2, 0.2)))
 
@@ -463,7 +469,6 @@ def tick_simulation():
     st.session_state.prog2 = min(72, int(t * 1.1))
     st.session_state.prog3 = min(60, int(t * 0.9))
 
-# 如果激活了运行状态，调用精简的前端刷新组件，周期为1000ms（1秒）
 if st.session_state.sim_running:
     st_autorefresh(interval=1000, key="nexa_sim_refresher")
     tick_simulation()
@@ -492,17 +497,20 @@ with col_badge:
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown('<hr style="border-color:#1a2530;margin:4px 0 20px 0;">', unsafe_allow_html=True)
+st.markdown('<hr style="border-color:#1a2530;margin:4px 0 10px 0;">', unsafe_allow_html=True)
 
-# ── Tabs（引入 key 机制，彻底锁定导航状态不乱跳） ──
-tab_market, tab_sim, tab_moat, tab_roadmap = st.tabs([
-    "Market", "Network Sim", "Differentiation", "Roadmap"
-])
+# ── 超级防跳高定制导航栏（本质是Radio，通过CSS伪装成Tab，绝不乱跳） ──
+current_tab = st.radio(
+    "Nav",
+    ["Market", "Network Sim", "Differentiation", "Roadmap"],
+    horizontal=True,
+    label_visibility="collapsed"
+)
 
 # ══════════════════════════════════════
 # TAB 1 — MARKET
 # ══════════════════════════════════════
-with tab_market:
+if current_tab == "Market":
     c1, c2, c3 = st.columns(3)
     with c1: st.metric("Global Idle Smartphones", "6.8B", "devices with NPU / on-device AI")
     with c2: st.metric("Edge AI Market (2028)", "$107B", "projected CAGR 19.2%")
@@ -632,7 +640,7 @@ with tab_market:
 # ══════════════════════════════════════
 # TAB 2 — NETWORK SIM
 # ══════════════════════════════════════
-with tab_sim:
+elif current_tab == "Network Sim":
     st.markdown("""
     <div class="nx-notice">
         ⚠ SIMULATION ONLY — This visualizes the NexaEdge network concept.<br>
@@ -720,7 +728,7 @@ with tab_sim:
 # ══════════════════════════════════════
 # TAB 3 — DIFFERENTIATION / MOAT
 # ══════════════════════════════════════
-with tab_moat:
+elif current_tab == "Differentiation":
     st.markdown("""
     <div class="nx-card">
         <div class="nx-card-title"><span>▸</span> Why NexaEdge vs Grass</div>
@@ -812,7 +820,7 @@ with tab_moat:
 # ══════════════════════════════════════
 # TAB 4 — ROADMAP
 # ══════════════════════════════════════
-with tab_roadmap:
+elif current_tab == "Roadmap":
     st.markdown("""
     <div class="nx-card">
         <div class="nx-card-title"><span>▸</span> Development Roadmap</div>
