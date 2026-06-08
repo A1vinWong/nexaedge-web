@@ -2,6 +2,7 @@ import streamlit as st
 import time
 import random
 import pandas as pd
+from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(
     page_title="NexaEdge Network — Investor Demo",
@@ -406,8 +407,9 @@ div.stButton > button[kind="secondary"]:hover {
 if 'sim_running' not in st.session_state: st.session_state.sim_running = False
 if 'sim_tasks' not in st.session_state: st.session_state.sim_tasks = 0
 if 'sim_log' not in st.session_state: st.session_state.sim_log = []
-if 'sim_nodes' not in st.session_state: st.session_state.sim_nodes = [0] * 64  # 0=idle, 1=active, 2=processing
-if 'sim_start_time' not in st.session_state: st.session_state.sim_start_time = 0.0
+if 'sim_nodes' not in st.session_state: st.session_state.sim_nodes = [0] * 64
+if 'sim_latency' not in st.session_state: st.session_state.sim_latency = 3.0
+if 'sim_consensus' not in st.session_state: st.session_state.sim_consensus = 98.2
 if 'prog1' not in st.session_state: st.session_state.prog1 = 0
 if 'prog2' not in st.session_state: st.session_state.prog2 = 0
 if 'prog3' not in st.session_state: st.session_state.prog3 = 0
@@ -424,9 +426,8 @@ TASK_TYPES = [
 ]
 
 def tick_simulation():
-    """Advance simulation state by one tick."""
+    """Advance simulation state by one tick with smooth state walk."""
     nodes = st.session_state.sim_nodes
-    # activate ~48 nodes if not already
     idle = [i for i, v in enumerate(nodes) if v == 0]
     if len([v for v in nodes if v > 0]) < 48 and idle:
         for _ in range(min(4, len(idle))):
@@ -434,19 +435,20 @@ def tick_simulation():
             nodes[idx] = 1
             idle.remove(idx)
 
-    # random active node becomes processing, then back
     active = [i for i, v in enumerate(nodes) if v == 1]
     if active:
         pick = random.choice(active)
         nodes[pick] = 2
-        # revert a few processing ones back to active
         processing = [i for i, v in enumerate(nodes) if v == 2]
         for p in random.sample(processing, min(2, len(processing))):
             nodes[p] = 1
 
     st.session_state.sim_nodes = nodes
 
-    # log entry
+    # 平滑的随机游走算法，防止指标数据剧烈乱跳
+    st.session_state.sim_latency = max(2.2, min(4.5, st.session_state.sim_latency + random.uniform(-0.3, 0.3)))
+    st.session_state.sim_consensus = max(95.0, min(99.9, st.session_state.sim_consensus + random.uniform(-0.2, 0.2)))
+
     task, cls = random.choice(TASK_TYPES)
     node_id = random.randint(1, 64)
     ts = time.strftime("%H:%M:%S")
@@ -460,6 +462,11 @@ def tick_simulation():
     st.session_state.prog1 = min(85, int(t * 1.4))
     st.session_state.prog2 = min(72, int(t * 1.1))
     st.session_state.prog3 = min(60, int(t * 0.9))
+
+# 如果激活了运行状态，调用精简的前端刷新组件，周期为1000ms（1秒）
+if st.session_state.sim_running:
+    st_autorefresh(interval=1000, key="nexa_sim_refresher")
+    tick_simulation()
 
 # ── Header ──
 col_logo, col_badge = st.columns([3, 1])
@@ -496,17 +503,11 @@ tab_market, tab_sim, tab_moat, tab_roadmap = st.tabs([
 # TAB 1 — MARKET
 # ══════════════════════════════════════
 with tab_market:
-
-    # Metrics
     c1, c2, c3 = st.columns(3)
-    with c1:
-        st.metric("Global Idle Smartphones", "6.8B", "devices with NPU / on-device AI")
-    with c2:
-        st.metric("Edge AI Market (2028)", "$107B", "projected CAGR 19.2%")
-    with c3:
-        st.metric("GPU Compute Cost", "$2–4/hr", "H100 spot — volatile & scarce")
+    with c1: st.metric("Global Idle Smartphones", "6.8B", "devices with NPU / on-device AI")
+    with c2: st.metric("Edge AI Market (2028)", "$107B", "projected CAGR 19.2%")
+    with c3: st.metric("GPU Compute Cost", "$2–4/hr", "H100 spot — volatile & scarce")
 
-    # Competitive table
     st.markdown("""
     <div class="nx-card">
         <div class="nx-card-title"><span>▸</span> Competitive Positioning</div>
@@ -561,7 +562,6 @@ with tab_market:
     </div>
     """, unsafe_allow_html=True)
 
-    # Buyer segments
     st.markdown('<div class="nx-card"><div class="nx-card-title"><span>▸</span> Who Pays — Buyer Segments</div>', unsafe_allow_html=True)
     b1, b2 = st.columns(2)
     with b1:
@@ -592,7 +592,6 @@ with tab_market:
         """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Architecture
     st.markdown("""
     <div class="nx-card">
         <div class="nx-card-title"><span>▸</span> System Architecture</div>
@@ -630,12 +629,10 @@ with tab_market:
     </div>
     """, unsafe_allow_html=True)
 
-
 # ══════════════════════════════════════
 # TAB 2 — NETWORK SIM
 # ══════════════════════════════════════
 with tab_sim:
-
     st.markdown("""
     <div class="nx-notice">
         ⚠ SIMULATION ONLY — This visualizes the NexaEdge network concept.<br>
@@ -644,7 +641,6 @@ with tab_sim:
     </div>
     """, unsafe_allow_html=True)
 
-    # Controls
     col_start, col_stop, col_status = st.columns([2, 2, 3])
     with col_start:
         if st.button("▶ Start Simulation", disabled=st.session_state.sim_running):
@@ -652,7 +648,8 @@ with tab_sim:
             st.session_state.sim_tasks = 0
             st.session_state.sim_log = []
             st.session_state.sim_nodes = [0] * 64
-            st.session_state.sim_start_time = time.time()
+            st.session_state.sim_latency = 3.0
+            st.session_state.sim_consensus = 98.2
             st.session_state.prog1 = 0
             st.session_state.prog2 = 0
             st.session_state.prog3 = 0
@@ -667,11 +664,6 @@ with tab_sim:
         status_text = "● RUNNING" if st.session_state.sim_running else "○ IDLE"
         st.markdown(f'<div style="font-family:\'Space Mono\',monospace;font-size:11px;color:{status_color};padding-top:10px;">{status_text}</div>', unsafe_allow_html=True)
 
-    # Tick simulation if running
-    if st.session_state.sim_running:
-        tick_simulation()
-
-    # Node grid
     nodes = st.session_state.sim_nodes
     node_html = '<div class="nx-card"><div class="nx-card-title"><span>▸</span> Node Network — 64 Simulated Devices</div><div class="nx-node-grid">'
     for v in nodes:
@@ -692,22 +684,16 @@ with tab_sim:
     </div></div>'''
     st.markdown(node_html, unsafe_allow_html=True)
 
-    # Sim stats
     active_count = sum(1 for v in nodes if v > 0)
-    latency = f"{random.uniform(2.1, 4.8):.1f}ms" if st.session_state.sim_running else "—"
-    consensus = f"{random.uniform(96.5, 99.9):.1f}%" if st.session_state.sim_running else "—"
+    latency_val = f"{st.session_state.sim_latency:.1f}ms" if st.session_state.sim_running else "—"
+    consensus_val = f"{st.session_state.sim_consensus:.1f}%" if st.session_state.sim_running else "—"
 
     s1, s2, s3, s4 = st.columns(4)
-    with s1:
-        st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{active_count}</div><div class="nx-sim-label">Active Nodes</div></div>', unsafe_allow_html=True)
-    with s2:
-        st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{st.session_state.sim_tasks}</div><div class="nx-sim-label">Tasks Done</div></div>', unsafe_allow_html=True)
-    with s3:
-        st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{latency}</div><div class="nx-sim-label">Avg Latency</div></div>', unsafe_allow_html=True)
-    with s4:
-        st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{consensus}</div><div class="nx-sim-label">BFT Consensus</div></div>', unsafe_allow_html=True)
+    with s1: st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{active_count}</div><div class="nx-sim-label">Active Nodes</div></div>', unsafe_allow_html=True)
+    with s2: st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{st.session_state.sim_tasks}</div><div class="nx-sim-label">Tasks Done</div></div>', unsafe_allow_html=True)
+    with s3: st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{latency_val}</div><div class="nx-sim-label">Avg Latency</div></div>', unsafe_allow_html=True)
+    with s4: st.markdown(f'<div class="nx-sim-stat"><div class="nx-sim-val">{consensus_val}</div><div class="nx-sim-label">BFT Consensus</div></div>', unsafe_allow_html=True)
 
-    # Task log
     st.markdown('<div class="nx-card" style="margin-top:14px;"><div class="nx-card-title"><span>▸</span> Task Dispatch Log</div>', unsafe_allow_html=True)
     if st.session_state.sim_log:
         log_html = '<div class="nx-log">'
@@ -718,7 +704,6 @@ with tab_sim:
         log_html = '<div class="nx-log"><div>// Press ▶ Start Simulation to begin.</div></div>'
     st.markdown(log_html + '</div>', unsafe_allow_html=True)
 
-    # Progress bars
     p1, p2, p3 = st.session_state.prog1, st.session_state.prog2, st.session_state.prog3
     st.markdown(f"""
     <div class="nx-card">
@@ -732,17 +717,10 @@ with tab_sim:
     </div>
     """, unsafe_allow_html=True)
 
-    # Auto-refresh only when running
-    if st.session_state.sim_running:
-        time.sleep(0.9)
-        st.rerun()
-
-
 # ══════════════════════════════════════
 # TAB 3 — DIFFERENTIATION / MOAT
 # ══════════════════════════════════════
 with tab_moat:
-
     st.markdown("""
     <div class="nx-card">
         <div class="nx-card-title"><span>▸</span> Why NexaEdge vs Grass</div>
@@ -831,12 +809,10 @@ with tab_moat:
     </div>
     """, unsafe_allow_html=True)
 
-
 # ══════════════════════════════════════
 # TAB 4 — ROADMAP
 # ══════════════════════════════════════
 with tab_roadmap:
-
     st.markdown("""
     <div class="nx-card">
         <div class="nx-card-title"><span>▸</span> Development Roadmap</div>
@@ -869,12 +845,9 @@ with tab_roadmap:
     """, unsafe_allow_html=True)
 
     r1, r2, r3 = st.columns(3)
-    with r1:
-        st.metric("Funding Target (Seed)", "$500K", "for MVP + 1,000-node beta")
-    with r2:
-        st.metric("Target Node Count (Y1)", "100K", "active devices at mainnet")
-    with r3:
-        st.metric("Settlement Chain", "Solana SPL", "low gas · high TPS · mobile-native")
+    with r1: st.metric("Funding Target (Seed)", "$500K", "for MVP + 1,000-node beta")
+    with r2: st.metric("Target Node Count (Y1)", "100K", "active devices at mainnet")
+    with r3: st.metric("Settlement Chain", "Solana SPL", "low gas · high TPS · mobile-native")
 
 # ── Footer ──
 st.markdown("""
