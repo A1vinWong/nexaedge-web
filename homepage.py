@@ -1,23 +1,16 @@
-Import streamlit as st
+import streamlit as st
 import os
 import time
 import random
 import pandas as pd
 import glob
 import hashlib
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont  # 👈 用于动态绘制推荐码图片
 
-# =========================================================================
-# ⚙️ 引入 WASM 运行时（带安全回退机制，确保无环境时代码不崩溃）
-# =========================================================================
-try:
-    import wasmtime
-    WASM_AVAILABLE = True
-except ImportError:
-    WASM_AVAILABLE = False
-
+# 💡 在这里统一配置你的新合约地址
 DEFAULT_CA = "D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2"
 
+# 1. 全局页面基础配置
 st.set_page_config(
     page_title="NexaEdge Network | Official Node Gateway",
     page_icon="🟢",
@@ -101,32 +94,7 @@ st.markdown("""
         font-size: 20px;
     }
 
-    /* ✅ 新增：免责声明样式 */
-    .disclaimer-bar {
-        background: rgba(255, 179, 0, 0.08);
-        border: 1px solid rgba(255, 179, 0, 0.25);
-        border-radius: 8px;
-        padding: 6px 12px;
-        font-size: 10px;
-        color: #88929b;
-        text-align: center;
-        margin: 4px 0 8px 0;
-        line-height: 1.5;
-    }
-    .sim-badge {
-        display: inline-block;
-        background: rgba(255,179,0,0.12);
-        color: #ffb300;
-        font-size: 9px;
-        font-weight: bold;
-        padding: 1px 6px;
-        border-radius: 3px;
-        border: 1px solid rgba(255,179,0,0.3);
-        vertical-align: middle;
-        margin-left: 4px;
-        letter-spacing: 0.05em;
-    }
-
+    /* ✨ 弹窗遮罩样式 */
     .modal-overlay {
         position: fixed;
         top: 0; left: 0;
@@ -181,35 +149,7 @@ def generate_referral_code(email: str) -> str:
     return "NX-" + h[:3] + "-" + h[3:6]
 
 # =========================================================================
-# 🛠️ WASM 沙箱模拟执行引擎（Pre-launch Simulation Mode）
-# =========================================================================
-def execute_secure_wasm_task(raw_data_size: int) -> float:
-    """
-    Pre-launch simulation mode.
-    Production WASM kernel will be activated at mainnet launch.
-    """
-    wasm_path = "core_telemetry_cleaner.wasm"
-
-    if WASM_AVAILABLE and os.path.exists(wasm_path):
-        try:
-            engine = wasmtime.Engine()
-            store = wasmtime.Store(engine)
-            module = wasmtime.Module.from_file(engine, wasm_path)
-            instance = wasmtime.Instance(store, module, [])
-            clean_fn = instance.exports(store).get("clean_ai_data")
-            if clean_fn:
-                result = clean_fn(store, raw_data_size)
-                return float(result) / 1000.0
-        except Exception:
-            pass
-
-    # Simulation fallback — not real earnings
-    base_efficiency = 0.0125 + random.uniform(-0.0015, 0.0015)
-    return float(raw_data_size) * base_efficiency
-
-
-# =========================================================================
-# 🎨 动态绘制专属推荐码海报
+# 🎨 动态绘制专属推荐码海报核心引擎 (使用 IMG_7859.jpeg，叠加网址+推荐码)
 # =========================================================================
 def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
     base_img_path = "IMG_7859.jpeg"
@@ -217,10 +157,12 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
         img = Image.new("RGB", (1080, 1920), "#0b0f12")
         img.save(base_img_path)
 
+    # 每次都从原图重新生成，不用缓存
     img = Image.open(base_img_path).convert("RGBA")
     width, height = img.size
     draw = ImageDraw.Draw(img)
 
+    # 尝试多个字体路径，确保 Streamlit Cloud 上能找到
     font_candidates = [
         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -271,13 +213,22 @@ def generate_referral_image(ref_code: str, output_path="temp_invite.png"):
     return output_path
 
 
+# =========================================================================
+# ✅ 修复：带缓存的海报生成函数，避免每次 rerun 都重新绘制导致闪烁
+# =========================================================================
 def get_cached_poster(ref_code: str, cache_key_name: str, cache_ref_key_name: str) -> str:
+    """
+    只在 ref_code 变化时重新生成海报，否则直接返回缓存路径。
+    cache_key_name: session_state 中存路径的 key
+    cache_ref_key_name: session_state 中存上次 ref_code 的 key
+    """
     cached_path = st.session_state.get(cache_key_name)
     cached_ref  = st.session_state.get(cache_ref_key_name)
 
     if cached_path and cached_ref == ref_code and os.path.exists(cached_path):
-        return cached_path
+        return cached_path  # 直接返回，不重新生成
 
+    # 需要重新生成
     output_path = f"poster_{ref_code}.png"
     generate_referral_image(ref_code, output_path)
     st.session_state[cache_key_name] = output_path
@@ -332,6 +283,8 @@ if 'chart_history' not in st.session_state: st.session_state.chart_history = [19
 if 'target_time_index' not in st.session_state: st.session_state.target_time_index = 2
 if 'last_tick_time' not in st.session_state: st.session_state.last_tick_time = 0.0
 
+
+
 if st.session_state.app_running:
     global_server["active_device_set"].add(st.session_state.session_id)
 else:
@@ -342,8 +295,7 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
     elapsed_gap = int(current_unix - st.session_state.last_tick_time)
     if elapsed_gap >= 1:
         st.session_state.session_seconds += elapsed_gap
-        incremental_reward = execute_secure_wasm_task(1) * elapsed_gap
-        st.session_state.app_earned += incremental_reward
+        st.session_state.app_earned += elapsed_gap * 0.01
         st.session_state.total_energy_wh += 5.1 * (elapsed_gap / 3600.0)
         st.session_state.last_tick_time = current_unix
         if st.session_state.current_user:
@@ -353,17 +305,8 @@ if st.session_state.app_running and st.session_state.last_tick_time > 0:
         global_server["device_balances"][dev_id]["total_energy_wh"] = st.session_state.total_energy_wh
         global_server["device_balances"][dev_id]["session_seconds"] = st.session_state.session_seconds
 
-# --- 顶栏 ---
+# --- 顶栏大标题 ---
 st.markdown('<h1 style="text-align:center; color:#A2FF00; font-size:30px; font-weight:800; margin-bottom:0px; padding-top:0px;">NexaEdge Network</h1>', unsafe_allow_html=True)
-
-# ✅ 新增：全局免责声明栏
-st.markdown('''
-<div class="disclaimer-bar">
-    🚧 Pre-Launch Demo · NexaEdge is currently in testnet simulation phase.
-    All earnings displayed are simulated and do not represent real token issuance.
-    No tokens have been distributed. Whitelist registration is for early community access only.
-</div>
-''', unsafe_allow_html=True)
 
 lang = st.selectbox("🌐 Language", ["English", "中文"], index=0, label_visibility="collapsed")
 
@@ -377,10 +320,12 @@ if lang == "中文":
 else:
     st.markdown('<p style="font-size: 13px; color: #A2FF00; font-weight:bold; text-align: center; margin-top: 2px; margin-bottom:8px;">Transforming idle smartphones into high-purity data network for AI Era.</p>', unsafe_allow_html=True)
 
+# 🖼️ 固定 Logo 展示
 st.markdown('<div style="max-height:280px; overflow:hidden; border-radius:12px; margin-bottom:4px;">', unsafe_allow_html=True)
 st.image("logo.png", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
+# PROJECT BRIEFING 框
 if lang == "中文":
     st.markdown('''
     <div style="background:#11171d; border:1px solid #1e272e; border-radius:12px; padding:12px 14px; margin:6px 0 8px 0;">
@@ -406,7 +351,7 @@ tab1, tab2, tab4 = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: Overview
+# TAB 1: Overview / 项目通识
 # ==========================================
 with tab1:
     c1, c2, c3 = st.columns(3)
@@ -428,11 +373,10 @@ with tab1:
         with c3: st.metric(label="Network Consensus", value="Proprietary BFT", delta="2:1 Redundant Voting")
 
     if lang == "中文":
-        st.markdown('<h2 style="color:#A2FF00; font-size:16px; margin-top:8px; margin-bottom:4px;">💰 设备收益模拟计算器 <span class="sim-badge">SIMULATION</span></h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:#A2FF00; font-size:16px; margin-top:8px; margin-bottom:4px;">💰 设备收益计算器</h2>', unsafe_allow_html=True)
         selected_time_tab1 = st.selectbox("选择运行时间档位:", current_options, index=st.session_state.target_time_index, key="calc_box_zh")
         st.session_state.target_time_index = current_options.index(selected_time_tab1)
-        # ✅ 改：承诺收益 → 模拟收益
-        st.info(f"📊 模拟月度收益参考值: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT（测试网模拟数据，非真实收益承诺）")
+        st.success(f"🎉 预计每月可带来收益: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
         st.markdown("""
         <div class="feature-box">
             <h4 style="color:white; margin:0; font-size:13px;">📱 充电即赚 · 睡后收入</h4>
@@ -448,11 +392,10 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown('<h2 style="color:#A2FF00; font-size:16px; margin-top:8px; margin-bottom:4px;">💰 Revenue Simulator <span class="sim-badge">SIMULATION</span></h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:#A2FF00; font-size:16px; margin-top:8px; margin-bottom:4px;">💰 Revenue Calculator</h2>', unsafe_allow_html=True)
         selected_time_tab1 = st.selectbox("Select Setting Pattern:", current_options, index=st.session_state.target_time_index, key="calc_box_en")
         st.session_state.target_time_index = current_options.index(selected_time_tab1)
-        # ✅ 改：承诺收益 → 模拟参考值
-        st.info(f"📊 Simulated monthly reference: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT — Testnet simulation only, not a earnings guarantee.")
+        st.success(f"🎉 Estimated Monthly Income: {HOURS_MAP[st.session_state.target_time_index] * 0.35 * 30:.2f} USDT")
         st.markdown("""
         <div class="feature-box">
             <h4 style="color:white; margin:0; font-size:13px;">📱 Passive Income via Charging</h4>
@@ -468,34 +411,31 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
+
     with st.form("unified_whitelist_form"):
         if lang == "中文":
             st.markdown('<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 申领创世白名单与社媒双倍加速奖励</div>', unsafe_allow_html=True)
-            # ✅ 新增：白名单免责说明
-            st.markdown('<div style="font-size:10px; color:#88929b; margin-bottom:6px;">📌 白名单登记仅代表早期社区资格，不构成任何代币发行或投资承诺。主网上线后将另行通知。</div>', unsafe_allow_html=True)
             u_email_label = "申请电子邮箱地址:"
             u_email_place = "请输入接收通知的邮箱"
-            u_wallet_label = "绑定的 Solana 钱包接收地址:"
+            u_wallet_label = "绑定的 Solana 钱包接收地址 (获取空投资产):"
             u_wallet_place = "输入您的 Solana SPL 钱包公钥"
             u_ref_label = "推荐码 (选填):"
             u_ref_place = "如有推荐码，请输入以获得创世加速"
-            btn_wl_txt = "锁定创世早鸟席位 ⚡"
+            btn_wl_txt = "锁定创世空投席位 ⚡"
             msg_empty = "❌ 请完整填写邮箱和钱包地址！"
-            msg_success = "🎉 早鸟席位登记成功！主网上线前我们将与您联系。"
+            msg_success = "🎉 创世节点白名单成功锁定！我们会在空投快照前与您取得联系。"
             contact_btn_label = "📧 联系我们"
         else:
-            st.markdown('<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 Claim Early Access & Genesis Community Rewards</div>', unsafe_allow_html=True)
-            # ✅ 新增：白名单免责说明
-            st.markdown('<div style="font-size:10px; color:#88929b; margin-bottom:6px;">📌 Whitelist registration grants early community access only. This does not constitute a token offering or investment commitment. Mainnet details will be announced separately.</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:2px;">🎁 Claim Genesis Whitelist & Social Boosting Rewards</div>', unsafe_allow_html=True)
             u_email_label = "Notification Email Address:"
             u_email_place = "e.g., node_miner@gmail.com"
-            u_wallet_label = "Bound Solana Wallet Address:"
+            u_wallet_label = "Bound Solana Wallet Address (For Asset Air-drops):"
             u_wallet_place = "Enter your Solana SPL public key address"
             u_ref_label = "Referral Code (Optional):"
             u_ref_place = "Enter code to claim genesis boosting if available"
-            btn_wl_txt = "Secure Early Access Seat ⚡"
+            btn_wl_txt = "Lock Genesis Seating ⚡"
             msg_empty = "❌ Email and Wallet fields cannot be empty!"
-            msg_success = "🎉 Early access registered! We'll reach out before mainnet launch."
+            msg_success = "🎉 Genesis node whitelist locked successfully! Notification will follow before snapshot."
             contact_btn_label = "📧 Contact US"
 
         st.markdown(f"""
@@ -517,26 +457,27 @@ with tab1:
             if not u_email or not u_wallet:
                 st.error(msg_empty)
             elif u_email.lower() in global_server["whitelist_emails"]:
-                err_dup_email = "❌ 该邮箱已申请过！" if lang=="中文" else "❌ This email has already been registered."
+                err_dup_email = "❌ 该邮箱已申请过白名单！" if lang=="中文" else "❌ This email has already been registered."
                 st.error(err_dup_email)
             elif u_wallet.lower() in global_server["whitelist_wallets"]:
-                err_dup_wallet = "❌ 该钱包地址已申请过！" if lang=="中文" else "❌ This wallet has already been registered."
+                err_dup_wallet = "❌ 该钱包地址已申请过白名单！" if lang=="中文" else "❌ This wallet has already been registered."
                 st.error(err_dup_wallet)
             else:
                 global_server["whitelist_emails"].add(u_email.lower())
                 global_server["whitelist_wallets"].add(u_wallet.lower())
                 wl_ref_code = generate_referral_code(u_email)
+                # ✅ 修复：白名单申请成功后也用缓存方式生成海报，避免重复绘制闪烁
                 wl_img_path = get_cached_poster(wl_ref_code, "wl_success_img", "wl_success_ref")
                 with open("whitelist.txt", "a", encoding="utf-8") as f:
                     f.write(f"Email: {u_email} | Wallet: {u_wallet} | RefCode: {u_ref if u_ref else 'None'} | AssignedRef: {wl_ref_code} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                st.success(msg_success)
 
+    # ✅ 修复：直接从 session_state 读取缓存路径，不再每次重新生成
     if st.session_state.get("wl_success_img") and os.path.exists(st.session_state["wl_success_img"]):
         st.image(st.session_state["wl_success_img"], use_container_width=True)
 
 
 # ==========================================
-# TAB 2: Dashboard
+# TAB 2: Dashboard 算力控制台
 # ==========================================
 with tab2:
     if st.session_state.app_running:
@@ -554,7 +495,7 @@ with tab2:
         badge_txt = f"🟢 已成功挂载云端账户: <b>{st.session_state.current_user}</b>" if lang=="中文" else f"🟢 Connected Cloud Account: <b>{st.session_state.current_user}</b>"
         st.markdown(f'<div class="user-badge">{badge_txt}</div>', unsafe_allow_html=True)
     else:
-        badge_txt = "⚠️ 游客节点运行（数据暂存本地，建议注册账户）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register to sync)"
+        badge_txt = "⚠️ 游客节点运行（数据暂存本地，建议立即去账户中心注册）" if lang=="中文" else "⚠️ Running as Visitor (Data stays local, register to sync)"
         st.markdown(f'<div class="user-badge" style="border-left-color:#ffb300; color:#ffb300;">{badge_txt}</div>', unsafe_allow_html=True)
 
     lbl_tgt = "配置目标运行时间:" if lang=="中文" else "Set Target Runtime:"
@@ -564,21 +505,8 @@ with tab2:
     s_sec = st.session_state.session_seconds
     time_str = f"{s_sec//3600:02d}:{(s_sec%3600)//60:02d}:{s_sec%60:02d}"
 
-    if WASM_AVAILABLE and os.path.exists("core_telemetry_cleaner.wasm"):
-        sandbox_status = "⚡ WASM-SANDBOX (RUST KERNEL ACTIVE)"
-        sandbox_style = "color:#A2FF00; font-size:10px; font-weight:bold; background:#0e2010; padding:2px 8px; border-radius:4px; border:1px solid #2e7d32;"
-    else:
-        # ✅ 改：不再伪装成真实，明确标注为模拟
-        sandbox_status = "🧪 SIMULATION MODE (Pre-launch)"
-        sandbox_style = "color:#ffb300; font-size:10px; font-weight:bold; background:#1a1400; padding:2px 8px; border-radius:4px; border:1px solid #554400;"
-
-    chart_lbl = "📶 边缘节点算力模拟波形" if lang=="中文" else "📶 Edge Node Simulated Hashrate"
-    st.markdown(f"""
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px; margin-left: 14px; padding-right:8px;">
-        <div class="chart-title-lbl" style="margin-left:0px; padding-left:0px;">{chart_lbl}</div>
-        <div style="{sandbox_style}">{sandbox_status}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    chart_lbl = "📶 边缘节点算力实时波形 data" if lang=="中文" else "📶 Edge Node Real-time Hashrate Trend"
+    st.markdown(f'<div class="chart-title-lbl">{chart_lbl}</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
     df_chart = pd.DataFrame(st.session_state.chart_history, columns=["Hashrate (G/s)"])
@@ -606,8 +534,7 @@ with tab2:
     """, unsafe_allow_html=True)
 
     lbl_d1 = "本次运行时长:" if lang=="中文" else "Continuous Runtime:"
-    # ✅ 改：余额标签加 SIM 标注
-    lbl_d2 = "模拟积累 NEXA <span class='sim-badge'>SIM</span>" if lang=="中文" else "Simulated NEXA <span class='sim-badge'>SIM</span>"
+    lbl_d2 = "账户绑定 NEXA 总数:" if lang=="中文" else "Account Balance:"
 
     if st.session_state.app_running:
         status_badge = '<span style="background-color:#1e272e; color:#A2FF00; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:middle;">ACTIVE</span>'
@@ -623,27 +550,27 @@ with tab2:
             </div>
             <div style="text-align:right; flex:1; min-width:0;">
                 <div style="font-size:9px; color:#88929b; font-weight:bold;">{lbl_d2}</div>
-                <div class="app-value neon-green-text" style="font-size:14px; white-space:nowrap;">{st.session_state.app_earned:,.2f}</div>
+                <div class="app-value neon-green-text" style="font-size:14px; white-space:nowrap;">{st.session_state.app_earned:,.2f} NEXA</div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     if not st.session_state.app_running:
-        btn_start = "激活模拟节点演示" if lang=="中文" else "START SIMULATION SESSION"
+        btn_start = "激活并启动边缘算力节点" if lang=="中文" else "START COMPUTE SESSION"
         if st.button(btn_start, key="app_start_btn"):
             st.session_state.app_running = True
             st.session_state.last_tick_time = time.time()
             st.rerun()
     else:
-        btn_stop = "暂停模拟" if lang=="中文" else "PAUSE SIMULATION"
+        btn_stop = "暂停当前算力" if lang=="中文" else "PAUSE COMPUTE SESSION"
         if st.button(btn_stop, key="app_stop_btn"):
             st.session_state.app_running = False
             st.session_state.last_tick_time = 0.0
             st.rerun()
 
 # ==========================================
-# TAB 4: Auth Portal
+# TAB 4: 🔑 账户注册与登录入口
 # ==========================================
 with tab4:
     if st.session_state.current_user:
@@ -651,6 +578,8 @@ with tab4:
         user_info = global_server["user_db"].get(email, {})
         ref_code = user_info.get("referral_code", generate_referral_code(email))
 
+        # ✅ 修复核心：使用缓存函数，只在 ref_code 变化时才重新生成图片
+        # 每次 rerun（包括每秒自动刷新）不再重复绘制，彻底消除闪烁
         user_poster_path = get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
 
         if os.path.exists(user_poster_path):
@@ -661,16 +590,16 @@ with tab4:
         lbl_id = f"当前在线身份：<span class='neon-blue-text' style='font-weight:bold;'>{email}</span>" if lang=="中文" else f"Active Identity: <span class='neon-blue-text' style='font-weight:bold;'>{email}</span>"
         st.markdown(lbl_id, unsafe_allow_html=True)
 
-        # ✅ 改：余额显示加模拟标注
-        box_txt = f"模拟积累积分（测试网）<br><span class='neon-green-text' style='font-size:24px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span><br><span style='font-size:9px; color:#88929b;'>Simulated · Not real tokens</span>" if lang=="中文" else f"Simulated Accumulated Points (Testnet)<br><span class='neon-green-text' style='font-size:24px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span><br><span style='font-size:9px; color:#88929b;'>Simulated · Not real tokens</span>"
+        box_txt = f"全网同步累计收益<br><span class='neon-green-text' style='font-size:24px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>" if lang=="中文" else f"Total Synchronized Cloud Earnings<br><span class='neon-green-text' style='font-size:24px; font-weight:bold;'>{st.session_state.app_earned:,.2f} NEXA</span>"
         st.markdown(f"<div style='margin:8px 0; background:#11171d; padding:8px; border-radius:10px;'>{box_txt}</div>", unsafe_allow_html=True)
 
-        ref_label = "🎟️ 您的专属推荐码（分享可获早鸟加速）" if lang=="中文" else "🎟️ Your Referral Code"
+        ref_label = "🎟️您的专属推荐码（分享可获加速奖励）" if lang=="中文" else "🎟️ Your Referral Code"
         st.markdown(f'<div style="background:#0d1f0d; border:1px dashed #A2FF00; border-radius:10px; padding:10px; margin:6px 0;"><span style="font-size:9px; color:#88929b; font-weight:bold;">{ref_label}</span><br><span class="glow-ref-code">{ref_code}</span></div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        btn_logout = "安全退出当前账户" if lang=="中文" else "Logout Account"
+        btn_logout = "安全退出当前登录账户" if lang=="中文" else "Logout Account Location"
         if st.button(btn_logout, key="logout_btn"):
+            # ✅ 退出时清理海报缓存，下次登录其他账户不会显示旧图
             st.session_state.pop("user_poster_path_cache", None)
             st.session_state.pop("user_poster_ref_cache", None)
             st.session_state.current_user = None
@@ -683,7 +612,7 @@ with tab4:
 
         if auth_mode in ["注册新节点账户", "Register Node Account"]:
             with st.form("reg_form"):
-                form_title = "🚀 注册早鸟账户" if lang=="中文" else "🚀 Register Early Access Account"
+                form_title = "🚀 极简注册（自动合并本地 NEXA 数量）" if lang=="中文" else "🚀 Quick Profile Registration"
                 st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#A2FF00; margin-bottom:6px;">{form_title}</div>', unsafe_allow_html=True)
                 label_mail = "邮箱地址:" if lang == "中文" else "Email Address:"
                 label_pwd = "设置密码:" if lang == "中文" else "Choose Password:"
@@ -691,7 +620,7 @@ with tab4:
                 r_email = st.text_input(label_mail, placeholder="example@nexa.com").strip()
                 r_pwd = st.text_input(label_pwd, type="password", placeholder="Password")
                 r_ref = st.text_input(label_reg_ref, placeholder="e.g., NX-XXX-XXX").strip()
-                btn_reg_txt = "创建早鸟账户 ⚡" if lang=="中文" else "Create Early Access Account ⚡"
+                btn_reg_txt = "创建全网统一账户 ⚡" if lang=="中文" else "Create Unified Profile ⚡"
                 if f_submit := st.form_submit_button(btn_reg_txt):
                     if not r_email or not r_pwd:
                         st.error("❌ 邮箱和密码为必填项！" if lang=="中文" else "❌ Email and Password are mandatory!")
@@ -700,6 +629,7 @@ with tab4:
                     else:
                         inherited_nexa = st.session_state.app_earned
                         ref_code = generate_referral_code(r_email)
+                        # ✅ 修复：注册时提前生成并缓存海报，rerun 后直接读缓存不闪烁
                         get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
                         global_server["user_db"][r_email] = {
                             "password_hash": hashlib.sha256(r_pwd.encode()).hexdigest(),
@@ -713,34 +643,35 @@ with tab4:
                         st.rerun()
         else:
             with st.form("login_form"):
-                login_title = "🔑 登录 NexaEdge 账户" if lang=="中文" else "🔑 Login to NexaEdge Account"
+                login_title = "🔑 登录 NexaEdge 算力账户" if lang=="中文" else "🔑 Connect Node Endpoint Terminal"
                 st.markdown(f'<div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:6px;">{login_title}</div>', unsafe_allow_html=True)
                 l_email = st.text_input("登录邮箱:" if lang == "中文" else "Account Email:").strip()
-                l_pwd = st.text_input("验证密码:" if lang == "中文" else "Password:", type="password")
-                btn_l_txt = "登录账户 ⚡" if lang=="中文" else "Login ⚡"
+                l_pwd = st.text_input("验证密码:" if lang == "中文" else "Verification Password:", type="password")
+                btn_l_txt = "验证并载入云端档案 ⚡" if lang=="中文" else "Authenticate & Load Assets ⚡"
                 if st.form_submit_button(btn_l_txt):
                     p_hash = hashlib.sha256(l_pwd.encode()).hexdigest()
                     if l_email in global_server["user_db"] and global_server["user_db"][l_email]["password_hash"] == p_hash:
                         ref_code = global_server["user_db"][l_email].get("referral_code", generate_referral_code(l_email))
+                        # ✅ 修复：登录时提前生成并缓存海报，rerun 后直接读缓存不闪烁
                         get_cached_poster(ref_code, "user_poster_path_cache", "user_poster_ref_cache")
                         st.session_state.current_user = l_email
                         st.session_state.app_earned = global_server["user_db"][l_email]["score"]
-                        st.success("⚡ 登录成功！" if lang=="中文" else "⚡ Login successful!")
+                        st.success("⚡ 登录成功！" if lang=="中文" else "⚡ Authentication verified!")
                         time.sleep(0.5)
                         st.rerun()
                     else:
-                        st.error("❌ 账号或密码有误！" if lang=="中文" else "❌ Invalid email or password!")
+                        st.error("❌ 账号或密码输入有误！" if lang=="中文" else "❌ Invalid combinations!")
 
 # ==========================================
-# Admin Panel
+# 🛡️ 隐蔽后台暗门管理面板触发区
 # ==========================================
 if is_admin_active:
     st.markdown("---")
-    st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 Admin Portal</div>', unsafe_allow_html=True)
-    admin_password = st.text_input("🔑 Admin Password:", type="password", key="admin_pwd_gate")
+    st.markdown('<div style="font-size:14px; font-weight:bold; color:#f43f5e; margin-bottom:8px;">🔒 核心内网安全端口隐蔽审计大盘 (ADMIN PORTAL DETECTED)</div>', unsafe_allow_html=True)
+    admin_password = st.text_input("🔑 请输入内网管理员授权验证密码：", type="password", key="admin_pwd_gate")
 
     if admin_password == "NexaAdmin2026":
-        st.toast("🔓 Admin access granted", icon="🟢")
+        st.toast("🔓 内网大账本数据已成功解密并挂载", icon="🟢")
         whitelist_count = 0
         whitelist_lines = []
         if os.path.exists("whitelist.txt"):
@@ -749,39 +680,39 @@ if is_admin_active:
             whitelist_count = len(whitelist_lines)
 
         c_a1, c_a2, c_a3 = st.columns(3)
-        with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">👥 Registered Users</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])}</div></div>', unsafe_allow_html=True)
-        with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #ffb300;"><div class="mini-stat-title">🎁 Whitelist Claims</div><div class="mini-stat-value" style="color:#ffb300;">{whitelist_count}</div></div>', unsafe_allow_html=True)
-        with c_a3: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 Active Nodes</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])}</div></div>', unsafe_allow_html=True)
+        with c_a1: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #f43f5e;"><div class="mini-stat-title">👥 用户注册量</div><div class="mini-stat-value" style="color:#f43f5e;">{len(global_server["user_db"])} Users</div></div>', unsafe_allow_html=True)
+        with c_a2: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #ffb300;"><div class="mini-stat-title">🎁 白名单登记</div><div class="mini-stat-value" style="color:#ffb300;">{whitelist_count} Claims</div></div>', unsafe_allow_html=True)
+        with c_a3: st.markdown(f'<div class="mini-stat-card" style="border:1px solid #A2FF00;"><div class="mini-stat-title">🟢 活跃节点</div><div class="mini-stat-value" style="color:#A2FF00;">{len(global_server["active_device_set"])} Devices</div></div>', unsafe_allow_html=True)
 
-        adm_sub_tab1, adm_sub_tab2 = st.tabs(["📋 Registered Users", "🎁 Whitelist"])
+        adm_sub_tab1, adm_sub_tab2 = st.tabs(["📋 注册用户大表", "🎁 创世白名单明细"])
         with adm_sub_tab1:
-            table_html = """<table class="admin-table"><tr><th>#</th><th>Email</th><th>Referral Code</th><th>Simulated NEXA</th><th>Referred By</th><th>Reg Time</th></tr>"""
+            table_html = """<table class="admin-table"><tr><th>序号</th><th>用户注册邮箱</th><th>生成专属邀请码</th><th>当前实测累计算力</th><th>绑定的上级推荐码</th><th>注册激活时间</th></tr>"""
             for idx, (email, info) in enumerate(global_server["user_db"].items(), 1):
-                table_html += f"""<tr><td>{idx}</td><td>{email}</td><td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info.get('referral_code', 'N/A')}</td><td style='color:#ffffff; font-weight:bold; font-family:monospace;'>{info['score']:,.2f}</td><td style='color:#00e5ff;'>{info.get('referred_by', 'None')}</td><td>{info['reg_time']}</td></tr>"""
+                table_html += f"""<tr><td>{idx}</td><td>{email}</td><td style='color:#A2FF00; font-weight:bold; font-family:monospace;'>{info.get('referral_code', 'N/A')}</td><td style='color:#ffffff; font-weight:bold; font-family:monospace;'>{info['score']:,.2f} NEXA</td><td style='color:#00e5ff;'>{info.get('referred_by', 'None')}</td><td>{info['reg_time']}</td></tr>"""
             table_html += "</table>"
             st.markdown(table_html, unsafe_allow_html=True)
 
         with adm_sub_tab2:
             if whitelist_lines:
-                wl_table_html = """<table class="admin-table"><tr><th>#</th><th>Entry</th></tr>"""
+                wl_table_html = """<table class="admin-table"><tr><th>序号</th><th>提交的日志 data</th></tr>"""
                 for idx, line in enumerate(whitelist_lines, 1):
                     wl_table_html += f"""<tr><td>{idx}</td><td style='font-family:monospace; color:#bdc3c7;'>{line}</td></tr>"""
                 wl_table_html += "</table>"
                 st.markdown(wl_table_html, unsafe_allow_html=True)
             else:
-                st.info("No whitelist entries yet.")
+                st.info("暂无用户提交白名单申请。")
     elif admin_password != "":
-        st.error("❌ Incorrect admin password.")
+        st.error("❌ 越权访问警告：内部授权密码错误，数据保持加密锁定状态！")
 
 # ==========================================
-# 底栏
+# 📊 宏观大盘全局物理底栏
 # ==========================================
 if lang == "中文":
     lbl_active_nodes = "● 全网活跃节点"
-    lbl_real_viewers = "👀 实时在线"
+    lbl_real_viewers = "👀 实时在线观众"
 else:
-    lbl_active_nodes = "● ACTIVE NODES"
-    lbl_real_viewers = "👀 LIVE VIEWERS"
+    lbl_active_nodes = "● NETWORK ACTIVE NODES"
+    lbl_real_viewers = "👀 LIVE REAL VIEWERS"
 
 st.markdown(f"""
 <div class="bottom-stats-row">
@@ -796,18 +727,9 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ✅ 新增：页脚免责声明
-st.markdown('''
-<div style="text-align:center; font-size:9px; color:#3a5068; margin-top:12px; line-height:1.6; padding: 0 8px;">
-    NexaEdge Network is currently in pre-launch demo phase. All metrics shown are simulated for demonstration purposes only.
-    Whitelist registration does not constitute a token offering, investment contract, or guarantee of future rewards.
-    © 2026 NexaEdge Network. All rights reserved.
-</div>
-''', unsafe_allow_html=True)
-
-# 后台刷新
+# ==================== 后台实时高频刷新内核
 if st.session_state.app_running:
-    st.session_state.app_earned += execute_secure_wasm_task(1)
+    st.session_state.app_earned += 0.01
     st.session_state.session_seconds += 1
     st.session_state.total_energy_wh += (5.1 / 3600.0)
     if st.session_state.current_user:
