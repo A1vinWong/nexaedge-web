@@ -104,11 +104,6 @@ LANGS = {
         "admin_export": "💾 Export Node Registry CSV",
         "admin_empty": "Global ledger is currently empty.",
         "admin_logout": "Relock Console",
-        "tag_bad_extreme": "EXTREME",
-        "tag_bad_spoof": "IP Spoof Risk",
-        "tag_good_zero": "ZERO",
-        "tag_good_zk": "ZK Proof + PoC",
-        "tag_good_local": "100% Local WASM",
     },
     "ZH": {
         "nav": ["核心市场", "网络节点模拟", "架构差异化", "路线图 & 融资", "白名单注册"],
@@ -185,11 +180,6 @@ LANGS = {
         "admin_export": "💾 导出注册节点 CSV",
         "admin_empty": "全局账本当前为空。",
         "admin_logout": "重新锁定控制台",
-        "tag_bad_extreme": "极高",
-        "tag_bad_spoof": "IP可伪造",
-        "tag_good_zero": "零成本",
-        "tag_good_zk": "ZK证明 + PoC",
-        "tag_good_local": "100% 本地WASM",
     }
 }
 
@@ -446,7 +436,7 @@ if current_tab == L["nav"][0]:
     real_cpu = psutil.cpu_percent()
     c1, c2, c3 = st.columns(3)
     with c1: st.metric("Local Node CPU Load", f"{real_cpu}%", "Real-time Telemetry")
-    with c2: st.metric("6.8B" if st.session_state.lang=="EN" else "全球闲置智能手机", "6.8B" if st.session_state.lang=="EN" else "68亿", "NPU Target Market" if st.session_state.lang=="EN" else "NPU目标市场")
+    with c2: st.metric("Global Idle Smartphones" if st.session_state.lang=="EN" else "全球闲置智能手机", "6.8B" if st.session_state.lang=="EN" else "68亿", "NPU Target Market" if st.session_state.lang=="EN" else "NPU目标市场")
     with c3: st.metric("Edge AI Market (2028)", "$107B", "CAGR 19.2%")
 
     if st.session_state.lang == "EN":
@@ -509,21 +499,27 @@ if current_tab == L["nav"][0]:
     st.markdown('</div>', unsafe_allow_html=True)
 
     d, c, s = L["demand_side"], L["coordination"], L["supply_side"]
-    arch_body_en = ["Submit inference tasks via API. Pay in NEXA per compute unit.", "Task routing, BFT consensus, reward settlement. Low gas, high TPS.", "WASM sandbox on idle devices. NPU executes inference. Proof submitted on-chain."]
-    arch_body_zh = ["通过API提交推理任务，按算力单位支付NEXA代币。", "任务路由、BFT共识、奖励结算。低gas，高TPS。", "闲置设备上的WASM沙箱，NPU执行推理，证明上链。"]
-    arch_body = arch_body_en if st.session_state.lang == "EN" else arch_body_zh
-    arch_titles = (["AI Buyers", "Solana SPL", "Device Nodes"] if st.session_state.lang == "EN" else ["AI买家", "Solana SPL", "设备节点"])
-    arch_icons = ["🏢", "⛓", "📱"]
-    arch_labels = [d, c, s]
+    arch_body = (
+        ["Submit inference tasks via API. Pay in NEXA per compute unit.",
+         "Task routing, BFT consensus, reward settlement. Low gas, high TPS.",
+         "WASM sandbox on idle devices. NPU executes inference. Proof submitted on-chain."]
+        if st.session_state.lang == "EN" else
+        ["通过API提交推理任务，按算力单位支付NEXA代币。",
+         "任务路由、BFT共识、奖励结算。低gas，高TPS。",
+         "闲置设备上的WASM沙箱，NPU执行推理，证明上链。"]
+    )
+    arch_titles = (["AI Buyers", "Solana SPL", "Device Nodes"] if st.session_state.lang == "EN"
+                   else ["AI买家", "Solana SPL", "设备节点"])
     arch_html = '<div style="display:flex;align-items:stretch;gap:0;">'
-    for i in range(3):
-        arch_html += f'<div style="flex:1;background:#060a0d;border:1px solid #1a2530;border-radius:8px;padding:14px;text-align:center;"><div style="font-family:\'Space Mono\',monospace;font-size:9px;color:#556070;text-transform:uppercase;margin-bottom:8px;">{arch_labels[i]}</div><div style="font-size:22px;margin-bottom:6px;">{arch_icons[i]}</div><div style="font-size:12px;font-weight:700;color:#e8edf2;margin-bottom:4px;">{arch_titles[i]}</div><div style="font-size:10px;color:#556070;line-height:1.5;">{arch_body[i]}</div></div>'
+    for i, (icon, label, title, body) in enumerate(zip(
+        ["🏢","⛓","📱"], [d,c,s], arch_titles, arch_body
+    )):
+        arch_html += f'<div style="flex:1;background:#060a0d;border:1px solid #1a2530;border-radius:8px;padding:14px;text-align:center;"><div style="font-family:\'Space Mono\',monospace;font-size:9px;color:#556070;text-transform:uppercase;margin-bottom:8px;">{label}</div><div style="font-size:22px;margin-bottom:6px;">{icon}</div><div style="font-size:12px;font-weight:700;color:#e8edf2;margin-bottom:4px;">{title}</div><div style="font-size:10px;color:#556070;line-height:1.5;">{body}</div></div>'
         if i < 2:
             arch_html += '<div style="display:flex;align-items:center;padding:0 8px;color:#a2ff00;font-size:18px;">→</div>'
     arch_html += '</div>'
     st.markdown(f'<div class="nx-card"><div class="nx-card-title"><span>▸</span> {L["arch_title"]}</div>{arch_html}</div>', unsafe_allow_html=True)
 
-    # 机构种子轮投资入口
     st.markdown(f"### 🏛️ {L['invest_title']}")
     ci1, ci2 = st.columns([2, 1])
     with ci1:
@@ -544,7 +540,7 @@ if current_tab == L["nav"][0]:
     """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 2 — NETWORK SIM 网络节点模拟
+# TAB 2 — NETWORK SIM
 # ══════════════════════════════════════
 elif current_tab == L["nav"][1]:
     st.markdown(f'<div class="nx-notice">{L["sim_only"]}</div>', unsafe_allow_html=True)
@@ -591,7 +587,7 @@ elif current_tab == L["nav"][1]:
     nexa_val = f"{st.session_state.nexa_earned:.4f}" if (st.session_state.sim_running or st.session_state.nexa_earned > 0) else "—"
     nexa_rate_val = f"{st.session_state.nexa_rate:.4f}" if st.session_state.sim_running else "—"
 
-    s1,s2,s3,s4,s5,s6 = st.columns(6)
+    s1, s2, s3, s4, s5, s6 = st.columns(6)
     for col, val, lbl, cls in [
         (s1, active_count, L["active_nodes"], ""),
         (s2, st.session_state.sim_tasks, L["tasks_done"], ""),
@@ -648,7 +644,7 @@ elif current_tab == L["nav"][1]:
     </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 3 — DIFFERENTIATION 架构差异化
+# TAB 3 — DIFFERENTIATION
 # ══════════════════════════════════════
 elif current_tab == L["nav"][2]:
     if st.session_state.lang == "EN":
@@ -725,7 +721,7 @@ elif current_tab == L["nav"][2]:
     </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 4 — ROADMAP & FUNDING 路线图与融资
+# TAB 4 — ROADMAP & FUNDING
 # ══════════════════════════════════════
 elif current_tab == L["nav"][3]:
     if st.session_state.lang == "EN":
@@ -833,25 +829,23 @@ elif current_tab == L["nav"][4]:
             <div style="font-size:12px;color:#556070;line-height:1.7;margin-bottom:16px;">{L['wl_success_desc']}</div>
             <div style="background:#060a0d;border:1px solid rgba(162,255,0,0.3);border-radius:8px;padding:16px;margin-bottom:15px;">
                 <div style="font-family:'Space Mono',monospace;font-size:9px;color:#556070;text-transform:uppercase;margin-bottom:6px;">{L['wl_your_ref']}</div>
-                <div class="nx-ref-code" id="ref-target">{ref}</div>
+                <div class="nx-ref-code">{ref}</div>
             </div>
         </div>""", unsafe_allow_html=True)
-        
-        # 优化后的原生剪贴板 JS 组件逻辑
+
+        # 原生剪贴板复制
         if st.button(L["wl_copy"], key="copy_ref_btn"):
             st.components.v1.html(f"""
                 <script>
-                navigator.clipboard.writeText("{ref}").then(() => {{
-                    window.parent.document.querySelector('button[kind="primary"]').innerText = "{L['wl_copied']}";
-                }});
+                navigator.clipboard.writeText("{ref}").catch(()=>{{}});
                 </script>
             """, height=0, width=0)
             st.toast(L["wl_copied"])
-            
+
         st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-        
-        # 修复闭环：允许同一个会话注册另一个节点
-        if st.button(L["wl_reset"], kind="secondary", key="wl_reset_btn"):
+
+        # 允许注册另一个节点
+        if st.button(L["wl_reset"], type="secondary", key="wl_reset_btn"):
             st.session_state.wl_success = False
             st.session_state.wl_ref_code = ''
             st.rerun()
@@ -895,7 +889,7 @@ elif current_tab == L["nav"][4]:
             {"By registering you confirm this is a concept demo. No tokens are issued. No investment contract is formed." if st.session_state.lang=='EN' else "注册即表明您了解这是概念演示。不发行代币，不构成投资合同。"}
         </div>""", unsafe_allow_html=True)
 
-    # 动态渲染已加哈希的创世公开可查账本
+    # 动态创世账本指纹
     if global_db["registrations"]:
         st.markdown(f"### {L['ledger_title']}")
         ledger_rows = [
@@ -908,7 +902,7 @@ elif current_tab == L["nav"][4]:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# FOOTER & 后台管理审计控制台 (Expander)
+# FOOTER & 后台管理审计控制台
 # ══════════════════════════════════════
 st.markdown("""
 <div class="nx-footer">
@@ -920,7 +914,8 @@ st.markdown("""
 
 with st.expander(L["admin_title"], expanded=False):
     if not st.session_state.admin_logged_in:
-        pw = st.text_input("", type="password", placeholder=L["admin_pw_ph"], key="admin_pw_input", label_visibility="collapsed")
+        pw = st.text_input("", type="password", placeholder=L["admin_pw_ph"],
+                           key="admin_pw_input", label_visibility="collapsed")
         if st.button(L["admin_login"], key="admin_login_btn"):
             if pw == ADMIN_PASSWORD:
                 st.session_state.admin_logged_in = True
@@ -931,7 +926,9 @@ with st.expander(L["admin_title"], expanded=False):
         if st.session_state.admin_error:
             st.error(L["admin_wrong"])
     else:
-        st.markdown(f'<div style="color:#a2ff00;font-family:\'Space Mono\',monospace;font-size:12px;font-weight:700;margin-bottom:14px;">{L["admin_header"]}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="color:#a2ff00;font-family:\'Space Mono\',monospace;font-size:12px;font-weight:700;margin-bottom:14px;">{L["admin_header"]}</div>',
+            unsafe_allow_html=True)
 
         regs = global_db["registrations"]
         ac1, ac2, ac3 = st.columns(3)
@@ -961,7 +958,8 @@ with st.expander(L["admin_title"], expanded=False):
 
             csv_lines = ["#,Email,Wallet,RefCode,UsedRef,Lang,Timestamp"]
             for i, r in enumerate(regs):
-                csv_lines.append(f"{i+1},{r['email']},{r['wallet']},{r['ref_code']},{r.get('used_ref','')},{r.get('lang','')},{r['timestamp']}")
+                csv_lines.append(
+                    f"{i+1},{r['email']},{r['wallet']},{r['ref_code']},{r.get('used_ref','')},{r.get('lang','')},{r['timestamp']}")
             st.download_button(
                 label=L["admin_export"],
                 data="\n".join(csv_lines),
