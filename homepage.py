@@ -525,12 +525,48 @@ if 'session_counted' not in st.session_state:
     st.session_state.session_counted = True
     global_db['base_sessions'] += 1
 
-# 后门页面检查（通过 URL query param）
-query_params = st.query_params
-is_admin_page = query_params.get("page", "") == "nexaedge-admin-2026"
+# ══════════════════════════════════════
+# 后台入口检测（URL + Session 双重方案）
+# ══════════════════════════════════════
+if 'is_admin_page' not in st.session_state:
+    st.session_state.is_admin_page = False
+
+def _detect_admin_url():
+    try:
+        qp = st.query_params
+        val = qp.get("page", "")
+        if isinstance(val, list): val = val[0] if val else ""
+        return str(val) == "nexaedge-admin-2026"
+    except Exception:
+        pass
+    try:
+        qp = st.experimental_get_query_params()
+        vals = qp.get("page", [""])
+        return (vals[0] if vals else "") == "nexaedge-admin-2026"
+    except Exception:
+        pass
+    return False
+
+if _detect_admin_url():
+    st.session_state.is_admin_page = True
+
+is_admin_page = st.session_state.is_admin_page
 
 L = LANGS[st.session_state.lang]
 TASK_TYPES = TASK_TYPES_EN if st.session_state.lang == "EN" else TASK_TYPES_ZH
+
+# 侧边栏隐藏入口（在 URL 方案失效时使用）
+with st.sidebar:
+    _sb = st.text_input("", placeholder="", key="sb_admin_key",
+                        label_visibility="collapsed", type="password")
+    if _sb == "nexaedge-admin-2026":
+        st.session_state.is_admin_page = True
+        st.rerun()
+    if st.session_state.is_admin_page:
+        if st.button("← Exit Admin", key="sb_exit_admin"):
+            st.session_state.is_admin_page = False
+            st.session_state.admin_logged_in = False
+            st.rerun()
 
 # ══════════════════════════════════════
 # 遥测调度引擎
