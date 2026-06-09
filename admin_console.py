@@ -53,31 +53,41 @@ except Exception as e:
     st.error(f"❌ 获取数据失败: {str(e)}")
     raw_data = []
 
-# 5. 数据联动渲染逻辑
+# 5. 数据流动防御渲染
 if not raw_data:
     st.info("💡 数据库目前运行正常，暂时没有新用户提交白名单。")
 else:
+    # 转换为 DataFrame 确保安全
     df = pd.DataFrame(raw_data)
     
-    # 时间转换
-    df['created_at_dt'] = pd.to_datetime(df['created_at'])
-    df['date'] = df['created_at_dt'].dt.date
+    # 统一强制补充缺失的核心字段，防止代码因列不存在而崩盘
+    required_columns = ["created_at", "email", "wallet", "invitation_code", "ref_code", "referred_by", "used_ref", "lang"]
+    for col in required_columns:
+        if col not in df.columns:
+            df[col] = ""
+
+    # 安全地将创建时间转化为日期类型
+    try:
+        df['created_at_dt'] = pd.to_datetime(df['created_at'], errors='coerce')
+        df['date'] = df['created_at_dt'].dt.date
+    except Exception:
+        df['date'] = datetime.date.today()
 
     # ==========================================
-    # 功能一：📊 注册统计指标
+    # 功能一：📊 实时数据透视卡片 (安全统计)
     # ==========================================
     st.markdown("### 📊 实时数据透视")
     
     total_rows = len(df)
-    unique_emails = df['email'].nunique() if 'email' in df.columns else 0
+    unique_emails = df['email'].astype(str).str.strip().nunique() if 'email' in df.columns else 0
     
-    # 语种统计
+    # 极其宽容的中英文语种模糊匹配计数
     zh_count = 0
     en_count = 0
     if 'lang' in df.columns:
-        lang_counts = df['lang'].value_counts()
-        zh_count = int(lang_counts.get('zh-CN', 0)) + int(lang_counts.get('zh', 0))
-        en_count = int(lang_counts.get('en', 0))
+        lang_series = df['lang'].astype(str).str.lower()
+        zh_count = lang_series.str.contains('zh').sum()
+        en_count = lang_series.str.contains('en').sum()
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -85,76 +95,87 @@ else:
     with col2:
         st.metric(label="👥 唯一独立邮箱 (Unique)", value=unique_emails)
     with col3:
-        st.metric(label="🇨🇳 中文用户 (ZH)", value=zh_count)
+        st.metric(label="🇨🇳 中文用户 (ZH)", value=int(zh_count))
     with col4:
-        st.metric(label="🇺🇸 英文用户 (EN)", value=en_count)
+        st.metric(label="🇺🇸 英文用户 (EN)", value=int(en_count))
 
     st.markdown("<br>", unsafe_allow_html=True)
     
     # ==========================================
-    # 功能二 & 三：📈 趋势图 + 推荐码排行
+    # 功能二 & 三：📈 趋势图 + 推荐码排行 (防御式渲染)
     # ==========================================
     chart_col, ref_col = st.columns([2, 1])
     
     with chart_col:
         st.markdown("#### 📅 每日注册趋势")
-        trend_df = df.groupby('date').size().reset_index(name='注册数量')
-        trend_df = trend_df.set_index('date')
-        st.line_chart(trend_df, height=210)
+        try:
+            trend_df = df.groupby('date').size().reset_index(name='注册数量')
+            trend_df = trend_df.set_index('date')
+            st.line_chart(trend_df, height=210)
+        except Exception:
+            st.caption("⏳ 正在等待更多日期的注册数据以生成趋势图...")
 
     with ref_col:
         st.markdown("#### 🔥 裂变推荐码活跃度分析")
-        # 兼容前台的 referred_by 字段
-        ref_field = 'referred_by' if 'referred_by' in df.columns else ('used_ref' if 'used_ref' in df.columns else None)
-        if ref_field and ref_field in df.columns:
-            ref_ranking = df[ref_field].dropna().value_counts().reset_index()
-            ref_ranking.columns = ['邀请码 (Ref Code)', '累计被使用次数']
-            ref_ranking = ref_ranking[ref_ranking['邀请码 (Ref Code)'].astype(str).str.strip() != '']
-            if not ref_ranking.empty:
+        try:
+            # 聚合所有的可能推荐码字段，防止漏算
+            df['final_ref'] = df['referred_by'].fillna(df['used_ref']).astype(str).str.strip()
+            # 过滤掉空字符串
+            ref_filtered = df[df['final_ref'] != '']
+            
+            if not ref_filtered.empty:
+                ref_ranking = ref_filtered['final_ref'].value_counts().reset_index()
+                ref_ranking.columns = ['邀请码 (Ref Code)', '累计被使用次数']
                 st.dataframe(ref_ranking.head(5), use_container_width=True, hide_index=True)
             else:
                 st.caption("⏳ 暂时还没有发生推荐码裂变行为")
-        else:
+        except Exception:
             st.caption("⏳ 暂无裂变分析数据")
 
     st.markdown("---")
 
     # ==========================================
-    # 功能四：📋 注册明细表 (最新优先 + 钱包截断)
+    # 功能四：📋 注册明细表 (带钱包强制安全截断)
     # ==========================================
     st.markdown("### 📋 白名单全资产明细（默认最新优先）")
     
     df_display = df.copy()
     
-    # 钱包截断
+    # 钱包中间截断函数
     def truncate_wallet_address(address):
         if pd.isna(address) or len(str(address)) <= 12:
             return address
-        addr_str = str(address)
+        addr_str = str(address).strip()
+        if not addr_str:
+            return ""
         return f"{addr_str[:6]}...{addr_str[-4:]}"
 
     if 'wallet' in df_display.columns:
         df_display['wallet'] = df_display['wallet'].apply(truncate_wallet_address)
     
-    # 动态匹配列名（兼容前后台不同命名）
-    all_cols = ["created_at", "email", "wallet", "invitation_code", "ref_code", "referred_by", "used_ref", "lang"]
-    display_cols = [col for col in all_cols if col in df_display.columns]
-    df_display = df_display[display_cols]
-
-    st.dataframe(df_display, use_container_width=True, hide_index=True)
+    # 精简展示的字段，不要让表格太乱
+    clean_cols = [c for c in ["created_at", "email", "wallet", "invitation_code", "referred_by", "lang"] if c in df_display.columns]
+    if clean_cols:
+        st.dataframe(df_display[clean_cols], use_container_width=True, hide_index=True)
+    else:
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
 
     # ==========================================
     # 功能五：📥 自动带时间戳的一键导出
     # ==========================================
     st.markdown("<br>", unsafe_allow_html=True)
-    current_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    csv_filename = f"nexaedge_whitelist_{current_timestamp}.csv"
-    
-    csv_bytes = df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 一键导出完整数据明细表 (全量完整钱包地址) 为 CSV 电子表格",
-        data=csv_bytes,
-        file_name=csv_filename,
-        mime="text/csv",
-        use_container_width=True
-    )
+    try:
+        current_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        csv_filename = f"nexaedge_whitelist_{current_timestamp}.csv"
+        
+        # 导出最原始完整的全量数据（包含完整钱包地址）
+        csv_bytes = df[required_columns].to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 一键导出完整数据明细表 (全量完整钱包地址) 为 CSV 电子表格",
+            data=csv_bytes,
+            file_name=csv_filename,
+            mime="text/csv",
+            use_container_width=True
+        )
+    except Exception as e:
+        st.caption("无法生成导出按钮，等待数据格式化...")
