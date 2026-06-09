@@ -4,4 +4,7 @@ pandas
 streamlit-autorefresh
 streamlit
 psutil
+streamlit>=1.30.0
+supabase>=2.3.0
+
 
