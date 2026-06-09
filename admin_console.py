@@ -12,12 +12,12 @@ st.set_page_config(
 # ══════════════════════════════════════
 # Supabase
 # ══════════════════════════════════════
+SUPABASE_URL = "https://nfafzigmcdybgbxdtymf.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mYWZ6aWdtY2R5YmdieGR0eW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODE3NTMsImV4cCI6MjA5NjU1Nzc1M30.ZIX3sByZ8yQSDGFr-o24CjIXwZ5UsB4rMB3jculLtv0"
+
 @st.cache_resource
 def get_supabase() -> Client:
-    return create_client(
-        st.secrets["supabase"]["url"],
-        st.secrets["supabase"]["key"]
-    )
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 supabase = get_supabase()
 
@@ -642,5 +642,3 @@ st.markdown("""
     NexaEdge Admin Console &nbsp;·&nbsp; Live Supabase Connection &nbsp;·&nbsp; contact@nexaedge.org
 </div>
 """, unsafe_allow_html=True)
-
-
