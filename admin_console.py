@@ -179,3 +179,67 @@ else:
         )
     except Exception as e:
         st.caption("无法生成导出按钮，等待数据格式化...")
+# ==========================================
+# 🤫 隐藏的管理员暗道：直接在前台看数据看板
+# ==========================================
+st.markdown("---")
+with st.expander("🔒 点击展开核心数据管理后台 (Admin Only)"):
+    admin_pwd = st.text_input("请输入管理员高级密码", type="password", key="admin_hidden_pwd")
+    if admin_pwd == "nexaedge2026admin":
+        st.success("🔓 鉴权成功！正在实时读取 Supabase 数据库...")
+        
+        try:
+            # 1. 尝试直接拉取最新完整数据
+            response = supabase.table("whitelist").select("*").order("created_at", desc=True).execute()
+            raw_data = response.data
+            
+            if not raw_data:
+                st.info("💡 数据库目前连接正常，暂时没有新用户提交白名单。")
+            else:
+                df = pd.DataFrame(raw_data)
+                
+                # 补全可能缺失的列
+                required_columns = ["created_at", "email", "wallet", "invitation_code", "lang"]
+                for col in required_columns:
+                    if col not in df.columns:
+                        df[col] = ""
+
+                # 2. 📊 核心指标
+                total_rows = len(df)
+                unique_emails = df['email'].astype(str).str.strip().nunique() if 'email' in df.columns else 0
+                
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.metric(label="📈 总提交次数 (Total Rows)", value=total_rows)
+                with c2:
+                    st.metric(label="👥 唯一独立邮箱 (Unique Emails)", value=unique_emails)
+
+                # 3. 📋 资产明细表
+                st.markdown("#### 📋 白名单全资产明细")
+                
+                df_display = df.copy()
+                def truncate_wallet_address(address):
+                    if pd.isna(address) or len(str(address)) <= 12:
+                        return address
+                    addr_str = str(address).strip()
+                    return f"{addr_str[:6]}...{addr_str[-4:]}" if addr_str else ""
+
+                if 'wallet' in df_display.columns:
+                    df_display['wallet'] = df_display['wallet'].apply(truncate_wallet_address)
+                
+                clean_cols = [c for c in ["created_at", "email", "wallet", "invitation_code", "lang"] if c in df_display.columns]
+                st.dataframe(df_display[clean_cols] if clean_cols else df_display, use_container_width=True, hide_index=True)
+
+                # 4. 📥 一键导出 CSV
+                csv_bytes = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 一键导出完整数据明细表为 CSV 电子表格",
+                    data=csv_bytes,
+                    file_name="nexaedge_whitelist_all.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+        except Exception as e:
+            st.error(f"❌ 读取数据库失败，请确认 Secrets 里的 [supabase] 钥匙是否配对。错误原因: {str(e)}")
+    elif admin_pwd:
+        st.error("❌ 密码错误，拒绝访问！")
