@@ -2,6 +2,7 @@ import streamlit as st
 from supabase import create_client, Client
 import pandas as pd
 import datetime
+import os
 
 # 1. 页面基础配置 (宽屏模式更适合看报表)
 st.set_page_config(page_title="Nexaedge Admin Console", page_icon="⚡", layout="wide")
@@ -46,11 +47,11 @@ st.title("⚡ Nexaedge Whitelist 后端核心控制台")
 st.caption("实时监控用户注册行为、推荐码裂变效率及白名单资产明细")
 st.markdown("---")
 
-# 4. 从 Supabase 拉取最新完整数据 (按最新时间优先排序)
+# 4. 从 Supabase 拉取最新完整数据 (修复在新版 SDK 下的排序报错问题)
 with st.spinner("正在从区块链底座调取实时数据..."):
     try:
-        # 使用 order("created_at", descending=True) 实现最新优先排序
-        response = supabase.table("whitelist").select("*").order("created_at", descending=True).execute()
+        # 【核心修正】：新版 Supabase Python SDK 移除了 descending 参数，改用 desc=True
+        response = supabase.table("whitelist").select("*").order("created_at", desc=True).execute()
         raw_data = response.data
     except Exception as e:
         st.error(f"获取数据失败，请检查数据库连接: {str(e)}")
@@ -72,13 +73,15 @@ else:
     st.markdown("### 📊 实时数据透视")
     
     total_rows = len(df)
-    unique_emails = df['email'].nunique()  # 唯一邮箱总数
+    unique_emails = df['email'].nunique() if 'email' in df.columns else 0  # 唯一邮箱总数
     
     # 统计语言分布（防止没有值的异常情况）
-    lang_counts = df['lang'].value_counts()
-    zh_count = int(lang_counts.get('zh-CN', 0))
-    en_count = int(lang_counts.get('en', 0))
-    other_lang_count = total_rows - (zh_count + en_count)
+    zh_count = 0
+    en_count = 0
+    if 'lang' in df.columns:
+        lang_counts = df['lang'].value_counts()
+        zh_count = int(lang_counts.get('zh-CN', 0))
+        en_count = int(lang_counts.get('en', 0))
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -107,12 +110,18 @@ else:
 
     with ref_col:
         st.markdown("#### 🔥 裂变推荐码 Top 5")
-        # 统计 used_ref 哪个被填写的次数最多 (即谁的码最活跃)
-        ref_ranking = df['used_ref'].dropna().value_counts().reset_index()
-        ref_ranking.columns = ['邀请码 (Ref)', '被使用次数']
-        
-        if not ref_ranking.empty:
-            st.dataframe(ref_ranking.head(5), use_container_width=True, hide_index=True)
+        if 'used_ref' in df.columns:
+            # 统计 used_ref 哪个被填写的次数最多 (即谁的码最活跃)
+            ref_ranking = df['used_ref'].dropna().value_counts().reset_index()
+            ref_ranking.columns = ['邀请码 (Ref)', '被使用次数']
+            
+            # 过滤掉可能存在的空字符串邀请码
+            ref_ranking = ref_ranking[ref_ranking['邀请码 (Ref)'].str.strip() != '']
+            
+            if not ref_ranking.empty:
+                st.dataframe(ref_ranking.head(5), use_container_width=True, hide_index=True)
+            else:
+                st.caption("暂无邀请裂变数据")
         else:
             st.caption("暂无邀请裂变数据")
 
@@ -133,18 +142,21 @@ else:
         addr_str = str(address)
         return f"{addr_str[:6]}...{addr_str[-4:]}"
 
-    df_display['wallet'] = df_display['wallet'].apply(truncate_wallet)
+    if 'wallet' in df_display.columns:
+        df_display['wallet'] = df_display['wallet'].apply(truncate_wallet)
     
-    # 重新整理表格展示列
-    display_cols = ["created_at", "email", "wallet", "ref_code", "used_ref", "lang"]
+    # 检查并整理表格展示列（确保即使有缺失列程序也不会崩溃）
+    all_possible_cols = ["created_at", "email", "wallet", "ref_code", "used_ref", "lang"]
+    display_cols = [col for col in all_possible_cols if col in df_display.columns]
     df_display = df_display[display_cols]
     
     # 搜索和筛选框
     search_query = st.text_input("🔍 搜索邮箱或原始钱包地址...", placeholder="输入任意关键字后回车...")
     if search_query:
         # 搜索时支持使用原始完整地址/邮箱进行过滤
-        df_filtered = df_display[df['email'].str.contains(search_query, case=False, na=False) | 
-                                 df['wallet'].str.contains(search_query, case=False, na=False)]
+        email_mask = df['email'].str.contains(search_query, case=False, na=False) if 'email' in df.columns else False
+        wallet_mask = df['wallet'].str.contains(search_query, case=False, na=False) if 'wallet' in df.columns else False
+        df_filtered = df_display[email_mask | wallet_mask]
     else:
         df_filtered = df_display
 
@@ -160,7 +172,8 @@ else:
     csv_filename = f"nexaedge_whitelist_{timestamp}.csv"
     
     # 导出完整的、未截断的数据（确保导出的钱包地址是完整的！）
-    export_df = df[["id", "email", "wallet", "ref_code", "used_ref", "lang", "created_at"]]
+    export_cols = [col for col in ["id", "email", "wallet", "ref_code", "used_ref", "lang", "created_at"] if col in df.columns]
+    export_df = df[export_cols]
     csv_bytes = export_df.to_csv(index=False).encode('utf-8')
     
     st.download_button(
