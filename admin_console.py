@@ -1,245 +1,229 @@
 import streamlit as st
+import time
+import hashlib
 from supabase import create_client, Client
-import pandas as pd
-import datetime
 
-# 1. 网页全局基础配置
-st.set_page_config(page_title="Nexaedge Admin Console", page_icon="⚡", layout="wide")
+st.set_page_config(
+    page_title="NexaEdge Admin Console",
+    page_icon="🔐",
+    layout="centered"
+)
 
-# 2. 初始化 Supabase 客户端
+# ══════════════════════════════════════
+# 同一个 Supabase 连接 — 读取真实数据
+# ══════════════════════════════════════
 @st.cache_resource
-def init_supabase() -> Client:
+def get_supabase() -> Client:
+    return create_client(
+        st.secrets["supabase"]["url"],
+        st.secrets["supabase"]["key"]
+    )
+
+supabase = get_supabase()
+
+def db_get_all():
     try:
-        url = st.secrets["supabase"]["url"].strip().rstrip('/')
-        key = st.secrets["supabase"]["key"].strip()
-        return create_client(url, key)
+        res = supabase.table("whitelist").select("*").order("created_at", desc=True).execute()
+        return res.data or []
     except Exception as e:
-        st.error("❌ 无法连接到 Supabase 数据库，请检查 Streamlit 的 Secrets 配置。")
-        st.stop()
+        st.error(f"DB Error: {e}")
+        return []
 
-supabase: Client = init_supabase()
+def db_count():
+    try:
+        res = supabase.table("whitelist").select("id", count="exact").execute()
+        return res.count or 0
+    except:
+        return 0
 
-# 3. 🔐 独立安全登录页
+def db_delete(row_id):
+    try:
+        supabase.table("whitelist").delete().eq("id", row_id).execute()
+        return True
+    except:
+        return False
+
 ADMIN_PASSWORD = "nexaedge2026admin"
 
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
+# ══════════════════════════════════════
+# CSS
+# ══════════════════════════════════════
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+.main .block-container{padding-top:1.5rem!important;padding-bottom:3rem!important;max-width:1000px!important}
+.stApp{background-color:#060b0f}
+#MainMenu,footer,header,[data-testid="stHeader"]{display:none!important}
+.stApp::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(162,255,0,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(162,255,0,.015) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+*,h1,h2,h3,h4,p,div,span,label{font-family:'Syne',sans-serif}
+[data-testid="stMetric"]{background:linear-gradient(135deg,#0d1720,#0a1118)!important;border:1px solid #182230!important;border-radius:12px!important;padding:18px!important}
+[data-testid="stMetricLabel"]{font-family:'Space Mono',monospace!important;font-size:9px!important;color:#4a6070!important;text-transform:uppercase!important;letter-spacing:.1em!important}
+[data-testid="stMetricValue"]{font-size:28px!important;font-weight:800!important;color:#e8edf2!important}
+div.stButton>button{background:linear-gradient(135deg,#a2ff00,#8de600)!important;color:#060b0f!important;font-family:'Space Mono',monospace!important;font-size:11px!important;font-weight:700!important;text-transform:uppercase!important;letter-spacing:.06em!important;border:none!important;border-radius:8px!important;padding:11px 22px!important;width:100%!important}
+div.stButton>button:hover{background:linear-gradient(135deg,#b5ff33,#a2ff00)!important;box-shadow:0 0 20px rgba(162,255,0,.2)!important}
+div.stButton>button[kind="secondary"]{background:transparent!important;color:#4a6070!important;border:1px solid #182230!important;box-shadow:none!important}
+div.stButton>button[kind="secondary"]:hover{border-color:#f43f5e!important;color:#f43f5e!important}
+.stTextInput>div>div>input{background:#060b0f!important;border:1px solid #182230!important;border-radius:8px!important;color:#e8edf2!important;font-family:'Space Mono',monospace!important;font-size:13px!important;padding:12px 14px!important}
+.stTextInput>div>div>input:focus{border-color:#a2ff00!important;box-shadow:0 0 0 2px rgba(162,255,0,.1)!important}
+.stTextInput label{font-family:'Space Mono',monospace!important;font-size:10px!important;color:#4a6070!important;text-transform:uppercase!important}
+.nx-card{background:linear-gradient(160deg,#0d1720,#090e14);border:1px solid #182230;border-radius:14px;padding:22px 24px;margin-bottom:16px}
+.nx-card-title{font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.nx-card-title .dot{color:#a2ff00}
+.nx-divider{border:none;border-top:1px solid #182230;margin:8px 0 16px}
+.admin-table{width:100%;border-collapse:collapse;font-size:11px}
+.admin-table th{text-align:left;padding:11px 14px;font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;text-transform:uppercase;letter-spacing:.08em;border-bottom:2px solid #182230}
+.admin-table td{padding:12px 14px;border-bottom:1px solid rgba(24,34,48,.5);color:#e8edf2;font-family:'Space Mono',monospace;font-size:10px;vertical-align:middle}
+.admin-table td.dim{color:#4a6070}
+.admin-table td.wallet{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4a6070}
+.admin-table tr:hover td{background:rgba(24,34,48,.4)}
+.admin-table tr:last-child td{border-bottom:none}
+.admin-badge{display:inline-block;background:rgba(162,255,0,.1);color:#a2ff00;border-radius:4px;padding:3px 9px;font-size:9px;font-weight:700;letter-spacing:.08em;font-family:'Space Mono',monospace}
+.badge-en{background:rgba(0,229,255,.1);color:#00e5ff;border-radius:4px;padding:2px 7px;font-size:9px;font-family:'Space Mono',monospace}
+.badge-zh{background:rgba(255,179,0,.1);color:#ffb300;border-radius:4px;padding:2px 7px;font-size:9px;font-family:'Space Mono',monospace}
+.nx-login-wrap{max-width:420px;margin:60px auto 0}
+.nx-footer{border-top:1px solid #182230;margin-top:40px;padding-top:16px;text-align:center;font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;line-height:2}
+</style>
+""", unsafe_allow_html=True)
 
-if not st.session_state["authenticated"]:
-    _, col_login, _ = st.columns([1, 2, 1])
-    with col_login:
-        st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.title("🔒 Nexaedge Console")
-        st.subheader("核心数据管理后台")
-        pwd_input = st.text_input("请输入管理员高级密码", type="password")
-        if st.button("解锁控制台", use_container_width=True):
-            if pwd_input == ADMIN_PASSWORD:
-                st.session_state["authenticated"] = True
-                st.rerun()
-            else:
-                st.error("❌ 密码错误，鉴权失败！")
+# Session state
+if 'admin_auth' not in st.session_state: st.session_state.admin_auth = False
+if 'admin_err' not in st.session_state: st.session_state.admin_err = False
+
+# ══════════════════════════════════════
+# HEADER
+# ══════════════════════════════════════
+st.markdown("""
+<div style="display:flex;align-items:center;gap:12px;padding:10px 0 4px;">
+    <div style="width:10px;height:10px;background:#a2ff00;border-radius:50%;box-shadow:0 0 12px #a2ff00;flex-shrink:0;"></div>
+    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#e8edf2;">
+        Nexa<span style="color:#a2ff00;">Edge</span> · Admin Console
+    </div>
+    <div style="margin-left:auto;">
+        <span style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.25);color:#f43f5e;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:4px 10px;border-radius:5px;letter-spacing:.08em;">🔐 RESTRICTED</span>
+    </div>
+</div>
+<hr class="nx-divider">
+""", unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# LOGIN GATE
+# ══════════════════════════════════════
+if not st.session_state.admin_auth:
+    st.markdown('<div class="nx-login-wrap">', unsafe_allow_html=True)
+    st.markdown("""<div class="nx-card" style="text-align:center;padding:36px 28px;">
+    <div style="font-size:40px;margin-bottom:14px;">🔐</div>
+    <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#e8edf2;margin-bottom:6px;">Admin Authentication</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;margin-bottom:24px;">NexaEdge Whitelist Registry — Restricted Access</div>
+    </div>""", unsafe_allow_html=True)
+    pw = st.text_input("Password", type="password", placeholder="Enter admin password...", key="admin_pw")
+    if st.button("🔓 Unlock Console", key="login_btn"):
+        if pw == ADMIN_PASSWORD:
+            st.session_state.admin_auth = True
+            st.session_state.admin_err = False
+            st.rerun()
+        else:
+            st.session_state.admin_err = True
+    if st.session_state.admin_err:
+        st.error("❌ Incorrect password.")
+    st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 🔓 鉴权通过 ---
-st.title("⚡ Nexaedge Whitelist 后端核心控制台")
-st.caption("实时监控用户注册行为、推荐码裂变效率及白名单资产明细")
-st.markdown("---")
+# ══════════════════════════════════════
+# DASHBOARD（登录后）
+# ══════════════════════════════════════
+regs = db_get_all()
+total = len(regs)
+en_count = sum(1 for r in regs if r.get('lang') == 'EN')
+zh_count = sum(1 for r in regs if r.get('lang') == 'ZH')
+ref_used = sum(1 for r in regs if r.get('used_ref') and r['used_ref'] not in [None, '', '—'])
 
-# 4. 实时拉取最新完整数据
-try:
-    response = supabase.table("whitelist").select("*").order("created_at", desc=True).execute()
-    raw_data = response.data
-except Exception as e:
-    st.error(f"❌ 获取数据失败: {str(e)}")
-    raw_data = []
+# Stats
+c1,c2,c3,c4 = st.columns(4)
+with c1: st.metric("📋 Total Registered", total)
+with c2: st.metric("🌐 EN / ZH", f"{en_count} / {zh_count}")
+with c3: st.metric("🔗 Used Referral", ref_used)
+with c4: st.metric("📅 Latest", regs[0]['created_at'][:10] if regs else "—")
 
-# 5. 数据流动防御渲染
-if not raw_data:
-    st.info("💡 数据库目前运行正常，正在等待前台新用户提交白名单数据。")
+st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
+
+# ── Referral leaderboard
+if ref_used > 0:
+    from collections import Counter
+    top_refs = Counter(r['used_ref'] for r in regs if r.get('used_ref') and r['used_ref'] not in [None,'','—'])
+    if top_refs:
+        best = top_refs.most_common(3)
+        st.markdown("""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> Top Referral Codes</div>""", unsafe_allow_html=True)
+        rb = st.columns(len(best))
+        for i,(code,count) in enumerate(best):
+            with rb[i]:
+                st.metric(f"#{i+1}", code, f"{count} referral{'s' if count>1 else ''}")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# ── Main table
+st.markdown(f"""<div class="nx-card"><div class="nx-card-title">
+<span class="dot">▸</span> Whitelist Registrations
+<span style="margin-left:auto;font-size:10px;color:#a2ff00;">{total} total</span>
+</div>""", unsafe_allow_html=True)
+
+if regs:
+    rows_html = ""
+    for i, r in enumerate(regs):
+        idx = total - i
+        lang_badge = f'<span class="badge-en">EN</span>' if r.get('lang')=='EN' else f'<span class="badge-zh">ZH</span>'
+        used = r.get('used_ref') or '—'
+        used_html = f'<span style="color:#a2ff00;font-size:9px;">{used}</span>' if used != '—' else '<span style="color:#2a3a4a;">—</span>'
+        wallet = r.get('wallet','')
+        wallet_short = f"{wallet[:10]}...{wallet[-6:]}" if len(wallet)>20 else wallet
+        ts = r.get('created_at','')[:19].replace('T',' ')
+        ref_code = r.get('ref_code') or r.get('invitation_code','—')
+        rows_html += f"""<tr>
+            <td class="dim">{idx}</td>
+            <td><strong style="color:#e8edf2;">{r.get('email','')}</strong></td>
+            <td class="wallet" title="{wallet}">{wallet_short}</td>
+            <td><span class="admin-badge">{ref_code}</span></td>
+            <td>{used_html}</td>
+            <td>{lang_badge}</td>
+            <td class="dim" style="white-space:nowrap;">{ts}</td>
+        </tr>"""
+
+    st.markdown(f"""<div style="overflow-x:auto;">
+    <table class="admin-table">
+        <thead><tr><th>#</th><th>Email</th><th>Solana Wallet</th><th>Ref Code</th><th>Used Ref</th><th>Lang</th><th>Registered At</th></tr></thead>
+        <tbody>{rows_html}</tbody>
+    </table></div>""", unsafe_allow_html=True)
 else:
-    # 转换为 DataFrame 确保安全
-    df = pd.DataFrame(raw_data)
-    
-    # 统一强制补充缺失的核心字段，防止代码因列不存在而崩盘
-    required_columns = ["created_at", "email", "wallet", "invitation_code", "ref_code", "referred_by", "used_ref", "lang"]
-    for col in required_columns:
-        if col not in df.columns:
-            df[col] = ""
+    st.markdown("""<div style="text-align:center;padding:50px 0;font-family:'Space Mono',monospace;font-size:12px;color:#4a6070;">
+    No registrations yet.<br><br>
+    <span style="font-size:10px;color:#2a3a4a;">Entries will appear here once users register on the main site.</span>
+    </div>""", unsafe_allow_html=True)
 
-    # 安全地将创建时间转化为日期类型
-    try:
-        df['created_at_dt'] = pd.to_datetime(df['created_at'], errors='coerce')
-        df['date'] = df['created_at_dt'].dt.date
-    except Exception:
-        df['date'] = datetime.date.today()
+st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 功能一：📊 实时数据透视卡片 (安全统计)
-    # ==========================================
-    st.markdown("### 📊 实时数据透视")
-    
-    total_rows = len(df)
-    unique_emails = df['email'].astype(str).str.strip().nunique() if 'email' in df.columns else 0
-    
-    # 极其宽容的中英文语种模糊匹配计数
-    zh_count = 0
-    en_count = 0
-    if 'lang' in df.columns:
-        lang_series = df['lang'].astype(str).str.lower()
-        zh_count = lang_series.str.contains('zh').sum()
-        en_count = lang_series.str.contains('en').sum()
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric(label="📈 总提交次数 (Total)", value=total_rows)
-    with col2:
-        st.metric(label="👥 唯一独立邮箱 (Unique)", value=unique_emails)
-    with col3:
-        st.metric(label="🇨🇳 中文用户 (ZH)", value=int(zh_count))
-    with col4:
-        st.metric(label="🇺🇸 英文用户 (EN)", value=int(en_count))
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # ==========================================
-    # 功能二 & 三：📈 趋势图 + 推荐码排行 (防御式渲染)
-    # ==========================================
-    chart_col, ref_col = st.columns([2, 1])
-    
-    with chart_col:
-        st.markdown("#### 📅 每日注册趋势")
-        try:
-            trend_df = df.groupby('date').size().reset_index(name='注册数量')
-            trend_df = trend_df.set_index('date')
-            st.line_chart(trend_df, height=210)
-        except Exception:
-            st.caption("⏳ 正在等待更多日期的注册数据以生成趋势图...")
-
-    with ref_col:
-        st.markdown("#### 🔥 裂变推荐码活跃度分析")
-        try:
-            # 聚合所有的可能推荐码字段，防止漏算
-            df['final_ref'] = df['referred_by'].fillna(df['used_ref']).astype(str).str.strip()
-            # 过滤掉空字符串
-            ref_filtered = df[df['final_ref'] != '']
-            
-            if not ref_filtered.empty:
-                ref_ranking = ref_filtered['final_ref'].value_counts().reset_index()
-                ref_ranking.columns = ['邀请码 (Ref Code)', '累计被使用次数']
-                st.dataframe(ref_ranking.head(5), use_container_width=True, hide_index=True)
-            else:
-                st.caption("⏳ 暂时还没有发生推荐码裂变行为")
-        except Exception:
-            st.caption("⏳ 暂无裂变分析数据")
-
-    st.markdown("---")
-
-    # ==========================================
-    # 功能四：📋 注册明细表 (带钱包强制安全截断)
-    # ==========================================
-    st.markdown("### 📋 白名单全资产明细（默认最新优先）")
-    
-    df_display = df.copy()
-    
-    # 钱包中间截断函数
-    def truncate_wallet_address(address):
-        if pd.isna(address) or len(str(address)) <= 12:
-            return address
-        addr_str = str(address).strip()
-        if not addr_str:
-            return ""
-        return f"{addr_str[:6]}...{addr_str[-4:]}"
-
-    if 'wallet' in df_display.columns:
-        df_display['wallet'] = df_display['wallet'].apply(truncate_wallet_address)
-    
-    # 精简展示的字段
-    clean_cols = [c for c in ["created_at", "email", "wallet", "invitation_code", "referred_by", "lang"] if c in df_display.columns]
-    if clean_cols:
-        st.dataframe(df_display[clean_cols], use_container_width=True, hide_index=True)
-    else:
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
-
-    # ==========================================
-    # 功能五：📥 自动带时间戳的一键导出
-    # ==========================================
-    st.markdown("<br>", unsafe_allow_html=True)
-    try:
-        current_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        csv_filename = f"nexaedge_whitelist_{current_timestamp}.csv"
-        
-        # 导出最原始完整的全量数据
-        csv_bytes = df.to_csv(index=False).encode('utf-8')
+# ── Action buttons
+b1,b2,b3 = st.columns([2,1,1])
+with b1:
+    if regs:
+        csv_lines = ["#,Email,Wallet,RefCode,UsedRef,ReferredBy,Lang,RegisteredAt"]
+        for i,r in enumerate(reversed(regs)):
+            wallet = r.get('wallet','')
+            ref_code = r.get('ref_code') or r.get('invitation_code','')
+            csv_lines.append(f"{i+1},{r.get('email','')},{wallet},{ref_code},{r.get('used_ref','')},{r.get('referred_by','')},{r.get('lang','')},{r.get('created_at','')[:19]}")
         st.download_button(
-            label="📥 一键导出完整数据明细表 (全量完整钱包地址) 为 CSV 电子表格",
-            data=csv_bytes,
-            file_name=csv_filename,
+            label="⬇ Export Full CSV",
+            data="\n".join(csv_lines),
+            file_name=f"nexaedge_whitelist_{time.strftime('%Y%m%d_%H%M')}.csv",
             mime="text/csv",
-            use_container_width=True
+            key="dl_csv"
         )
-    except Exception as e:
-        st.caption("无法生成导出按钮，等待数据格式化...")
-# ==========================================
-# 🤫 隐藏的管理员暗道：直接在前台看数据看板
-# ==========================================
-st.markdown("---")
-with st.expander("🔒 点击展开核心数据管理后台 (Admin Only)"):
-    admin_pwd = st.text_input("请输入管理员高级密码", type="password", key="admin_hidden_pwd")
-    if admin_pwd == "nexaedge2026admin":
-        st.success("🔓 鉴权成功！正在实时读取 Supabase 数据库...")
-        
-        try:
-            # 1. 尝试直接拉取最新完整数据
-            response = supabase.table("whitelist").select("*").order("created_at", desc=True).execute()
-            raw_data = response.data
-            
-            if not raw_data:
-                st.info("💡 数据库目前连接正常，暂时没有新用户提交白名单。")
-            else:
-                df = pd.DataFrame(raw_data)
-                
-                # 补全可能缺失的列
-                required_columns = ["created_at", "email", "wallet", "invitation_code", "lang"]
-                for col in required_columns:
-                    if col not in df.columns:
-                        df[col] = ""
+with b2:
+    if st.button("🔄 Refresh", type="secondary", key="refresh"):
+        st.rerun()
+with b3:
+    if st.button("🔒 Logout", type="secondary", key="logout"):
+        st.session_state.admin_auth = False
+        st.rerun()
 
-                # 2. 📊 核心指标
-                total_rows = len(df)
-                unique_emails = df['email'].astype(str).str.strip().nunique() if 'email' in df.columns else 0
-                
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.metric(label="📈 总提交次数 (Total Rows)", value=total_rows)
-                with c2:
-                    st.metric(label="👥 唯一独立邮箱 (Unique Emails)", value=unique_emails)
-
-                # 3. 📋 资产明细表
-                st.markdown("#### 📋 白名单全资产明细")
-                
-                df_display = df.copy()
-                def truncate_wallet_address(address):
-                    if pd.isna(address) or len(str(address)) <= 12:
-                        return address
-                    addr_str = str(address).strip()
-                    return f"{addr_str[:6]}...{addr_str[-4:]}" if addr_str else ""
-
-                if 'wallet' in df_display.columns:
-                    df_display['wallet'] = df_display['wallet'].apply(truncate_wallet_address)
-                
-                clean_cols = [c for c in ["created_at", "email", "wallet", "invitation_code", "lang"] if c in df_display.columns]
-                st.dataframe(df_display[clean_cols] if clean_cols else df_display, use_container_width=True, hide_index=True)
-
-                # 4. 📥 一键导出 CSV
-                csv_bytes = df.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="📥 一键导出完整数据明细表为 CSV 电子表格",
-                    data=csv_bytes,
-                    file_name="nexaedge_whitelist_all.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-        except Exception as e:
-            st.error(f"❌ 读取数据库失败，请确认 Secrets 里的 [supabase] 钥匙是否配对。错误原因: {str(e)}")
-    elif admin_pwd:
-        st.error("❌ 密码错误，拒绝访问！")
+st.markdown("""<div class="nx-footer">
+NexaEdge Admin Console &nbsp;·&nbsp; Restricted Access &nbsp;·&nbsp; contact@nexaedge.org<br>
+© 2026 NexaEdge Network
+</div>""", unsafe_allow_html=True)
