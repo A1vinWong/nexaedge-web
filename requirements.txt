@@ -2,4 +2,6 @@ streamlit
 Pillow
 pandas
 streamlit-autorefresh
+streamlit
+psutil
 
