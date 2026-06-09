@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 from supabase import create_client, Client
 
 st.set_page_config(
-    page_title="NexaEdge Network — Investor Demo",
+    page_title="NexaEdge Network — Concept Demo",
     page_icon="🟢",
     layout="centered"
 )
@@ -65,150 +65,144 @@ def db_get_registrations():
 # ══════════════════════════════════════
 LANGS = {
     "EN": {
-        "nav": ["Market", "Network Sim", "Differentiation", "Roadmap", "Whitelist"],
-        "tagline": "Aggregating idle smartphone compute into a distributed edge AI inference network — turning personal devices into institutional-grade infrastructure.",
-        "stage": "⚠ PRE-LAUNCH · ARCHITECTURE DEMO",
-        "sim_only": "⚠ CONCEPT SIMULATION — All metrics are scaling projections, not performance guarantees.",
+        "nav": ["Market", "Network Sim", "Differentiation", "Roadmap", "Waitlist"],
+        # FIX: removed "institutional-grade" puffery, kept factual
+        "tagline": "A protocol design to aggregate idle smartphone compute into a distributed edge AI inference network.",
+        # FIX: clearer pre-launch label, removed "Investor Demo"
+        "stage": "⚠ CONCEPT DEMO · PRE-SEED",
+        # FIX: stronger simulation disclaimer
+        "sim_only": "⚠ SIMULATION ONLY — All nodes, metrics, and NEXA figures are randomly generated for concept illustration. No real compute is running.",
         "start_sim": "▶ Start Simulation",
         "stop_sim": "■ Stop",
-        "running": "● LIVE TELEMETRY ACTIVE",
+        "running": "● SIMULATION ACTIVE",
         "idle": "○ STANDBY",
-        "online_now": "🟢 Nodes Online",
-        "total_sessions": "Registered",
-        "active_nodes": "Active Nodes",
-        "tasks_done": "Tasks Done",
-        "avg_latency": "Avg Latency",
-        "bft_consensus": "Consensus",
-        "nexa_earned": "NEXA Earned",
-        "nexa_per_task": "NEXA/Task",
-        "nexa_proj_title": "NEXA Token Projection",
+        # FIX: removed fake "online now" count from header (was adding +12 hardcoded)
+        "registered": "Waitlist Signups",
+        "active_nodes": "Simulated Active Nodes",
+        "tasks_done": "Simulated Tasks",
+        "avg_latency": "Sim. Latency",
+        "bft_consensus": "Sim. Consensus",
+        "nexa_earned": "Sim. NEXA",
+        "nexa_per_task": "Sim. NEXA/Task",
+        "nexa_proj_title": "NEXA Token Model (Illustrative)",
         "nexa_sim_earned": "Simulated Yield",
-        "nexa_est_usd": "Est. USD (@ $0.50)",
-        "nexa_supply": "Total Supply",
-        "nexa_disclaimer": "⚠ Illustrative only. NEXA reward ~0.0012–0.0038/task based on $50M projected market cap, 100M supply, $0.50 est. price. Actual rates at mainnet.",
-        "node_grid_title": "Node Matrix — 64 Simulated Devices",
-        "task_log_title": "Task Dispatch Log",
-        "log_empty": "// Press ▶ Start to begin.",
-        "workload_title": "Compute Pipeline Capacity",
-        "wl_inference": "Edge AI Inference (SLM 1.8B / WASM)",
-        "wl_rlhf": "Dataset Validation (RLHF)",
-        "wl_zk": "ZK Proof Generation",
+        "nexa_est_usd": "Est. USD (@ $0.50 illustrative)",
+        "nexa_supply": "Total Supply (Minted)",
+        "nexa_disclaimer": "⚠ Simulated NEXA yield figures are illustrative only. 100,000,000 NEXA tokens have been minted on Solana (contract: D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2) but are not yet in public circulation. The $0.50 price shown is a hypothetical model, not a market rate. Reward rates and distribution rules will be defined at mainnet. This is not a financial instrument or investment offer.",
+        "node_grid_title": "Simulated Node Matrix — 64 Virtual Devices",
+        "task_log_title": "Simulated Task Dispatch Log",
+        "log_empty": "// Press ▶ Start to begin the simulation.",
+        "workload_title": "Simulated Compute Pipeline",
+        "wl_inference": "Edge AI Inference (SLM 1.8B / WASM) — concept",
+        "wl_rlhf": "Dataset Validation (RLHF) — concept",
+        "wl_zk": "ZK Proof Generation — concept",
         "comp_title": "Competitive Positioning",
-        "buyer_title": "Who Pays — Buyer Segments",
-        "arch_title": "System Architecture",
+        "buyer_title": "Target Buyer Segments",
+        "arch_title": "Proposed System Architecture",
         "diff_title": "NexaEdge vs. Bandwidth Proxies",
-        "moat_title": "Technical Moat",
-        "thermal_title": "Hardware Safety — 39°C Thermal Protocol",
+        "moat_title": "Planned Technical Moat",
+        "thermal_title": "Hardware Safety Design — 39°C Thermal Protocol",
         "roadmap_title": "Development Roadmap",
-        "wl_title": "Join the Genesis Whitelist",
-        "wl_desc": "Register early — lock your node slot before mainnet launch.",
+        "wl_title": "Join the Early Waitlist",
+        "wl_desc": "Signal interest in the node program. NEXA tokens are minted but not yet distributed — wallet address collected for future node airdrop eligibility.",
         "wl_email": "Email Address",
         "wl_email_ph": "you@example.com",
-        "wl_wallet": "Solana Wallet (SPL)",
+        "wl_wallet": "Solana Wallet (SPL) — for future use",
         "wl_wallet_ph": "32–44 char public key (e.g. 7xKp...)",
         "wl_ref": "Referral Code (Optional)",
-        "wl_ref_ph": "Enter a friend's referral code",
-        "wl_submit": "Register for Whitelist",
-        "wl_success_title": "✅ Registration Successful!",
-        "wl_success_desc": "You're on the NexaEdge whitelist. Share your referral code to earn bonus NEXA at launch.",
+        "wl_ref_ph": "Enter a friend's code",
+        "wl_submit": "Join Waitlist",
+        "wl_success_title": "✅ You're on the waitlist!",
+        "wl_success_desc": "We'll reach out when development begins. Share your code to move up the queue.",
         "wl_your_ref": "Your Referral Code",
-        "wl_copy": "📋 Copy to Clipboard",
+        "wl_copy": "📋 Copy Code",
         "wl_copied": "✅ Copied!",
-        "wl_reset": "🔄 Register Another Node",
-        "wl_total": "Total Registered",
+        "wl_reset": "🔄 Register Another",
+        "wl_total": "Waitlist Signups",
         "err_email": "Please enter a valid email address.",
         "err_wallet": "Solana wallet must be 32–44 characters.",
         "err_dupe": "This email is already registered.",
         "idle_label": "Idle", "active_label": "Active", "processing_label": "Processing",
         "demand_side": "Demand Layer", "coordination": "Settlement Layer", "supply_side": "Supply Cluster",
         "lang_btn": "中文",
-        "ledger_title": "🛡️ Genesis Ledger — Registered Nodes",
-        "invest_title": "Institutional Seed Round Gateway",
-        "invest_desc": "NexaEdge Seed round processed via AngelList Rollups (Post-money SAFE). Institutional allocators may lock intent directly.",
-        "invest_btn": "💼 Soft-Circle Allocation",
-        "invest_warn": "AngelList compliance audit in progress. Submit via Whitelist or email contact@nexaedge.org.",
+        "ledger_title": "📋 Waitlist — Registered Nodes",
     },
     "ZH": {
-        "nav": ["核心市场", "网络模拟", "差异化优势", "路线图", "白名单注册"],
-        "tagline": "将闲置智能手机算力汇聚成分布式边缘 AI 推理网络——让个人设备变身机构级基础设施。",
-        "stage": "⚠ 预发布 · 架构及融资演示",
-        "sim_only": "⚠ 概念模拟演示——所有指标均为示意性预测，非性能保证。",
-        "start_sim": "▶ 启动模拟网络",
+        "nav": ["核心市场", "网络模拟", "差异化优势", "路线图", "候补名单"],
+        "tagline": "一个将闲置智能手机算力汇聚成分布式边缘 AI 推理网络的协议设计方案。",
+        "stage": "⚠ 概念演示 · 种子前阶段",
+        "sim_only": "⚠ 仅为模拟演示——所有节点、指标与 NEXA 数字均为随机生成，用于概念说明，并非真实算力运行。",
+        "start_sim": "▶ 启动模拟",
         "stop_sim": "■ 停止",
-        "running": "● 实时遥测已激活",
+        "running": "● 模拟运行中",
         "idle": "○ 待机中",
-        "online_now": "🟢 在线节点",
-        "total_sessions": "已注册",
-        "active_nodes": "活跃节点",
-        "tasks_done": "完成任务",
-        "avg_latency": "平均延迟",
-        "bft_consensus": "BFT 共识",
-        "nexa_earned": "已赚 NEXA",
-        "nexa_per_task": "NEXA/任务",
-        "nexa_proj_title": "NEXA 代币预测",
+        "registered": "候补名单注册数",
+        "active_nodes": "模拟活跃节点",
+        "tasks_done": "模拟任务数",
+        "avg_latency": "模拟延迟",
+        "bft_consensus": "模拟共识",
+        "nexa_earned": "模拟 NEXA",
+        "nexa_per_task": "模拟 NEXA/任务",
+        "nexa_proj_title": "NEXA 代币模型（示意）",
         "nexa_sim_earned": "模拟产出",
-        "nexa_est_usd": "估值 (@ $0.50)",
-        "nexa_supply": "总供应量",
-        "nexa_disclaimer": "⚠ 仅供参考。每任务约 0.0012–0.0038 NEXA，基于 1 亿总供应量、5000 万美元预计市值、$0.50 发行价估算。实际比率以主网为准。",
-        "node_grid_title": "节点矩阵 — 64 个模拟设备",
-        "task_log_title": "任务调度日志",
-        "log_empty": "// 点击 ▶ 启动模拟网络以开始。",
-        "workload_title": "算力管道负载",
-        "wl_inference": "边缘 AI 推理 (SLM 1.8B / WASM)",
-        "wl_rlhf": "数据集验证 (RLHF)",
-        "wl_zk": "ZK 证明生成",
+        "nexa_est_usd": "估值（@ $0.50 示意价）",
+        "nexa_supply": "总供应量（已铸造）",
+        "nexa_disclaimer": "⚠ 模拟 NEXA 产出数字仅供示意。1 亿枚 NEXA 代币已在 Solana 上铸造（合约：D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2），但尚未公开流通。所示 $0.50 价格为假设模型，并非市场价格。奖励比率与分发规则将在主网阶段确定。本内容不构成金融工具或投资要约。",
+        "node_grid_title": "模拟节点矩阵 — 64 个虚拟设备",
+        "task_log_title": "模拟任务调度日志",
+        "log_empty": "// 点击 ▶ 启动模拟。",
+        "workload_title": "模拟算力管道",
+        "wl_inference": "边缘 AI 推理（SLM 1.8B / WASM）— 概念",
+        "wl_rlhf": "数据集验证（RLHF）— 概念",
+        "wl_zk": "ZK 证明生成 — 概念",
         "comp_title": "竞争定位",
-        "buyer_title": "买家细分",
-        "arch_title": "系统架构",
+        "buyer_title": "目标买家细分",
+        "arch_title": "拟议系统架构",
         "diff_title": "NexaEdge vs 带宽代理网络",
-        "moat_title": "技术护城河",
-        "thermal_title": "硬件安全 — 39°C 热保护协议",
+        "moat_title": "计划中的技术护城河",
+        "thermal_title": "硬件安全设计 — 39°C 热保护协议",
         "roadmap_title": "开发路线图",
-        "wl_title": "加入创世白名单",
-        "wl_desc": "提前注册——在主网上线前锁定您的节点位置。",
+        "wl_title": "加入早期候补名单",
+        "wl_desc": "表达对节点计划的兴趣。NEXA 代币已铸造但尚未分发——钱包地址将用于未来节点空投资格认定。",
         "wl_email": "电子邮件",
         "wl_email_ph": "your@email.com",
-        "wl_wallet": "Solana 钱包 (SPL)",
+        "wl_wallet": "Solana 钱包（SPL）— 备用",
         "wl_wallet_ph": "32–44 位公钥（如 7xKp...）",
         "wl_ref": "推荐码（可选）",
         "wl_ref_ph": "输入朋友的推荐码",
-        "wl_submit": "提交白名单注册",
-        "wl_success_title": "✅ 注册成功！",
-        "wl_success_desc": "您已加入 NexaEdge 白名单。分享推荐码，在主网上线时获得额外 NEXA 奖励。",
+        "wl_submit": "加入候补名单",
+        "wl_success_title": "✅ 已加入候补名单！",
+        "wl_success_desc": "开发启动后我们将与您联系。分享推荐码可提升排名。",
         "wl_your_ref": "您的推荐码",
         "wl_copy": "📋 复制",
         "wl_copied": "✅ 已复制！",
-        "wl_reset": "🔄 注册另一个节点",
-        "wl_total": "已注册总数",
+        "wl_reset": "🔄 注册另一个",
+        "wl_total": "候补名单注册数",
         "err_email": "请输入有效的电子邮件地址。",
         "err_wallet": "Solana 钱包地址应为 32–44 个字符。",
         "err_dupe": "此邮箱已注册。",
         "idle_label": "空闲", "active_label": "活跃", "processing_label": "处理中",
         "demand_side": "需求方", "coordination": "协调层", "supply_side": "供给方",
         "lang_btn": "English",
-        "ledger_title": "🛡️ 创世账本 — 已注册节点",
-        "invest_title": "机构种子轮投资入口",
-        "invest_desc": "NexaEdge 种子轮通过 AngelList Rollups（Post-money SAFE）架构处理。合格机构可直接锁定意向额度。",
-        "invest_btn": "💼 意向锁定",
-        "invest_warn": "合规审核处理中。请通过白名单提交或联系 contact@nexaedge.org。",
+        "ledger_title": "📋 候补名单 — 已注册节点",
     }
 }
 
 TASK_TYPES_EN = [
-    ("SLM inference (Phi-3 mini / WASM)", "success"),
-    ("RLHF label validation chunk", "info"),
-    ("ZK proof chunk verification", "success"),
-    ("BFT consensus cluster vote", "info"),
-    ("Thermal check: OK ✓", "success"),
-    ("Node fingerprint SHA256 verified", "success"),
+    ("[SIM] SLM inference (Phi-3 mini / WASM)", "success"),
+    ("[SIM] RLHF label validation chunk", "info"),
+    ("[SIM] ZK proof chunk verification", "success"),
+    ("[SIM] BFT consensus cluster vote", "info"),
+    ("[SIM] Thermal check: OK ✓", "success"),
+    ("[SIM] Node fingerprint SHA256 verified", "success"),
 ]
 TASK_TYPES_ZH = [
-    ("SLM 推理任务执行 (Phi-3 mini / WASM)", "success"),
-    ("RLHF 数据标签交叉验证", "info"),
-    ("ZK 证明片段生成与校验", "success"),
-    ("BFT 共识层节点签名投票", "info"),
-    ("本机热指标检查: 正常 ✓", "success"),
-    ("节点硬件指纹哈希校验成功", "success"),
+    ("[模拟] SLM 推理任务执行 (Phi-3 mini / WASM)", "success"),
+    ("[模拟] RLHF 数据标签交叉验证", "info"),
+    ("[模拟] ZK 证明片段生成与校验", "success"),
+    ("[模拟] BFT 共识层节点签名投票", "info"),
+    ("[模拟] 本机热指标检查: 正常 ✓", "success"),
+    ("[模拟] 节点硬件指纹哈希校验成功", "success"),
 ]
 
 REWARD_BASE = 0.0022
@@ -246,9 +240,7 @@ div.stButton>button[kind="secondary"]:hover{border-color:#a2ff00!important;color
 .nx-card-title{font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;display:flex;align-items:center;gap:8px}
 .nx-card-title .dot{color:#a2ff00}
 .nx-notice{background:rgba(255,179,0,.05);border:1px solid rgba(255,179,0,.2);border-left:3px solid #ffb300;border-radius:0 8px 8px 0;padding:12px 16px;font-family:'Space Mono',monospace;font-size:10px;color:#ffb300;line-height:1.7;margin-bottom:20px}
-.nx-online-badge{display:inline-flex;align-items:center;gap:10px;background:#060b0f;border:1px solid #182230;border-radius:8px;padding:7px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#00e5ff;margin-top:8px}
-.nx-pulse{width:6px;height:6px;background:#00e5ff;border-radius:50%;animation:pulse-anim 2s ease-in-out infinite}
-@keyframes pulse-anim{0%,100%{box-shadow:0 0 0 0 rgba(0,229,255,.4)}50%{box-shadow:0 0 0 5px rgba(0,229,255,0)}}
+.nx-online-badge{display:inline-flex;align-items:center;gap:10px;background:#060b0f;border:1px solid #182230;border-radius:8px;padding:7px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;margin-top:8px}
 .nx-stage-badge{display:inline-block;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);color:#00e5ff;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:5px 12px;border-radius:6px;letter-spacing:.1em}
 .nx-feature{background:#060b0f;border:1px solid #182230;border-left:3px solid #a2ff00;border-radius:0 10px 10px 0;padding:16px 18px;margin-bottom:12px}
 .nx-feature-title{font-size:13px;font-weight:700;color:#e8edf2;margin-bottom:6px}
@@ -256,6 +248,7 @@ div.stButton>button[kind="secondary"]:hover{border-color:#a2ff00!important;color
 .nx-feature-buyer{margin-top:8px;font-family:'Space Mono',monospace;font-size:10px;color:#00e5ff}
 .tag-bad{display:inline-block;background:rgba(244,63,94,.12);color:#f43f5e;font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700}
 .tag-good{display:inline-block;background:rgba(162,255,0,.1);color:#a2ff00;font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700}
+.tag-plan{display:inline-block;background:rgba(0,229,255,.08);color:#00e5ff;font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700}
 .nx-node-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:14px 0}
 .nx-node{aspect-ratio:1;border-radius:5px;background:#182230}
 .nx-node.active{background:#a2ff00;box-shadow:0 0 8px rgba(162,255,0,.35)}
@@ -362,9 +355,9 @@ if st.session_state.sim_running:
 
 # ══════════════════════════════════════
 # HEADER
+# FIX: removed hardcoded +12 fake node offset; only show real waitlist count
 # ══════════════════════════════════════
 total_reg_count = db_count()
-active_node_count = len([v for v in st.session_state.sim_nodes if v > 0]) + 12
 
 col_logo, col_right = st.columns([3, 1])
 with col_logo:
@@ -377,10 +370,7 @@ with col_logo:
     </div>
     <div style="font-size:12px;color:#4a6070;line-height:1.65;max-width:500px;padding-bottom:8px;">{L['tagline']}</div>
     <div class="nx-online-badge">
-        <div class="nx-pulse"></div>
-        {L['online_now']}: <strong style="color:#a2ff00;">{active_node_count}</strong>
-        &nbsp;·&nbsp;
-        {L['total_sessions']}: <strong style="color:#e8edf2;">{total_reg_count}</strong>
+        {L['registered']}: <strong style="color:#e8edf2;">{total_reg_count}</strong>
     </div>
     """, unsafe_allow_html=True)
 
@@ -402,25 +392,26 @@ if current_tab == L["nav"][0]:
     with c2: st.metric("Edge AI Market 2028" if st.session_state.lang=="EN" else "边缘AI市场 2028", "$107B", "CAGR 19.2%")
     with c3: st.metric("GPU Spot Cost" if st.session_state.lang=="EN" else "GPU即时价", "$2–4/hr", "H100 volatile" if st.session_state.lang=="EN" else "H100波动")
 
+    # FIX: added "PLANNED" tags on NexaEdge column to be accurate about unbuilt features
     if st.session_state.lang == "EN":
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['comp_title']}</div>
-        <table class="nx-table"><thead><tr><th>Dimension</th><th>GPU Cloud</th><th>Grass</th><th class="hl">NexaEdge</th></tr></thead><tbody>
-        <tr><td>CapEx</td><td><span class="tag-bad">EXTREME</span></td><td>Low</td><td class="hl"><span class="tag-good">ZERO</span></td></tr>
-        <tr><td>Latency</td><td><span class="tag-bad">50–150ms</span></td><td>N/A</td><td class="hl"><span class="tag-good">&lt;5ms</span></td></tr>
-        <tr><td>Privacy</td><td><span class="tag-bad">Data leaves</span></td><td>Partial</td><td class="hl"><span class="tag-good">GDPR-native</span></td></tr>
-        <tr><td>Geo Reach</td><td>Few DCs</td><td>High IPs</td><td class="hl"><span class="tag-good">Global</span></td></tr>
-        <tr><td>Compute</td><td>GPU only</td><td><span class="tag-bad">Network only</span></td><td class="hl"><span class="tag-good">NPU + CPU</span></td></tr>
-        <tr><td>Sybil Resist.</td><td>Central auth</td><td><span class="tag-bad">IP spoofable</span></td><td class="hl"><span class="tag-good">HW fingerprint+ZK</span></td></tr>
+        <table class="nx-table"><thead><tr><th>Dimension</th><th>GPU Cloud</th><th>Grass</th><th class="hl">NexaEdge (Planned)</th></tr></thead><tbody>
+        <tr><td>CapEx</td><td><span class="tag-bad">EXTREME</span></td><td>Low</td><td class="hl"><span class="tag-plan">ZERO (design)</span></td></tr>
+        <tr><td>Latency</td><td><span class="tag-bad">50–150ms</span></td><td>N/A</td><td class="hl"><span class="tag-plan">&lt;5ms (target)</span></td></tr>
+        <tr><td>Privacy</td><td><span class="tag-bad">Data leaves</span></td><td>Partial</td><td class="hl"><span class="tag-plan">GDPR-native (design)</span></td></tr>
+        <tr><td>Geo Reach</td><td>Few DCs</td><td>High IPs</td><td class="hl"><span class="tag-plan">Global (design)</span></td></tr>
+        <tr><td>Compute</td><td>GPU only</td><td><span class="tag-bad">Network only</span></td><td class="hl"><span class="tag-plan">NPU + CPU (design)</span></td></tr>
+        <tr><td>Sybil Resist.</td><td>Central auth</td><td><span class="tag-bad">IP spoofable</span></td><td class="hl"><span class="tag-plan">HW fingerprint+ZK (design)</span></td></tr>
         </tbody></table></div>""", unsafe_allow_html=True)
     else:
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['comp_title']}</div>
-        <table class="nx-table"><thead><tr><th>维度</th><th>GPU云</th><th>Grass</th><th class="hl">NexaEdge</th></tr></thead><tbody>
-        <tr><td>资本支出</td><td><span class="tag-bad">极高</span></td><td>低</td><td class="hl"><span class="tag-good">零</span></td></tr>
-        <tr><td>延迟</td><td><span class="tag-bad">50–150ms</span></td><td>不适用</td><td class="hl"><span class="tag-good">&lt;5ms</span></td></tr>
-        <tr><td>隐私</td><td><span class="tag-bad">数据离设备</span></td><td>部分</td><td class="hl"><span class="tag-good">GDPR原生</span></td></tr>
-        <tr><td>地理覆盖</td><td>少量DC</td><td>高IP</td><td class="hl"><span class="tag-good">全球</span></td></tr>
-        <tr><td>算力</td><td>GPU</td><td><span class="tag-bad">仅网络</span></td><td class="hl"><span class="tag-good">NPU+CPU</span></td></tr>
-        <tr><td>女巫抵抗</td><td>中心化</td><td><span class="tag-bad">IP可伪造</span></td><td class="hl"><span class="tag-good">硬件指纹+ZK</span></td></tr>
+        <table class="nx-table"><thead><tr><th>维度</th><th>GPU云</th><th>Grass</th><th class="hl">NexaEdge（计划中）</th></tr></thead><tbody>
+        <tr><td>资本支出</td><td><span class="tag-bad">极高</span></td><td>低</td><td class="hl"><span class="tag-plan">零（设计目标）</span></td></tr>
+        <tr><td>延迟</td><td><span class="tag-bad">50–150ms</span></td><td>不适用</td><td class="hl"><span class="tag-plan">&lt;5ms（目标）</span></td></tr>
+        <tr><td>隐私</td><td><span class="tag-bad">数据离设备</span></td><td>部分</td><td class="hl"><span class="tag-plan">GDPR原生（设计）</span></td></tr>
+        <tr><td>地理覆盖</td><td>少量DC</td><td>高IP</td><td class="hl"><span class="tag-plan">全球（设计）</span></td></tr>
+        <tr><td>算力</td><td>GPU</td><td><span class="tag-bad">仅网络</span></td><td class="hl"><span class="tag-plan">NPU+CPU（设计）</span></td></tr>
+        <tr><td>女巫抵抗</td><td>中心化</td><td><span class="tag-bad">IP可伪造</span></td><td class="hl"><span class="tag-plan">硬件指纹+ZK（设计）</span></td></tr>
         </tbody></table></div>""", unsafe_allow_html=True)
 
     st.markdown(f'<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L["buyer_title"]}</div>', unsafe_allow_html=True)
@@ -452,11 +443,24 @@ if current_tab == L["nav"][0]:
     arch_html += '</div>'
     st.markdown(f'<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L["arch_title"]}</div>{arch_html}</div>', unsafe_allow_html=True)
 
-    st.markdown(f"""<div class="nx-card" style="border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.02);">
-    <div class="nx-card-title"><span style="color:#00e5ff;">◈</span> {L['invest_title']}</div>
-    <div style="font-size:12px;color:#4a6070;line-height:1.7;margin-bottom:14px;">{L['invest_desc']}</div></div>""", unsafe_allow_html=True)
-    if st.button(L["invest_btn"], key="invest_btn"):
-        st.warning(L["invest_warn"])
+    # FIX: removed fake AngelList investment gateway button entirely
+    # Replaced with honest contact card
+    if st.session_state.lang == "EN":
+        st.markdown("""<div class="nx-card" style="border-color:rgba(0,229,255,.15);background:rgba(0,229,255,.02);">
+        <div class="nx-card-title"><span style="color:#00e5ff;">◈</span> INVESTOR CONTACT</div>
+        <div style="font-size:12px;color:#4a6070;line-height:1.8;">
+            NexaEdge is raising a pre-seed round. If you are an accredited investor or grant committee interested in the concept, please reach out directly.<br><br>
+            <strong style="color:#d0d8e4;">contact@nexaedge.org</strong><br>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;">No SAFE or investment contract has been formed. All commitments are subject to formal due diligence.</span>
+        </div></div>""", unsafe_allow_html=True)
+    else:
+        st.markdown("""<div class="nx-card" style="border-color:rgba(0,229,255,.15);background:rgba(0,229,255,.02);">
+        <div class="nx-card-title"><span style="color:#00e5ff;">◈</span> 投资方联系</div>
+        <div style="font-size:12px;color:#4a6070;line-height:1.8;">
+            NexaEdge 正在进行种子前融资。如果您是对本概念感兴趣的合格投资人或资助委员会，请直接联系我们。<br><br>
+            <strong style="color:#d0d8e4;">contact@nexaedge.org</strong><br>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;">目前尚未签署任何 SAFE 或投资合同。所有承诺须经正式尽职调查后方可生效。</span>
+        </div></div>""", unsafe_allow_html=True)
 
     st.markdown("""<div class="nx-social-grid">
     <a class="nx-social-btn" href="https://www.instagram.com/nexaedge__" target="_blank">📸 Instagram</a>
@@ -482,7 +486,7 @@ elif current_tab == L["nav"][1]:
         if st.button(L["stop_sim"], disabled=not st.session_state.sim_running, type="secondary"):
             st.session_state.sim_running=False; st.session_state.sim_nodes=[0]*64; st.rerun()
     with col_status:
-        sc,st_txt = ("#a2ff00",L["running"]) if st.session_state.sim_running else ("#4a6070",L["idle"])
+        sc,st_txt = ("#ffb300",L["running"]) if st.session_state.sim_running else ("#4a6070",L["idle"])
         st.markdown(f'<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:{sc};padding-top:12px;font-weight:700;">{st_txt}</div>', unsafe_allow_html=True)
 
     nodes = st.session_state.sim_nodes
@@ -542,75 +546,77 @@ elif current_tab == L["nav"][1]:
 elif current_tab == L["nav"][2]:
     if st.session_state.lang=="EN":
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['diff_title']}</div>
-        <table class="nx-table"><thead><tr><th>Dimension</th><th>Grass</th><th class="hl">NexaEdge</th></tr></thead><tbody>
+        <table class="nx-table"><thead><tr><th>Dimension</th><th>Grass</th><th class="hl">NexaEdge (Planned)</th></tr></thead><tbody>
         <tr><td>Core resource</td><td>Residential bandwidth</td><td class="hl">Device compute (CPU+NPU)</td></tr>
         <tr><td>Primary use</td><td>Web scraping</td><td class="hl">AI inference, RLHF, ZK-ML</td></tr>
-        <tr><td>Sybil resistance</td><td><span class="tag-bad">HIGH RISK</span> VPN spoofed</td><td class="hl"><span class="tag-good">LOW RISK</span> HW fingerprint</td></tr>
-        <tr><td>Compute verify</td><td>None</td><td class="hl">BFT + ZK proof</td></tr>
-        <tr><td>Solana Mobile</td><td>None</td><td class="hl"><span class="tag-good">NATIVE</span> Seeker/Saga</td></tr>
+        <tr><td>Sybil resistance</td><td><span class="tag-bad">HIGH RISK</span> VPN spoofed</td><td class="hl"><span class="tag-plan">PLANNED</span> HW fingerprint</td></tr>
+        <tr><td>Compute verify</td><td>None</td><td class="hl"><span class="tag-plan">PLANNED</span> BFT + ZK proof</td></tr>
+        <tr><td>Solana Mobile</td><td>None</td><td class="hl"><span class="tag-plan">PLANNED</span> Seeker/Saga</td></tr>
         </tbody></table></div>""", unsafe_allow_html=True)
     else:
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['diff_title']}</div>
-        <table class="nx-table"><thead><tr><th>维度</th><th>Grass</th><th class="hl">NexaEdge</th></tr></thead><tbody>
+        <table class="nx-table"><thead><tr><th>维度</th><th>Grass</th><th class="hl">NexaEdge（计划中）</th></tr></thead><tbody>
         <tr><td>核心资源</td><td>住宅带宽</td><td class="hl">设备算力（CPU+NPU）</td></tr>
         <tr><td>主要用途</td><td>网页抓取</td><td class="hl">AI推理、RLHF、ZK-ML</td></tr>
-        <tr><td>女巫抵抗</td><td><span class="tag-bad">高风险</span> VPN伪造</td><td class="hl"><span class="tag-good">低风险</span> 硬件指纹</td></tr>
-        <tr><td>算力验证</td><td>无</td><td class="hl">BFT + ZK证明</td></tr>
-        <tr><td>Solana Mobile</td><td>无</td><td class="hl"><span class="tag-good">原生</span> Seeker/Saga</td></tr>
+        <tr><td>女巫抵抗</td><td><span class="tag-bad">高风险</span> VPN伪造</td><td class="hl"><span class="tag-plan">计划中</span> 硬件指纹</td></tr>
+        <tr><td>算力验证</td><td>无</td><td class="hl"><span class="tag-plan">计划中</span> BFT + ZK证明</td></tr>
+        <tr><td>Solana Mobile</td><td>无</td><td class="hl"><span class="tag-plan">计划中</span> Seeker/Saga</td></tr>
         </tbody></table></div>""", unsafe_allow_html=True)
 
     st.markdown(f'<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L["moat_title"]}</div>', unsafe_allow_html=True)
     m1,m2=st.columns(2)
     if st.session_state.lang=="EN":
         with m1:
-            st.markdown("""<div class="nx-moat"><div class="nx-moat-icon">🔐</div><div class="nx-moat-title">Proof of Compute (PoC)</div><div class="nx-moat-body">Every node solves a cryptographic ML inference puzzle to claim rewards. HW fingerprint + ZK proof prevents Sybil attacks.</div></div>
-            <div class="nx-moat"><div class="nx-moat-icon">🌍</div><div class="nx-moat-title">Geographic Density</div><div class="nx-moat-body">6.8B smartphones vs. a few thousand datacenters. NexaEdge reaches rural markets no cloud can serve.</div></div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="nx-moat"><div class="nx-moat-icon">🔐</div><div class="nx-moat-title">Proof of Compute (PoC) — Planned</div><div class="nx-moat-body">Every node will solve a cryptographic ML inference puzzle to claim rewards. HW fingerprint + ZK proof designed to prevent Sybil attacks.</div></div>
+            <div class="nx-moat"><div class="nx-moat-icon">🌍</div><div class="nx-moat-title">Geographic Density — Design Thesis</div><div class="nx-moat-body">6.8B smartphones vs. a few thousand datacenters. NexaEdge is designed to reach markets no cloud can serve.</div></div>""", unsafe_allow_html=True)
         with m2:
-            st.markdown("""<div class="nx-moat"><div class="nx-moat-icon">🧠</div><div class="nx-moat-title">NPU-Native Execution</div><div class="nx-moat-body">Modern smartphones (A-series, Snapdragon) have dedicated NPUs. NexaEdge targets these for SLM inference.</div></div>
-            <div class="nx-moat"><div class="nx-moat-icon">📱</div><div class="nx-moat-title">Solana Mobile Integration</div><div class="nx-moat-body">Solana Seeker/Saga are the only Web3-native phones. NexaEdge becomes the killer app making hardware ROI-positive.</div></div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="nx-moat"><div class="nx-moat-icon">🧠</div><div class="nx-moat-title">NPU-Native Execution — Planned</div><div class="nx-moat-body">Modern smartphones (A-series, Snapdragon) have dedicated NPUs. The protocol targets these for SLM inference workloads.</div></div>
+            <div class="nx-moat"><div class="nx-moat-icon">📱</div><div class="nx-moat-title">Solana Mobile Integration — Planned</div><div class="nx-moat-body">Solana Seeker/Saga are Web3-native phones. NexaEdge is designed to become a native node client on these devices.</div></div>""", unsafe_allow_html=True)
     else:
         with m1:
-            st.markdown("""<div class="nx-moat"><div class="nx-moat-icon">🔐</div><div class="nx-moat-title">算力证明（PoC）</div><div class="nx-moat-body">每个节点必须解决加密ML推理难题才能领取奖励。硬件指纹+ZK证明防止女巫攻击。</div></div>
-            <div class="nx-moat"><div class="nx-moat-icon">🌍</div><div class="nx-moat-title">地理密度</div><div class="nx-moat-body">68亿部智能手机对比数千个数据中心。NexaEdge覆盖任何云端无法服务的超本地场景。</div></div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="nx-moat"><div class="nx-moat-icon">🔐</div><div class="nx-moat-title">算力证明（PoC）— 计划中</div><div class="nx-moat-body">每个节点将通过加密ML推理难题领取奖励。设计上采用硬件指纹+ZK证明防止女巫攻击。</div></div>
+            <div class="nx-moat"><div class="nx-moat-icon">🌍</div><div class="nx-moat-title">地理密度 — 设计论点</div><div class="nx-moat-body">68亿部智能手机对比数千个数据中心，协议设计覆盖任何云端无法服务的超本地场景。</div></div>""", unsafe_allow_html=True)
         with m2:
-            st.markdown("""<div class="nx-moat"><div class="nx-moat-icon">🧠</div><div class="nx-moat-title">NPU原生执行</div><div class="nx-moat-body">现代智能手机（A系列、骁龙）配备专用NPU。NexaEdge将其用于SLM推理。</div></div>
-            <div class="nx-moat"><div class="nx-moat-icon">📱</div><div class="nx-moat-title">Solana Mobile集成</div><div class="nx-moat-body">Solana Seeker/Saga是唯一的Web3原生手机。NexaEdge成为使硬件投资回报为正的杀手级应用。</div></div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="nx-moat"><div class="nx-moat-icon">🧠</div><div class="nx-moat-title">NPU原生执行 — 计划中</div><div class="nx-moat-body">现代智能手机（A系列、骁龙）配备专用NPU。协议针对这些硬件运行SLM推理工作负载。</div></div>
+            <div class="nx-moat"><div class="nx-moat-icon">📱</div><div class="nx-moat-title">Solana Mobile集成 — 计划中</div><div class="nx-moat-body">NexaEdge 计划成为 Solana Seeker/Saga 设备上的原生节点客户端。</div></div>""", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    thermal_en="The 39°C thermal ceiling is a hardcoded daemon constraint.<br>If device ≥ 39°C → task queue paused → passive cooling activated.<br>Enforced at WASM sandbox level — not overridable by user.<br><br><strong style='color:#d0d8e4;'>Why it matters:</strong> Institutional buyers need SLA guarantees. The 39°C protocol is the supply-side durability guarantee."
-    thermal_zh="39°C 热限是硬编码的守护进程约束。<br>设备温度 ≥ 39°C → 任务队列暂停 → 激活被动散热模式。<br>在 WASM 沙箱层面强制执行——用户不可覆盖。<br><br><strong style='color:#d0d8e4;'>对买家的意义：</strong>机构算力买家需要SLA保证。39°C协议是供给侧的耐久性保障。"
+    thermal_en="The 39°C thermal ceiling is a planned daemon constraint in the protocol design.<br>If device ≥ 39°C → task queue paused → passive cooling activated.<br>Enforced at WASM sandbox level — not overridable by the user.<br><br><strong style='color:#d0d8e4;'>Design rationale:</strong> Institutional buyers require SLA guarantees. The 39°C protocol is the planned supply-side durability guarantee — to be validated in hardware alpha."
+    thermal_zh="39°C 热限是协议设计中计划的守护进程约束。<br>设备温度 ≥ 39°C → 任务队列暂停 → 激活被动散热模式。<br>在 WASM 沙箱层面强制执行——用户不可覆盖。<br><br><strong style='color:#d0d8e4;'>设计依据：</strong>机构买家需要SLA保证。39°C协议是计划中的供给侧耐久性保障——将在硬件 alpha 阶段验证。"
     st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['thermal_title']}</div>
     <div style="font-size:12px;color:#4a6070;line-height:1.9;">{thermal_en if st.session_state.lang=="EN" else thermal_zh}</div></div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════
 # TAB 4 — ROADMAP
+# FIX: removed YC / Solana Grant / Alliance DAO "in pipeline" claims
+# Replaced with honest milestone framing
 # ══════════════════════════════════════
 elif current_tab == L["nav"][3]:
     if st.session_state.lang=="EN":
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['roadmap_title']}</div>
-        <div class="nx-roadmap-item current"><div class="nx-roadmap-phase">Q2 2026 · NOW</div><div class="nx-roadmap-title">Concept Validation & Institutional Acceleration</div><div class="nx-roadmap-body">Architecture finalized. Whitepaper drafted. <strong>Solana Grant</strong>, <strong>Alliance DAO</strong>, <strong>Y Combinator</strong> in pipeline. AngelList SAFE ($5M cap) initialized. Global node waitlist open.</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q3 2026</div><div class="nx-roadmap-title">WASM Sandbox MVP</div><div class="nx-roadmap-body">Functional WASM on iOS/Android. First SLM inference (Phi-3 mini) on device NPU. Thermal guard daemon. Internal alpha: 50 devices.</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q4 2026</div><div class="nx-roadmap-title">Closed Beta — 1,000 Nodes</div><div class="nx-roadmap-body">Solana SPL token deployment. BFT testnet. First paying buyer pilot. ZK proof of compute live.</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q1 2027</div><div class="nx-roadmap-title">Public Mainnet Launch</div><div class="nx-roadmap-body">Open enrollment. Solana Seeker integration. Marketplace live. Target: 100K active nodes, 3 enterprise buyers.</div></div>
-        <div class="nx-roadmap-item" style="padding-bottom:0;"><div class="nx-roadmap-phase">2027+</div><div class="nx-roadmap-title">Scale & Ecosystem</div><div class="nx-roadmap-body">ZK-ML verification live. Expand to laptop/IoT. Series A targeting $15M.</div></div>
+        <div class="nx-roadmap-item current"><div class="nx-roadmap-phase">Q2 2026 · NOW</div><div class="nx-roadmap-title">Concept Validation & Early Community</div><div class="nx-roadmap-body">Architecture finalized. Whitepaper drafted. Early waitlist open to gauge developer and investor interest. Actively applying to grants and accelerator programs — no offers received yet.</div></div>
+        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q3 2026 · TARGET</div><div class="nx-roadmap-title">WASM Sandbox MVP</div><div class="nx-roadmap-body">Functional WASM runtime on iOS/Android. First SLM inference (Phi-3 mini) on device NPU. Thermal guard daemon. Internal alpha: 50 devices.</div></div>
+        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q4 2026 · TARGET</div><div class="nx-roadmap-title">Closed Beta — 1,000 Nodes</div><div class="nx-roadmap-body">Solana SPL token deployment. BFT testnet. First paying buyer pilot. ZK proof of compute live.</div></div>
+        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q1 2027 · TARGET</div><div class="nx-roadmap-title">Public Mainnet Launch</div><div class="nx-roadmap-body">Open enrollment. Solana Seeker integration. Marketplace live. Target: 100K active nodes, 3 enterprise buyers.</div></div>
+        <div class="nx-roadmap-item" style="padding-bottom:0;"><div class="nx-roadmap-phase">2027+ · VISION</div><div class="nx-roadmap-title">Scale & Ecosystem</div><div class="nx-roadmap-body">ZK-ML verification live. Expand to laptop/IoT. Series A exploration.</div></div>
         </div>""", unsafe_allow_html=True)
     else:
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['roadmap_title']}</div>
-        <div class="nx-roadmap-item current"><div class="nx-roadmap-phase">2026年Q2 · 当前</div><div class="nx-roadmap-title">概念验证与机构加速</div><div class="nx-roadmap-body">架构设计定稿。白皮书起草完成。<strong>Solana Grant</strong>、<strong>Alliance DAO</strong>、<strong>Y Combinator</strong> 积极推进中。AngelList SAFE（$500万上限）初始化。全球节点候补名单开放。</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2026年Q3</div><div class="nx-roadmap-title">WASM 沙箱 MVP</div><div class="nx-roadmap-body">iOS/Android WASM 执行环境。首个 SLM 推理（Phi-3 mini）在设备 NPU 上运行。热保护守护进程。内部 alpha：50 台设备。</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2026年Q4</div><div class="nx-roadmap-title">封闭测试——1,000 节点</div><div class="nx-roadmap-body">Solana SPL 代币部署。BFT 测试网。首个付费买家试点。ZK 算力证明上线。</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2027年Q1</div><div class="nx-roadmap-title">公开主网上线</div><div class="nx-roadmap-body">开放节点注册。Solana Seeker 集成。市场上线。目标：10万活跃节点、3个企业买家。</div></div>
-        <div class="nx-roadmap-item" style="padding-bottom:0;"><div class="nx-roadmap-phase">2027年+</div><div class="nx-roadmap-title">规模扩张与生态</div><div class="nx-roadmap-body">ZK-ML 验证上线。扩展至笔记本/IoT。A轮融资目标 1500 万美元。</div></div>
+        <div class="nx-roadmap-item current"><div class="nx-roadmap-phase">2026年Q2 · 当前</div><div class="nx-roadmap-title">概念验证与早期社区</div><div class="nx-roadmap-body">架构设计定稿。白皮书起草完成。早期候补名单开放，用于评估开发者与投资方兴趣。正积极申请资助与加速器项目——尚未收到任何录取通知。</div></div>
+        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2026年Q3 · 目标</div><div class="nx-roadmap-title">WASM 沙箱 MVP</div><div class="nx-roadmap-body">iOS/Android WASM 执行环境。首个 SLM 推理（Phi-3 mini）在设备 NPU 上运行。热保护守护进程。内部 alpha：50 台设备。</div></div>
+        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2026年Q4 · 目标</div><div class="nx-roadmap-title">封闭测试——1,000 节点</div><div class="nx-roadmap-body">Solana SPL 代币部署。BFT 测试网。首个付费买家试点。ZK 算力证明上线。</div></div>
+        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2027年Q1 · 目标</div><div class="nx-roadmap-title">公开主网上线</div><div class="nx-roadmap-body">开放节点注册。Solana Seeker 集成。市场上线。目标：10万活跃节点、3个企业买家。</div></div>
+        <div class="nx-roadmap-item" style="padding-bottom:0;"><div class="nx-roadmap-phase">2027年+ · 愿景</div><div class="nx-roadmap-title">规模扩张与生态</div><div class="nx-roadmap-body">ZK-ML 验证上线。扩展至笔记本/IoT。探索 A 轮融资。</div></div>
         </div>""", unsafe_allow_html=True)
 
     r1,r2,r3=st.columns(3)
     if st.session_state.lang=="EN":
-        with r1: st.metric("Seed Target","$500K","MVP + 1,000-node beta")
-        with r2: st.metric("Target Nodes (Y1)","100K","at mainnet")
+        with r1: st.metric("Pre-Seed Target","$500K","MVP + 1,000-node beta")
+        with r2: st.metric("Target Nodes (Y1)","100K","at mainnet launch")
         with r3: st.metric("Settlement Chain","Solana SPL","low gas · high TPS")
     else:
-        with r1: st.metric("种子轮目标","$500K","MVP+1000节点测试")
-        with r2: st.metric("目标节点数","100K","主网活跃")
+        with r1: st.metric("种子前目标","$500K","MVP+1000节点测试")
+        with r2: st.metric("目标节点数","100K","主网上线时")
         with r3: st.metric("结算链","Solana SPL","低gas·高TPS")
 
     st.markdown(f"""<div class="nx-card" style="margin-top:8px;border-color:rgba(255,179,0,.2);background:rgba(255,179,0,.02);">
@@ -618,7 +624,9 @@ elif current_tab == L["nav"][3]:
     <div style="font-size:11px;color:#4a6070;line-height:1.8;">{L['nexa_disclaimer']}</div></div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 5 — WHITELIST（写入 Supabase）
+# TAB 5 — WAITLIST
+# FIX: renamed from "Whitelist" to "Waitlist" — more accurate for pre-launch
+# FIX: clearer disclaimer that no tokens are issued at this stage
 # ══════════════════════════════════════
 elif current_tab == L["nav"][4]:
     total_reg = db_count()
@@ -679,7 +687,12 @@ elif current_tab == L["nav"][4]:
                     else:
                         st.error("Database error. Please try again." if st.session_state.lang=="EN" else "数据库错误，请重试。")
         st.markdown('</div>', unsafe_allow_html=True)
-        disclaimer="By registering you confirm this is a concept demo. No tokens issued. No investment contract formed." if st.session_state.lang=='EN' else "注册即表明您了解这是概念演示。不发行代币，不构成投资合同。"
+        disclaimer=("By registering, you confirm you understand this is a pre-seed concept demo. "
+                    "NEXA tokens are minted on Solana but not yet in public circulation. "
+                    "Wallet address is collected for future node airdrop eligibility only. "
+                    "No investment contract is formed by registering."
+                    if st.session_state.lang=='EN' else
+                    "注册即表明您了解这是种子前概念演示。NEXA 代币已在 Solana 上铸造，但尚未公开流通。钱包地址仅用于未来节点空投资格认定。注册不构成投资合同。")
         st.markdown(f'<div style="font-family:\'Space Mono\',monospace;font-size:9px;color:#2a3a4a;text-align:center;line-height:1.7;margin-top:10px;">{disclaimer}</div>', unsafe_allow_html=True)
 
     if total_reg > 0:
@@ -690,7 +703,7 @@ elif current_tab == L["nav"][4]:
             st.dataframe(ledger_rows, use_container_width=True, hide_index=True)
 
 st.markdown("""<div class="nx-footer">
-NexaEdge Network &nbsp;·&nbsp; Pre-Launch Concept Demo &nbsp;·&nbsp; All simulations illustrative only<br>
-No tokens issued &nbsp;·&nbsp; No investment contract &nbsp;·&nbsp; contact@nexaedge.org<br>
+NexaEdge Network &nbsp;·&nbsp; Pre-Seed Concept Demo &nbsp;·&nbsp; All simulations are randomly generated for illustration only<br>
+NEXA minted on Solana · Not yet in public circulation &nbsp;·&nbsp; No investment contract formed &nbsp;·&nbsp; contact@nexaedge.org<br>
 © 2026 NexaEdge Network. All rights reserved.
 </div>""", unsafe_allow_html=True)
