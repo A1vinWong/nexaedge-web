@@ -77,8 +77,9 @@ LANGS = {
         "wl_success_title": "✅ RECORD LOCKED SUCCESSFULLY",
         "wl_success_desc": "Your node configuration has been appended to the global ledger database.",
         "wl_your_ref": "Your Referral Code",
-        "wl_copy": "📋 Copy",
-        "wl_copied": "✅ Copied!",
+        "wl_copy": "📋 Copy Code to Clipboard",
+        "wl_copied": "✅ Copied to Clipboard!",
+        "wl_reset": "🔄 Register Another Node",
         "wl_total": "Total Registered",
         "err_email": "Invalid email address.",
         "err_wallet": "Solana wallet must be 32–44 characters.",
@@ -90,7 +91,7 @@ LANGS = {
         "coordination": "Settlement & Coordination",
         "supply_side": "Supply Cluster",
         "lang_btn": "中文",
-        "ledger_title": "Genesis Ledger Secure Footprints",
+        "ledger_title": "🛡️ Genesis Ledger Secure Footprints",
         "invest_title": "Seed Round Institutional Investment Gateway",
         "invest_desc": "NexaEdge Seed round infrastructure is processed through AngelList Rollups (Post-money SAFE). Qualified institutional allocators can lock intent queues directly.",
         "invest_btn": "💼 Soft-Circle Seed Allocation",
@@ -157,8 +158,9 @@ LANGS = {
         "wl_success_title": "✅ 数据记录已成功写入",
         "wl_success_desc": "您的节点配置和设备特征已成功写入全局持久化缓存，刷新不丢失。",
         "wl_your_ref": "您的专属推荐码",
-        "wl_copy": "📋 复制",
-        "wl_copied": "✅ 已复制！",
+        "wl_copy": "📋 复制推荐码到剪贴板",
+        "wl_copied": "✅ 已成功复制到剪贴板！",
+        "wl_reset": "🔄 注册另一个算力节点",
         "wl_total": "全球累计注册节点",
         "err_email": "格式校验错误：邮箱字符串校验失败。",
         "err_wallet": "格式校验错误：Solana SPL 地址长度不符合规范（应为 32–44 字符）。",
@@ -175,7 +177,7 @@ LANGS = {
         "invest_desc": "NexaEdge 种子轮通过 AngelList Rollups（Post-money SAFE）架构处理。合格机构分配方可直接锁定意向额度。",
         "invest_btn": "💼 意向锁定种子轮额度",
         "invest_warn": "AngelList 基础架构目前在后台合规审核中。请通过白名单提交或直接联系 contact@nexaedge.org。",
-        "admin_title": "⚙️ 系统根权限审计控制台",
+        "admin_title": "⚙️ System Root Audit Console",
         "admin_pw_ph": "请输入管理员密码",
         "admin_login": "解锁控制台",
         "admin_wrong": "认证失败，密码错误。",
@@ -212,7 +214,7 @@ ADMIN_PASSWORD = "nexaedge2026admin"
 REWARD_BASE = 0.0022
 
 # ══════════════════════════════════════
-# CSS
+# CSS 样式表层
 # ══════════════════════════════════════
 st.markdown("""
 <style>
@@ -355,7 +357,6 @@ _defaults = {
     'nexa_rate': 0.0,
     'wl_success': False,
     'wl_ref_code': '',
-    'wl_copied': False,
     'admin_logged_in': False,
     'admin_error': False,
 }
@@ -371,7 +372,7 @@ L = LANGS[st.session_state.lang]
 TASK_TYPES = TASK_TYPES_EN if st.session_state.lang == "EN" else TASK_TYPES_ZH
 
 # ══════════════════════════════════════
-# 遥测 tick（真实CPU混合模拟）
+# 遥测调度引擎 (实时物理CPU负载混算)
 # ══════════════════════════════════════
 if st.session_state.sim_running:
     st_autorefresh(interval=1200, key="nexa_telemetry_tick")
@@ -405,7 +406,7 @@ if st.session_state.sim_running:
     st.session_state.nexa_earned += reward
 
 # ══════════════════════════════════════
-# HEADER
+# HEADER 渲染
 # ══════════════════════════════════════
 col_logo, col_right = st.columns([3, 1])
 total_sessions_display = global_db['base_sessions'] + len(global_db['registrations'])
@@ -439,7 +440,7 @@ st.markdown('<hr style="border-color:#1a2530;margin:8px 0 10px 0;">', unsafe_all
 current_tab = st.radio("Nav", L["nav"], horizontal=True, label_visibility="collapsed")
 
 # ══════════════════════════════════════
-# TAB 1 — MARKET
+# TAB 1 — MARKET 核心市场
 # ══════════════════════════════════════
 if current_tab == L["nav"][0]:
     real_cpu = psutil.cpu_percent()
@@ -522,7 +523,7 @@ if current_tab == L["nav"][0]:
     arch_html += '</div>'
     st.markdown(f'<div class="nx-card"><div class="nx-card-title"><span>▸</span> {L["arch_title"]}</div>{arch_html}</div>', unsafe_allow_html=True)
 
-    # 投资入口
+    # 机构种子轮投资入口
     st.markdown(f"### 🏛️ {L['invest_title']}")
     ci1, ci2 = st.columns([2, 1])
     with ci1:
@@ -543,7 +544,7 @@ if current_tab == L["nav"][0]:
     """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 2 — NETWORK SIM
+# TAB 2 — NETWORK SIM 网络节点模拟
 # ══════════════════════════════════════
 elif current_tab == L["nav"][1]:
     st.markdown(f'<div class="nx-notice">{L["sim_only"]}</div>', unsafe_allow_html=True)
@@ -647,7 +648,7 @@ elif current_tab == L["nav"][1]:
     </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 3 — DIFFERENTIATION
+# TAB 3 — DIFFERENTIATION 架构差异化
 # ══════════════════════════════════════
 elif current_tab == L["nav"][2]:
     if st.session_state.lang == "EN":
@@ -724,7 +725,7 @@ elif current_tab == L["nav"][2]:
     </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 4 — ROADMAP & FUNDING
+# TAB 4 — ROADMAP & FUNDING 路线图与融资
 # ══════════════════════════════════════
 elif current_tab == L["nav"][3]:
     if st.session_state.lang == "EN":
@@ -805,7 +806,7 @@ elif current_tab == L["nav"][3]:
     </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# TAB 5 — WHITELIST（全局持久化存储）
+# TAB 5 — WHITELIST 白名单注册（持久化）
 # ══════════════════════════════════════
 elif current_tab == L["nav"][4]:
     total_reg = len(global_db["registrations"])
@@ -830,14 +831,29 @@ elif current_tab == L["nav"][4]:
         <div class="nx-success-box">
             <div style="font-size:18px;font-weight:800;color:#a2ff00;margin-bottom:8px;">{L['wl_success_title']}</div>
             <div style="font-size:12px;color:#556070;line-height:1.7;margin-bottom:16px;">{L['wl_success_desc']}</div>
-            <div style="background:#060a0d;border:1px solid rgba(162,255,0,0.3);border-radius:8px;padding:16px;">
+            <div style="background:#060a0d;border:1px solid rgba(162,255,0,0.3);border-radius:8px;padding:16px;margin-bottom:15px;">
                 <div style="font-family:'Space Mono',monospace;font-size:9px;color:#556070;text-transform:uppercase;margin-bottom:6px;">{L['wl_your_ref']}</div>
-                <div class="nx-ref-code">{ref}</div>
+                <div class="nx-ref-code" id="ref-target">{ref}</div>
             </div>
         </div>""", unsafe_allow_html=True)
-        copy_lbl = L["wl_copied"] if st.session_state.wl_copied else L["wl_copy"]
-        if st.button(copy_lbl, key="copy_ref_btn"):
-            st.session_state.wl_copied = True
+        
+        # 优化后的原生剪贴板 JS 组件逻辑
+        if st.button(L["wl_copy"], key="copy_ref_btn"):
+            st.components.v1.html(f"""
+                <script>
+                navigator.clipboard.writeText("{ref}").then(() => {{
+                    window.parent.document.querySelector('button[kind="primary"]').innerText = "{L['wl_copied']}";
+                }});
+                </script>
+            """, height=0, width=0)
+            st.toast(L["wl_copied"])
+            
+        st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
+        
+        # 修复闭环：允许同一个会话注册另一个节点
+        if st.button(L["wl_reset"], kind="secondary", key="wl_reset_btn"):
+            st.session_state.wl_success = False
+            st.session_state.wl_ref_code = ''
             st.rerun()
     else:
         with st.form("wl_form_secure"):
@@ -879,7 +895,7 @@ elif current_tab == L["nav"][4]:
             {"By registering you confirm this is a concept demo. No tokens are issued. No investment contract is formed." if st.session_state.lang=='EN' else "注册即表明您了解这是概念演示。不发行代币，不构成投资合同。"}
         </div>""", unsafe_allow_html=True)
 
-    # 显示已哈希的账本指纹（增强现场感）
+    # 动态渲染已加哈希的创世公开可查账本
     if global_db["registrations"]:
         st.markdown(f"### {L['ledger_title']}")
         ledger_rows = [
@@ -892,7 +908,7 @@ elif current_tab == L["nav"][4]:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# FOOTER + 隐藏后台管理（折叠入口）
+# FOOTER & 后台管理审计控制台 (Expander)
 # ══════════════════════════════════════
 st.markdown("""
 <div class="nx-footer">
