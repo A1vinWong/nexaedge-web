@@ -652,14 +652,14 @@ if st.session_state.user_email:
 
         # Activate / Stop buttons
         node_active = st.session_state.get("node_active", False)
-        b1, b2 = st.columns(2)
-        with b1:
+        col_act, col_stop = st.columns([3, 2])
+        with col_act:
             if st.button("⚡ ACTIVATE NODE", disabled=node_active, key="btn_activate"):
-                st.session_state.node_active   = True
-                st.session_state.node_tasks    = st.session_state.get("node_tasks", 0)
-                st.session_state.node_log      = []
+                st.session_state.node_active = True
+                st.session_state.node_tasks  = st.session_state.get("node_tasks", 0)
+                st.session_state.node_log    = []
                 st.rerun()
-        with b2:
+        with col_stop:
             if st.button("■ STOP", disabled=not node_active, type="secondary", key="btn_stop"):
                 st.session_state.node_active = False
                 try:
