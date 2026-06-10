@@ -25,8 +25,7 @@ SUPABASE_URL = "https://nfafzigmcdybgbxdtymf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mYWZ6aWdtY2R5YmdieGR0eW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODE3NTMsImV4cCI6MjA5NjU1Nzc1M30.ZIX3sByZ8yQSDGFr-o24CjIXwZ5UsB4rMB3jculLtv0"
 
 # ⚠️ Change this password before deploying
-ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "nexaedge2026")
-
+ADMIN_PASSWORD = "nexaedge2026"
 
 # ══════════════════════════════════════
 # CSS — matches NexaEdge dark theme
@@ -308,6 +307,26 @@ def load_all():
         return res.data or []
     except Exception as e:
         st.error(f"Supabase error: {e}")
+        return []
+
+@st.cache_data(ttl=30)
+def load_nodes():
+    try:
+        res = supabase.table("nodes").select("*").order("created_at", desc=False).execute()
+        return res.data or []
+    except:
+        return []
+
+@st.cache_data(ttl=30)
+def load_heartbeats(limit=100):
+    try:
+        res = (supabase.table("heartbeats")
+               .select("*")
+               .order("reported_at", desc=True)
+               .limit(limit)
+               .execute())
+        return res.data or []
+    except:
         return []
 
 # ══════════════════════════════════════
@@ -679,12 +698,113 @@ st.markdown("""
 </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════
+# NODE MONITOR
+# ══════════════════════════════════════
+st.markdown('<hr class="nx-divider">', unsafe_allow_html=True)
+st.markdown("""
+<div class="nx-card-title">
+    <span style="color:#a2ff00;">▸</span> Live Node Monitor
+</div>""", unsafe_allow_html=True)
+
+nodes_data = load_nodes()
+hb_data    = load_heartbeats(200)
+
+if not nodes_data:
+    st.markdown("""
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;
+                padding:20px 0;">
+        No nodes registered yet. Users register via the Node Portal.
+    </div>""", unsafe_allow_html=True)
+else:
+    # Node KPIs
+    total_nodes   = len(nodes_data)
+    online_nodes  = sum(1 for n in nodes_data if n.get("status") == "online")
+    pending_nodes = sum(1 for n in nodes_data if n.get("status") == "pending")
+    offline_nodes = total_nodes - online_nodes - pending_nodes
+
+    n1, n2, n3, n4 = st.columns(4)
+    with n1: st.metric("Total Nodes",   total_nodes)
+    with n2: st.metric("Online",        online_nodes,  delta="● LIVE" if online_nodes > 0 else None)
+    with n3: st.metric("Pending",       pending_nodes)
+    with n4: st.metric("Offline",       offline_nodes)
+
+    st.markdown('<div style="margin-top:16px;"></div>', unsafe_allow_html=True)
+
+    # Node table
+    node_rows = []
+    for n in sorted(nodes_data, key=lambda x: x.get("created_at",""), reverse=True):
+        status = n.get("status", "—")
+        color  = {"online": "#a2ff00", "pending": "#ffb300", "offline": "#4a6070"}.get(status, "#4a6070")
+        last   = n.get("last_seen", "")[:19].replace("T"," ") if n.get("last_seen") else "Never"
+        created = n.get("created_at","")[:10] if n.get("created_at") else "—"
+        node_rows.append({
+            "Registered": created,
+            "Token": n.get("node_token","—"),
+            "Status": status.upper(),
+            "Device": n.get("device_model") or "—",
+            "OS": n.get("os_version") or "—",
+            "Last Seen": last,
+        })
+
+    node_df = pd.DataFrame(node_rows)
+    st.dataframe(node_df, use_container_width=True, hide_index=True)
+
+    # Heartbeat chart
+    if hb_data:
+        st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="nx-card-title">
+            <span style="color:#00e5ff;">▸</span> Recent Heartbeats — CPU & Temperature
+        </div>""", unsafe_allow_html=True)
+
+        hb_df = pd.DataFrame(hb_data)
+        hb_df["reported_at"] = pd.to_datetime(hb_df["reported_at"], utc=True)
+        hb_df = hb_df.sort_values("reported_at")
+        hb_df["time"] = hb_df["reported_at"].dt.strftime("%H:%M:%S")
+
+        hb_chart, hb_info = st.columns([3, 1])
+        with hb_chart:
+            if "cpu_usage" in hb_df.columns:
+                st.markdown('<div style="font-family:monospace;font-size:9px;color:#4a6070;margin-bottom:6px;text-transform:uppercase;">CPU Usage %</div>', unsafe_allow_html=True)
+                st.line_chart(
+                    hb_df.set_index("time")["cpu_usage"].tail(30),
+                    color="#a2ff00", height=140
+                )
+            if "temperature" in hb_df.columns:
+                st.markdown('<div style="font-family:monospace;font-size:9px;color:#4a6070;margin-bottom:6px;text-transform:uppercase;">Temperature °C</div>', unsafe_allow_html=True)
+                st.line_chart(
+                    hb_df.set_index("time")["temperature"].tail(30),
+                    color="#00e5ff", height=140
+                )
+
+        with hb_info:
+            latest = hb_data[0] if hb_data else {}
+            st.markdown(f"""
+            <div class="nx-mini-stat" style="margin-bottom:10px;">
+                <div class="nx-mini-label">Latest CPU</div>
+                <div class="nx-mini-val">{latest.get("cpu_usage", 0):.1f}%</div>
+            </div>
+            <div class="nx-mini-stat" style="margin-bottom:10px;">
+                <div class="nx-mini-label">Latest Temp</div>
+                <div class="nx-mini-val cyan">{latest.get("temperature", 0):.1f}°C</div>
+            </div>
+            <div class="nx-mini-stat" style="margin-bottom:10px;">
+                <div class="nx-mini-label">Battery</div>
+                <div class="nx-mini-val gold">{latest.get("battery_level", 0)}%</div>
+            </div>
+            <div class="nx-mini-stat">
+                <div class="nx-mini-label">Total HB</div>
+                <div class="nx-mini-val">{len(hb_data)}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# ══════════════════════════════════════
 # FOOTER
 # ══════════════════════════════════════
 st.markdown("""
 <div style="border-top:1px solid #182230;margin-top:40px;padding-top:16px;
             text-align:center;font-family:'Space Mono',monospace;
             font-size:9px;color:#2a3a4a;line-height:2;">
-    NexaEdge Admin · Beta P1 · Data refreshes every 60s · All emails hashed<br>
+    NexaEdge Admin · Beta P1+P3 · Waitlist refreshes 60s · Nodes refresh 30s · All emails hashed<br>
     contact@nexaedge.org
 </div>""", unsafe_allow_html=True)
