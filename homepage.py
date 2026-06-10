@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 from supabase import create_client, Client
 
 st.set_page_config(
-    page_title="NexaEdge Network — Concept Demo",
+    page_title="NexaEdge Network — Early Beta",
     page_icon="🟢",
     layout="centered"
 )
@@ -81,7 +81,7 @@ LANGS = {
     "EN": {
         "nav": ["Market", "Network Sim", "Differentiation", "Roadmap", "Waitlist", "Whitepaper"],
         "tagline": "A protocol design to aggregate idle smartphone compute into a distributed edge AI inference network.",
-        "stage": "⚠ CONCEPT DEMO · PRE-SEED",
+        "stage": "● EARLY BETA · Q3 2026",
         "sim_only": "⚠ SIMULATION ONLY — All nodes, metrics, and NEXA figures are randomly generated for concept illustration. No real compute is running.",
         "start_sim": "▶ Start Simulation",
         "stop_sim": "■ Stop",
@@ -140,7 +140,7 @@ LANGS = {
     "ZH": {
         "nav": ["核心市场", "网络模拟", "差异化优势", "路线图", "候补名单", "白皮书"],
         "tagline": "一个将闲置智能手机算力汇聚成分布式边缘 AI 推理网络的协议设计方案。",
-        "stage": "⚠ 概念演示 · 种子前阶段",
+        "stage": "● 早期 Beta · 2026年Q3",
         "sim_only": "⚠ 仅为模拟演示——所有节点、指标与 NEXA 数字均为随机生成，用于概念说明，并非真实算力运行。",
         "start_sim": "▶ 启动模拟",
         "stop_sim": "■ 停止",
@@ -248,7 +248,7 @@ div.stButton>button[kind="secondary"]:hover{border-color:#a2ff00!important;color
 .nx-card-title .dot{color:#a2ff00}
 .nx-notice{background:rgba(255,179,0,.05);border:1px solid rgba(255,179,0,.2);border-left:3px solid #ffb300;border-radius:0 8px 8px 0;padding:12px 16px;font-family:'Space Mono',monospace;font-size:10px;color:#ffb300;line-height:1.7;margin-bottom:20px}
 .nx-online-badge{display:inline-flex;align-items:center;gap:10px;background:#060b0f;border:1px solid #182230;border-radius:8px;padding:7px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;margin-top:8px}
-.nx-stage-badge{display:inline-block;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);color:#00e5ff;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:5px 12px;border-radius:6px;letter-spacing:.1em}
+.nx-stage-badge{display:inline-block;background:rgba(162,255,0,.08);border:1px solid rgba(162,255,0,.25);color:#a2ff00;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:5px 12px;border-radius:6px;letter-spacing:.1em}
 .nx-feature{background:#060b0f;border:1px solid #182230;border-left:3px solid #a2ff00;border-radius:0 10px 10px 0;padding:16px 18px;margin-bottom:12px}
 .nx-feature-title{font-size:13px;font-weight:700;color:#e8edf2;margin-bottom:6px}
 .nx-feature-body{font-size:11px;color:#4a6070;line-height:1.7}
@@ -286,8 +286,10 @@ div.stButton>button[kind="secondary"]:hover{border-color:#a2ff00!important;color
 .nx-table tr:hover td{background:rgba(24,34,48,.3)}
 .nx-roadmap-item{border-left:2px solid #182230;padding-left:20px;padding-bottom:24px;position:relative}
 .nx-roadmap-item::before{content:'';position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:#182230;border:2px solid #182230}
-.nx-roadmap-item.current::before{background:#00e5ff;border-color:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.5)}
+.nx-roadmap-item.current::before{background:#a2ff00;border-color:#a2ff00;box-shadow:0 0 10px rgba(162,255,0,.5)}
+.nx-roadmap-item.done::before{background:#a2ff00;border-color:#a2ff00}
 .nx-roadmap-phase{font-family:'Space Mono',monospace;font-size:9px;color:#ffb300;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.nx-roadmap-phase.done{color:#a2ff00}
 .nx-roadmap-title{font-size:14px;font-weight:700;color:#e8edf2;margin-bottom:6px}
 .nx-roadmap-body{font-size:11px;color:#4a6070;line-height:1.7}
 .nx-moat{background:#060b0f;border:1px solid #182230;border-radius:10px;padding:18px;margin-bottom:12px}
@@ -631,28 +633,28 @@ elif current_tab == L["nav"][2]:
 elif current_tab == L["nav"][3]:
     if st.session_state.lang=="EN":
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['roadmap_title']}</div>
-        <div class="nx-roadmap-item current"><div class="nx-roadmap-phase">Q2 2026 · NOW</div><div class="nx-roadmap-title">Concept Validation & Early Community</div><div class="nx-roadmap-body">Architecture finalized. Whitepaper drafted. Early waitlist open to gauge developer and investor interest. Actively applying to grants and accelerator programs — no offers received yet.</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q3 2026 · TARGET</div><div class="nx-roadmap-title">WASM Sandbox MVP</div><div class="nx-roadmap-body">Functional WASM runtime on iOS/Android. First SLM inference (Phi-3 mini) on device NPU. Thermal guard daemon. Internal alpha: 50 devices.</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q4 2026 · TARGET</div><div class="nx-roadmap-title">Closed Beta — 1,000 Nodes</div><div class="nx-roadmap-body">Solana SPL token deployment. BFT testnet. First paying buyer pilot. ZK proof of compute live.</div></div>
+        <div class="nx-roadmap-item done"><div class="nx-roadmap-phase done">Q2 2026 · COMPLETE ✓</div><div class="nx-roadmap-title">Concept Validation & Early Community</div><div class="nx-roadmap-body">Architecture finalized. Whitepaper live. Waitlist, node registration, heartbeat system, and task queue all deployed. Real data flowing into Supabase.</div></div>
+        <div class="nx-roadmap-item current"><div class="nx-roadmap-phase">Q3 2026 · NOW — EARLY BETA</div><div class="nx-roadmap-title">Early Beta — Simulated Task Execution</div><div class="nx-roadmap-body">Task queue live. Node portal active. Heartbeat + simulated task execution running. iOS developer recruitment in progress for native app. Infrastructure validated.</div></div>
+        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q4 2026 · TARGET</div><div class="nx-roadmap-title">Closed Beta — 1,000 Nodes</div><div class="nx-roadmap-body">Native iOS/Android node client. Solana SPL token deployment. BFT testnet. First paying buyer pilot. ZK proof of compute live.</div></div>
         <div class="nx-roadmap-item"><div class="nx-roadmap-phase">Q1 2027 · TARGET</div><div class="nx-roadmap-title">Public Mainnet Launch</div><div class="nx-roadmap-body">Open enrollment. Solana Seeker integration. Marketplace live. Target: 100K active nodes, 3 enterprise buyers.</div></div>
         <div class="nx-roadmap-item" style="padding-bottom:0;"><div class="nx-roadmap-phase">2027+ · VISION</div><div class="nx-roadmap-title">Scale & Ecosystem</div><div class="nx-roadmap-body">ZK-ML verification live. Expand to laptop/IoT. Series A exploration.</div></div>
         </div>""", unsafe_allow_html=True)
     else:
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['roadmap_title']}</div>
-        <div class="nx-roadmap-item current"><div class="nx-roadmap-phase">2026年Q2 · 当前</div><div class="nx-roadmap-title">概念验证与早期社区</div><div class="nx-roadmap-body">架构设计定稿。白皮书起草完成。早期候补名单开放，用于评估开发者与投资方兴趣。正积极申请资助与加速器项目——尚未收到任何录取通知。</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2026年Q3 · 目标</div><div class="nx-roadmap-title">WASM 沙箱 MVP</div><div class="nx-roadmap-body">iOS/Android WASM 执行环境。首个 SLM 推理（Phi-3 mini）在设备 NPU 上运行。热保护守护进程。内部 alpha：50 台设备。</div></div>
-        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2026年Q4 · 目标</div><div class="nx-roadmap-title">封闭测试——1,000 节点</div><div class="nx-roadmap-body">Solana SPL 代币部署。BFT 测试网。首个付费买家试点。ZK 算力证明上线。</div></div>
+        <div class="nx-roadmap-item done"><div class="nx-roadmap-phase done">2026年Q2 · 已完成 ✓</div><div class="nx-roadmap-title">概念验证与早期社区</div><div class="nx-roadmap-body">架构定稿。白皮书上线。候补名单、节点注册、心跳系统和任务队列全部部署完成。真实数据写入 Supabase。</div></div>
+        <div class="nx-roadmap-item current"><div class="nx-roadmap-phase">2026年Q3 · 当前 — 早期 Beta</div><div class="nx-roadmap-title">早期 Beta — 模拟任务执行</div><div class="nx-roadmap-body">任务队列上线。节点 Portal 运行中。心跳与模拟任务执行已验证。iOS 开发者招募中，用于原生 app 开发。基础设施已验证。</div></div>
+        <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2026年Q4 · 目标</div><div class="nx-roadmap-title">封闭测试——1,000 节点</div><div class="nx-roadmap-body">iOS/Android 原生节点客户端。Solana SPL 代币部署。BFT 测试网。首个付费买家试点。ZK 算力证明上线。</div></div>
         <div class="nx-roadmap-item"><div class="nx-roadmap-phase">2027年Q1 · 目标</div><div class="nx-roadmap-title">公开主网上线</div><div class="nx-roadmap-body">开放节点注册。Solana Seeker 集成。市场上线。目标：10万活跃节点、3个企业买家。</div></div>
         <div class="nx-roadmap-item" style="padding-bottom:0;"><div class="nx-roadmap-phase">2027年+ · 愿景</div><div class="nx-roadmap-title">规模扩张与生态</div><div class="nx-roadmap-body">ZK-ML 验证上线。扩展至笔记本/IoT。探索 A 轮融资。</div></div>
         </div>""", unsafe_allow_html=True)
 
     r1,r2,r3=st.columns(3)
     if st.session_state.lang=="EN":
-        with r1: st.metric("Pre-Seed Target","$500K","MVP + 1,000-node beta")
+        with r1: st.metric("Beta Stage","Early Beta","Infrastructure live")
         with r2: st.metric("Target Nodes (Y1)","100K","at mainnet launch")
         with r3: st.metric("Settlement Chain","Solana SPL","low gas · high TPS")
     else:
-        with r1: st.metric("种子前目标","$500K","MVP+1000节点测试")
+        with r1: st.metric("当前阶段","早期 Beta","基础设施已上线")
         with r2: st.metric("目标节点数","100K","主网上线时")
         with r3: st.metric("结算链","Solana SPL","低gas·高TPS")
 
@@ -743,12 +745,12 @@ elif current_tab == L["nav"][4]:
                     else:
                         st.error("Database error. Please try again." if st.session_state.lang=="EN" else "数据库错误，请重试。")
         st.markdown('</div>', unsafe_allow_html=True)
-        disclaimer=("By registering, you confirm you understand this is a pre-seed concept demo. "
+        disclaimer=("By registering, you confirm you understand this is an early beta. "
                     "NEXA tokens are minted on Solana but not yet in public circulation. "
                     "Wallet address is collected for future node airdrop eligibility only. "
                     "No investment contract is formed by registering."
                     if st.session_state.lang=='EN' else
-                    "注册即表明您了解这是种子前概念演示。NEXA 代币已在 Solana 上铸造，但尚未公开流通。空投资格与分配比例将在主网上线时根据队列排名和推荐数量确定。注册不构成投资合同。")
+                    "注册即表明您了解这是早期 Beta 阶段。NEXA 代币已在 Solana 上铸造，但尚未公开流通。空投资格与分配比例将在主网上线时根据队列排名和推荐数量确定。注册不构成投资合同。")
         st.markdown(f'<div style="font-family:\'Space Mono\',monospace;font-size:9px;color:#2a3a4a;text-align:center;line-height:1.7;margin-top:10px;">{disclaimer}</div>', unsafe_allow_html=True)
 
     if total_reg > 0:
@@ -760,10 +762,9 @@ elif current_tab == L["nav"][4]:
 
 elif current_tab in ["Whitepaper", "白皮书"]:
     is_zh = st.session_state.lang == "ZH"
-
-    wp_cover_title = "技术白皮书 · V0.1 · 2026年6月" if is_zh else "TECHNICAL WHITEPAPER · V0.1 · JUNE 2026"
+    wp_cover_title = "技术白皮书 · V0.2 · 2026年Q3" if is_zh else "TECHNICAL WHITEPAPER · V0.2 · Q3 2026"
     wp_tagline = "将全球闲置智能手机算力汇聚成分布式边缘 AI 推理网络" if is_zh else "Aggregating Idle Smartphone Compute into a Distributed Edge AI Inference Network"
-    wp_warn = "⚠ 概念演示阶段 · 非投资建议" if is_zh else "⚠ PRE-SEED CONCEPT DEMO · NOT AN INVESTMENT OFFER"
+    wp_warn = "⚠ 早期 Beta 阶段 · 非投资建议" if is_zh else "⚠ EARLY BETA · NOT AN INVESTMENT OFFER"
 
     st.markdown(f"""
     <style>
@@ -773,7 +774,7 @@ elif current_tab in ["Whitepaper", "白皮书"]:
     .wp-title span{{color:#22c55e}}
     .wp-sub{{font-family:'Space Mono',monospace;font-size:10px;color:#64748b;letter-spacing:.1em;margin-bottom:20px}}
     .wp-tagline{{font-size:13px;color:#94a3b8;font-style:italic;margin-bottom:20px}}
-    .wp-warn{{display:inline-block;background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.25);color:#fca5a5;font-family:'Space Mono',monospace;font-size:9px;padding:5px 12px;border-radius:6px;letter-spacing:.05em}}
+    .wp-warn{{display:inline-block;background:rgba(162,255,0,.1);border:1px solid rgba(162,255,0,.3);color:#a2ff00;font-family:'Space Mono',monospace;font-size:9px;padding:5px 12px;border-radius:6px;letter-spacing:.05em}}
     .wp-stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0}}
     .wp-stat{{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 8px;text-align:center}}
     .wp-stat-val{{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:#16a34a;line-height:1.1}}
@@ -795,9 +796,11 @@ elif current_tab in ["Whitepaper", "白皮书"]:
     .wp-rm{{padding-left:24px;border-left:2px solid #e2e8f0;margin:12px 0}}
     .wp-rm-item{{padding-bottom:20px;position:relative}}
     .wp-rm-item::before{{content:'';position:absolute;left:-29px;top:5px;width:10px;height:10px;border-radius:50%;background:#e2e8f0}}
-    .wp-rm-item.now::before{{background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.5)}}
+    .wp-rm-item.done::before{{background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.5)}}
+    .wp-rm-item.now::before{{background:#a2ff00;box-shadow:0 0 8px rgba(162,255,0,.5)}}
     .wp-rm-phase{{font-family:'Space Mono',monospace;font-size:10px;color:#f59e0b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}}
-    .wp-rm-phase.active{{color:#22c55e}}
+    .wp-rm-phase.done{{color:#22c55e}}
+    .wp-rm-phase.active{{color:#a2ff00}}
     .wp-rm-title{{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px}}
     .wp-rm-body{{font-size:11px;color:#64748b;line-height:1.6}}
     </style>
@@ -817,320 +820,25 @@ elif current_tab in ["Whitepaper", "白皮书"]:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Whitepaper logo has been removed ──
-
     if is_zh:
         st.markdown("""
-        <div class="wp-section">
-            <div class="wp-h2">1. 执行摘要</div>
-            <div class="wp-body" style="margin-top:12px">NexaEdge 是一个将闲置智能手机算力汇聚成无需许可的分布式边缘 AI 推理网络的协议设计。现代智能手机内置专用神经处理单元（NPU），每天有超过 95% 的时间处于闲置状态。NexaEdge 旨在利用这些潜在算力，以低于 5ms 的延迟、接近零边际成本提供 AI 推理服务，并原生支持 GDPR 合规。</div>
-            <div class="wp-hl">全球边缘 AI 市场预计到 2028 年将达到 1070 亿美元（CAGR 19.2%）。目前尚无协议能够在规模上聚合智能手机 NPU 算力。NexaEdge 的设计目标是成为第一个。</div>
-            <div class="wp-body">项目目前处于概念验证阶段（2026年Q2）。候补名单门户、节点注册系统和基于浏览器的心跳客户端已部署完成。1亿枚 NEXA 代币已在 Solana 上铸造，但尚未公开流通。</div>
-            <div class="wp-note">⚠ 本文件仅供资助委员会、加速器项目及合格投资人参考，不构成证券发行或投资合同。</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">2. 问题陈述</div>
-            <div class="wp-h3">2.1 边缘 AI 算力缺口</div>
-            <div class="wp-body">AI 推理需求增长速度已超过中心化 GPU 供给能力。H100 即时价格在每小时 $2–$4 之间波动。与此同时：</div>
-            <div class="wp-body">• 68亿部智能手机内置可运行 1.8B–3.8B 参数 SLM 的 NPU<br>• 这些设备每天有 12–20 小时处于闲置状态<br>• 它们分布在全球每个地区，紧邻终端用户<br>• 其算力完全未被更广泛的 AI 生态系统利用</div>
-            <div class="wp-h3">2.2 竞争格局</div>
-            <table class="wp-table">
-                <tr><th></th><th>GPU 云</th><th>Grass.io</th><th class="g">NexaEdge（设计目标）</th></tr>
-                <tr><td class="dk">资本支出</td><td>极高</td><td>低</td><td class="hl">零</td></tr>
-                <tr><td class="dk">延迟</td><td>50–150ms</td><td>不适用</td><td class="hl">&lt;5ms 目标</td></tr>
-                <tr><td class="dk">隐私</td><td>数据离设备</td><td>部分</td><td class="hl">GDPR 原生</td></tr>
-                <tr><td class="dk">算力</td><td>仅GPU</td><td>仅网络</td><td class="hl">NPU + CPU</td></tr>
-                <tr><td class="dk">女巫抵抗</td><td>中心化认证</td><td>IP可伪造</td><td class="hl">硬件指纹+ZK</td></tr>
-            </table>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">3. NexaEdge 协议</div>
-            <div class="wp-hl">将每一部闲置智能手机变成经过验证的边缘计算节点，通过执行 AI 推理任务赚取 NEXA 代币。</div>
-            <div class="wp-h3">3.1 三层架构</div>
-            <table class="wp-table">
-                <tr><th>层级</th><th>组件</th><th>功能</th></tr>
-                <tr><td class="dk">需求层</td><td>AI买家 API</td><td>提交任务，用 NEXA 支付</td></tr>
-                <tr><td class="dk">协调层</td><td>Solana SPL</td><td>BFT 共识、ZK 验证、奖励分发</td></tr>
-                <tr><td class="dk">供给层</td><td>设备节点</td><td>WASM 沙箱、NPU 执行、热保护</td></tr>
-            </table>
-            <div class="wp-h3">3.2 算力证明（PoC）</div>
-            <div class="wp-body">• <b>硬件指纹</b> — 设备专属、不可伪造的标识符<br>• <b>ZK 推理证明</b> — 无需暴露模型权重即可验证<br>• <b>BFT 交叉验证</b> — 需要最小法定数量的独立节点确认</div>
-            <div class="wp-h3">3.3 39°C 热保护协议</div>
-            <div class="wp-body">设备温度达到 39°C 时，任务队列自动暂停。在 WASM 沙箱层面强制执行——节点运营者不可覆盖。为机构买家提供 SLA 保证。</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">4. NEXA 代币模型</div>
-            <div class="wp-stats" style="margin-top:12px">
-                <div class="wp-stat"><div class="wp-stat-val">1亿</div><div class="wp-stat-lbl">总供应量（固定）</div></div>
-                <div class="wp-stat"><div class="wp-stat-val" style="font-size:13px">Solana SPL</div><div class="wp-stat-lbl">区块链</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">$0.50</div><div class="wp-stat-lbl">示意价格</div></div>
-                <div class="wp-stat"><div class="wp-stat-val" style="font-size:13px">2026年Q4</div><div class="wp-stat-lbl">目标分发</div></div>
-            </div>
-            <div class="wp-body" style="margin-top:12px">合约地址：<code style="background:#f1f5f9;padding:2px 5px;border-radius:3px;font-size:10px">D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2</code></div>
-            <div class="wp-h3">计划分配（示意）</div>
-            <table class="wp-table">
-                <tr><th>类别</th><th>分配比例</th><th>归属规则</th></tr>
-                <tr><td class="dk">节点运营者奖励</td><td class="hl">40%</td><td>按任务获得，无锁定期</td></tr>
-                <tr><td class="dk">生态系统与资助</td><td class="hl">20%</td><td>3年线性归属</td></tr>
-                <tr><td class="dk">团队与顾问</td><td class="hl">15%</td><td>1年锁定，3年归属</td></tr>
-                <tr><td class="dk">储备金</td><td class="hl">15%</td><td>DAO 控制，4年锁定</td></tr>
-                <tr><td class="dk">早期候补名单空投</td><td class="hl">10%</td><td>主网上线时快照</td></tr>
-            </table>
-            <div class="wp-note">⚠ 代币分配仅供示意，可能调整。本内容不构成金融工具或投资要约。</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">5. 市场机会</div>
-            <div class="wp-stats" style="margin-top:12px">
-                <div class="wp-stat"><div class="wp-stat-val">$107B</div><div class="wp-stat-lbl">边缘AI 2028</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">$28B</div><div class="wp-stat-lbl">AI推理 2026</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">68亿</div><div class="wp-stat-lbl">NPU手机</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">19.2%</div><div class="wp-stat-lbl">CAGR</div></div>
-            </div>
-            <div class="wp-h3">目标买家细分</div>
-            <div class="wp-body"><b>边缘AI代理部署者</b> — 运行 1.8B–3.8B SLM，延迟低于 5ms，架构层面符合 GDPR。→ AI开发者、企业SaaS</div>
-            <div class="wp-body"><b>AI数据集清洗（RLHF）</b> — 分布式 WASM 沙箱在数千节点上同步运行自动标注。→ AI实验室、数据管道公司</div>
-            <div class="wp-body"><b>ZK-ML推理验证</b> — 无需中心化预言机的可信推理验证。→ DeFi协议、合规平台</div>
-            <div class="wp-body"><b>传感器上下文AI</b> — GPS、摄像头、IMU实现数据中心无法提供的上下文感知推理。→ 位置AI、自主系统</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">6. 开发路线图</div>
-            <div class="wp-rm" style="margin-top:16px">
-                <div class="wp-rm-item now">
-                    <div class="wp-rm-phase active">2026年Q2 · 当前</div>
-                    <div class="wp-rm-title">概念验证与早期社区</div>
-                    <div class="wp-rm-body">架构定稿。候补名单、节点注册和浏览器心跳已上线。真实数据写入 Supabase。1亿 NEXA 已铸造。已向 Solana Foundation、Alliance DAO 和 Y Combinator 提交资助申请。</div>
-                </div>
-                <div class="wp-rm-item">
-                    <div class="wp-rm-phase">2026年Q3 · 目标</div>
-                    <div class="wp-rm-title">WASM 沙箱 MVP</div>
-                    <div class="wp-rm-body">iOS/Android WASM 运行时。Phi-3 mini 在设备 NPU 上首次推理。热保护守护进程。内部 alpha：50台设备。</div>
-                </div>
-                <div class="wp-rm-item">
-                    <div class="wp-rm-phase">2026年Q4 · 目标</div>
-                    <div class="wp-rm-title">封闭测试——1000节点</div>
-                    <div class="wp-rm-body">Solana SPL 部署。BFT 测试网。首个付费买家试点。ZK 算力证明上线。</div>
-                </div>
-                <div class="wp-rm-item">
-                    <div class="wp-rm-phase">2027年Q1 · 目标</div>
-                    <div class="wp-rm-title">公开主网上线</div>
-                    <div class="wp-rm-body">开放注册。Solana Seeker 集成。市场上线。目标：10万活跃节点，3个企业买家。</div>
-                </div>
-                <div class="wp-rm-item">
-                    <div class="wp-rm-phase">2027年+ · 愿景</div>
-                    <div class="wp-rm-title">规模扩张与生态</div>
-                    <div class="wp-rm-body">ZK-ML 验证上线。扩展至笔记本/IoT。探索 A 轮融资。</div>
-                </div>
-            </div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">7. 技术护城河</div>
-            <div class="wp-h3">NPU 原生执行</div>
-            <div class="wp-body">苹果 A17 Pro NPU：35 TOPS。高通骁龙 8 Gen 3：45 TOPS。NexaEdge 通过 WASM 运行时直接调用 Core ML（iOS）和 NNAPI（Android）。</div>
-            <div class="wp-h3">Solana Mobile 集成</div>
-            <div class="wp-body">Solana Seeker 和 Saga 具备硬件级密钥存储（Seed Vault）。NexaEdge 设计与这些设备原生集成，支持节点注册和设备端 NEXA 钱包管理。</div>
-            <div class="wp-h3">地理密度优势</div>
-            <div class="wp-body">68亿部智能手机遍布全球每个城市和农村地区——数据中心在结构上无法复制。随着边缘 AI 普及，贴近终端用户的地理优势将成为核心护城河。</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">8. 融资与资金用途</div>
-            <div class="wp-stats" style="margin-top:12px">
-                <div class="wp-stat"><div class="wp-stat-val">$50万</div><div class="wp-stat-lbl">种子前目标</div></div>
-                <div class="wp-stat"><div class="wp-stat-val" style="font-size:14px">SAFE</div><div class="wp-stat-lbl">融资工具</div></div>
-                <div class="wp-stat"><div class="wp-stat-val" style="font-size:14px">2026年Q3</div><div class="wp-stat-lbl">目标完成</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">50</div><div class="wp-stat-lbl">Alpha设备数</div></div>
-            </div>
-            <table class="wp-table" style="margin-top:12px">
-                <tr><th>类别</th><th>金额</th><th>占比</th></tr>
-                <tr><td class="dk">WASM 运行时开发</td><td>$20万</td><td class="hl">40%</td></tr>
-                <tr><td class="dk">节点运营者激励</td><td>$10万</td><td class="hl">20%</td></tr>
-                <tr><td class="dk">Solana 集成与智能合约</td><td>$10万</td><td class="hl">20%</td></tr>
-                <tr><td class="dk">法律与合规</td><td>$5万</td><td class="hl">10%</td></tr>
-                <tr><td class="dk">市场营销与社区建设</td><td>$5万</td><td class="hl">10%</td></tr>
-            </table>
-            <div class="wp-body" style="margin-top:10px">联系方式：<a href="mailto:contact@nexaedge.org" style="color:#16a34a">contact@nexaedge.org</a></div>
-            <div class="wp-note">目前尚未签署任何 SAFE 或投资合同。所有承诺须经正式尽职调查后方可生效。</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">9. 风险因素</div>
-            <div class="wp-h3">技术风险</div>
-            <div class="wp-body">移动 NPU 上的 WASM 运行时性能在规模上尚未经过验证。设备端 SLM 推理延迟可能高于预期。</div>
-            <div class="wp-h3">监管风险</div>
-            <div class="wp-body">加密货币代币分发受各司法管辖区不断演变的证券法规约束。NEXA 代币分类可能需要在公开分发前进行法律重构。</div>
-            <div class="wp-h3">采用风险</div>
-            <div class="wp-body">节点运营者获取需要足够的 NEXA 奖励率。AI 买家获取需要在企业承诺前展示可靠性和 SLA 合规性。</div>
-            <div class="wp-h3">竞争风险</div>
-            <div class="wp-body">Akash、Render、io.net 等资金充裕的协议可能转向移动算力。苹果和谷歌可能在未来 OS 更新中限制移动端 WASM 执行。</div>
-            <div class="wp-hl">NexaEdge 处于概念阶段。所有预测、时间表和技术主张均为设计目标，不构成保证。</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">10. 法律免责声明</div>
-            <div class="wp-body">本白皮书仅供参考。不构成招股说明书、出售要约或购买任何证券或金融工具的邀请。</div>
-            <div class="wp-body">NEXA 代币是设计用于 NexaEdge 协议内部的功能代币，尚未在任何司法管辖区依据证券法进行注册。</div>
-            <div class="wp-body">所有前瞻性陈述均基于当前设计意图，可能随时更改。加入候补名单不产生任何法律权利或代币、股权、金融工具的权益。</div>
-            <div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:9px;color:#94a3b8;text-align:center;line-height:2">
-                contact@nexaedge.org · nexaedge.streamlit.app · @nexaedge_ · t.me/NexaEdge7<br>
-                © 2026 NexaEdge Network. 保留所有权利。
-            </div>
-        </div>
+        <div class="wp-section"><div class="wp-h2">1. 执行摘要</div><div class="wp-body" style="margin-top:12px">NexaEdge 是一个将闲置智能手机算力汇聚成无需许可的分布式边缘 AI 推理网络的协议设计。现代智能手机内置专用神经处理单元（NPU），每天有超过 95% 的时间处于闲置状态。</div><div class="wp-hl">全球边缘 AI 市场预计到 2028 年将达到 1070 亿美元（CAGR 19.2%）。NexaEdge 的设计目标是成为第一个在规模上聚合智能手机 NPU 算力的协议。</div><div class="wp-body">项目目前处于早期 Beta 阶段（2026年Q3）。候补名单、节点注册、心跳系统和任务队列已全部上线并验证。1亿枚 NEXA 代币已在 Solana 上铸造，但尚未公开流通。</div><div class="wp-note">⚠ 本文件仅供资助委员会、加速器项目及合格投资人参考，不构成证券发行或投资合同。</div></div>
+        <div class="wp-section"><div class="wp-h2">2. 当前 Beta 状态</div><div class="wp-h3">已上线 ✓</div><div class="wp-body">• 候补名单系统（2个注册用户）<br>• 节点注册与 Token 系统<br>• 心跳数据收集（CPU、温度、电池）<br>• 任务队列（slm_inference / rlhf_validation / zk_proof）<br>• 模拟任务执行与结果上报<br>• 节点 Portal（OTP 登录、队列排名、推荐码）</div><div class="wp-h3">开发中</div><div class="wp-body">• iOS 原生节点客户端（招募开发者中）<br>• 真正的 WASM 沙箱（Q4 目标）<br>• Solana SPL 代币分发</div></div>
+        <div class="wp-section"><div class="wp-h2">3. 开发路线图</div><div class="wp-rm" style="margin-top:16px"><div class="wp-rm-item done"><div class="wp-rm-phase done">2026年Q2 · 已完成 ✓</div><div class="wp-rm-title">概念验证与早期社区</div><div class="wp-rm-body">架构定稿。白皮书上线。候补名单、节点注册、心跳和任务队列全部部署。</div></div><div class="wp-rm-item now"><div class="wp-rm-phase active">2026年Q3 · 当前 — 早期 Beta</div><div class="wp-rm-title">早期 Beta — 模拟任务执行</div><div class="wp-rm-body">任务队列上线。节点 Portal 运行中。iOS 开发者招募中。</div></div><div class="wp-rm-item"><div class="wp-rm-phase">2026年Q4 · 目标</div><div class="wp-rm-title">封闭测试——1,000 节点</div><div class="wp-rm-body">iOS/Android 原生节点客户端。Solana SPL 部署。BFT 测试网。首个付费买家。</div></div><div class="wp-rm-item"><div class="wp-rm-phase">2027年Q1 · 目标</div><div class="wp-rm-title">公开主网上线</div><div class="wp-rm-body">开放注册。Solana Seeker 集成。目标：10万活跃节点。</div></div></div></div>
+        <div class="wp-section"><div class="wp-h2">4. NEXA 代币模型</div><div class="wp-stats" style="margin-top:12px"><div class="wp-stat"><div class="wp-stat-val">1亿</div><div class="wp-stat-lbl">总供应量（固定）</div></div><div class="wp-stat"><div class="wp-stat-val" style="font-size:13px">Solana SPL</div><div class="wp-stat-lbl">区块链</div></div><div class="wp-stat"><div class="wp-stat-val">$0.50</div><div class="wp-stat-lbl">示意价格</div></div><div class="wp-stat"><div class="wp-stat-val" style="font-size:13px">2026年Q4</div><div class="wp-stat-lbl">目标分发</div></div></div><div class="wp-body" style="margin-top:12px">合约地址：<code style="background:#f1f5f9;padding:2px 5px;border-radius:3px;font-size:10px">D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2</code></div><div class="wp-note">⚠ 代币尚未公开流通。本内容不构成金融工具或投资要约。</div></div>
+        <div class="wp-section"><div class="wp-h2">5. 法律免责声明</div><div class="wp-body">本白皮书仅供参考。不构成招股说明书、出售要约或购买任何证券或金融工具的邀请。所有前瞻性陈述均基于当前设计意图，可能随时更改。</div><div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:9px;color:#94a3b8;text-align:center;line-height:2">contact@nexaedge.org · @nexaedge_ · t.me/NexaEdge7<br>© 2026 NexaEdge Network. 保留所有权利。</div></div>
         """, unsafe_allow_html=True)
-
     else:
         st.markdown("""
-        <div class="wp-section">
-            <div class="wp-h2">1. Executive Summary</div>
-            <div class="wp-body" style="margin-top:12px">NexaEdge is a protocol design to aggregate idle smartphone compute into a permissionless, distributed edge AI inference network. Modern smartphones contain dedicated Neural Processing Units (NPUs) that sit idle for 95%+ of the day. NexaEdge proposes to harness this latent compute to serve AI inference tasks at sub-5ms latency, at near-zero marginal cost, with native GDPR compliance.</div>
-            <div class="wp-hl">The global edge AI market is projected to reach $107B by 2028 (CAGR 19.2%). Today, no protocol exists that aggregates smartphone NPU compute at scale. NexaEdge is designed to be the first.</div>
-            <div class="wp-body">The project is at concept validation stage (Q2 2026). A working waitlist portal, node registration system, and browser-based heartbeat client have been deployed. 100,000,000 NEXA tokens have been minted on Solana but are not yet in public circulation.</div>
-            <div class="wp-note">⚠ This document is for grant committees, accelerators, and accredited investors only. It does not constitute a securities offering or investment contract.</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">2. The Problem</div>
-            <div class="wp-h3">2.1 The Edge AI Compute Gap</div>
-            <div class="wp-body">AI inference demand is growing faster than centralized GPU supply. H100 spot prices fluctuate between $2–4/hour. Meanwhile:</div>
-            <div class="wp-body">• 6.8 billion smartphones contain NPUs capable of running 1.8B–3.8B parameter SLMs<br>• These devices are idle for 12–20 hours per day<br>• They are distributed across every geography, close to end users<br>• Their compute goes entirely unused by the broader AI ecosystem</div>
-            <div class="wp-h3">2.2 Competitive Landscape</div>
-            <table class="wp-table">
-                <tr><th></th><th>GPU Cloud</th><th>Grass.io</th><th class="g">NexaEdge (Design)</th></tr>
-                <tr><td class="dk">CapEx</td><td>Extreme</td><td>Low</td><td class="hl">Zero</td></tr>
-                <tr><td class="dk">Latency</td><td>50–150ms</td><td>N/A</td><td class="hl">&lt;5ms target</td></tr>
-                <tr><td class="dk">Privacy</td><td>Data leaves</td><td>Partial</td><td class="hl">GDPR-native</td></tr>
-                <tr><td class="dk">Compute</td><td>GPU only</td><td>Network only</td><td class="hl">NPU + CPU</td></tr>
-                <tr><td class="dk">Sybil Resist.</td><td>Central auth</td><td>IP spoofable</td><td class="hl">HW fingerprint+ZK</td></tr>
-            </table>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">3. The NexaEdge Protocol</div>
-            <div class="wp-hl">Turn every idle smartphone into a verified edge compute node that earns NEXA tokens for executing AI inference tasks.</div>
-            <div class="wp-h3">3.1 Three-Layer Architecture</div>
-            <table class="wp-table">
-                <tr><th>Layer</th><th>Component</th><th>Function</th></tr>
-                <tr><td class="dk">Demand</td><td>AI Buyers API</td><td>Submit tasks, pay in NEXA</td></tr>
-                <tr><td class="dk">Coordination</td><td>Solana SPL</td><td>BFT consensus, ZK verification, rewards</td></tr>
-                <tr><td class="dk">Supply</td><td>Device Nodes</td><td>WASM sandbox, NPU execution, thermal guard</td></tr>
-            </table>
-            <div class="wp-h3">3.2 Proof of Compute (PoC)</div>
-            <div class="wp-body">• <b>Hardware fingerprint</b> — device-specific, non-spoofable identifier<br>• <b>ZK proof of inference</b> — verifiable without revealing model weights<br>• <b>BFT cross-validation</b> — minimum quorum of independent nodes required</div>
-            <div class="wp-h3">3.3 39°C Thermal Protocol</div>
-            <div class="wp-body">If device temperature reaches 39°C, the task queue pauses automatically. Enforced at WASM sandbox level — not overridable by node operators. Enables institutional SLA guarantees.</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">4. NEXA Token Model</div>
-            <div class="wp-stats" style="margin-top:12px">
-                <div class="wp-stat"><div class="wp-stat-val">100M</div><div class="wp-stat-lbl">Supply (Fixed)</div></div>
-                <div class="wp-stat"><div class="wp-stat-val" style="font-size:13px">Solana SPL</div><div class="wp-stat-lbl">Blockchain</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">$0.50</div><div class="wp-stat-lbl">Illustrative</div></div>
-                <div class="wp-stat"><div class="wp-stat-val" style="font-size:13px">Q4 2026</div><div class="wp-stat-lbl">Distribution</div></div>
-            </div>
-            <div class="wp-body" style="margin-top:12px">Contract: <code style="background:#f1f5f9;padding:2px 5px;border-radius:3px;font-size:10px">D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2</code></div>
-            <div class="wp-h3">Planned Allocation (Illustrative)</div>
-            <table class="wp-table">
-                <tr><th>Category</th><th>Allocation</th><th>Vesting</th></tr>
-                <tr><td class="dk">Node Operator Rewards</td><td class="hl">40%</td><td>Earned per task</td></tr>
-                <tr><td class="dk">Ecosystem & Grants</td><td class="hl">20%</td><td>3-year linear vest</td></tr>
-                <tr><td class="dk">Team & Advisors</td><td class="hl">15%</td><td>1-year cliff, 3-year vest</td></tr>
-                <tr><td class="dk">Reserve</td><td class="hl">15%</td><td>DAO-controlled, 4-year lock</td></tr>
-                <tr><td class="dk">Early Waitlist Airdrop</td><td class="hl">10%</td><td>Snapshot at mainnet launch</td></tr>
-            </table>
-            <div class="wp-note">⚠ Token allocation is illustrative. This is not a financial instrument or investment offer.</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">5. Market Opportunity</div>
-            <div class="wp-stats" style="margin-top:12px">
-                <div class="wp-stat"><div class="wp-stat-val">$107B</div><div class="wp-stat-lbl">Edge AI 2028</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">$28B</div><div class="wp-stat-lbl">Inference 2026</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">6.8B</div><div class="wp-stat-lbl">NPU Phones</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">19.2%</div><div class="wp-stat-lbl">CAGR</div></div>
-            </div>
-            <div class="wp-h3">Target Buyer Segments</div>
-            <div class="wp-body"><b>Edge AI Agent Deployers</b> — Run 1.8B–3.8B SLMs with sub-5ms local inference. GDPR compliant by architecture. → AI developers, enterprise SaaS</div>
-            <div class="wp-body"><b>AI Dataset Cleaning (RLHF)</b> — Distributed WASM sandbox runs automated labeling across thousands of nodes simultaneously. → AI labs, data pipeline companies</div>
-            <div class="wp-body"><b>ZK-ML Inference Verification</b> — Trustless inference verification without centralized oracles. → DeFi protocols, compliance platforms</div>
-            <div class="wp-body"><b>Sensor-Context AI</b> — GPS, camera, IMU enable tasks structurally impossible in datacenters. → Location AI, autonomous systems</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">6. Development Roadmap</div>
-            <div class="wp-rm" style="margin-top:16px">
-                <div class="wp-rm-item now">
-                    <div class="wp-rm-phase active">Q2 2026 · NOW</div>
-                    <div class="wp-rm-title">Concept Validation & Early Community</div>
-                    <div class="wp-rm-body">Architecture finalized. Waitlist, node registration, and browser heartbeat live. Real data flowing into Supabase. 100M NEXA minted. Grant applications submitted to Solana Foundation, Alliance DAO, and Y Combinator.</div>
-                </div>
-                <div class="wp-rm-item">
-                    <div class="wp-rm-phase">Q3 2026 · TARGET</div>
-                    <div class="wp-rm-title">WASM Sandbox MVP</div>
-                    <div class="wp-rm-body">Functional WASM runtime on iOS/Android. First SLM inference (Phi-3 mini) on device NPU. Thermal guard daemon. Internal alpha: 50 devices.</div>
-                </div>
-                <div class="wp-rm-item">
-                    <div class="wp-rm-phase">Q4 2026 · TARGET</div>
-                    <div class="wp-rm-title">Closed Beta — 1,000 Nodes</div>
-                    <div class="wp-rm-body">Solana SPL token deployment. BFT testnet. First paying buyer pilot. ZK proof of compute live.</div>
-                </div>
-                <div class="wp-rm-item">
-                    <div class="wp-rm-phase">Q1 2027 · TARGET</div>
-                    <div class="wp-rm-title">Public Mainnet Launch</div>
-                    <div class="wp-rm-body">Open enrollment. Solana Seeker integration. Marketplace live. Target: 100K active nodes, 3 enterprise buyers.</div>
-                </div>
-                <div class="wp-rm-item">
-                    <div class="wp-rm-phase">2027+ · VISION</div>
-                    <div class="wp-rm-title">Scale & Ecosystem</div>
-                    <div class="wp-rm-body">ZK-ML verification live. Expand to laptop/IoT. Series A exploration.</div>
-                </div>
-            </div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">7. Technical Moat</div>
-            <div class="wp-h3">NPU-Native Execution</div>
-            <div class="wp-body">Apple A17 Pro NPU: 35 TOPS. Qualcomm Snapdragon 8 Gen 3: 45 TOPS. NexaEdge targets these directly via Core ML (iOS) and NNAPI (Android) through the WASM runtime.</div>
-            <div class="wp-h3">Solana Mobile Integration</div>
-            <div class="wp-body">Solana Seeker and Saga feature hardware-level key storage (Seed Vault). NexaEdge is designed to integrate natively for seamless node enrollment and on-device NEXA wallet management.</div>
-            <div class="wp-h3">Geographic Density Advantage</div>
-            <div class="wp-body">6.8 billion smartphones in every city and rural area on Earth — structurally impossible to replicate with datacenters. Proximity to end users becomes a competitive moat as edge AI adoption grows.</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">8. Funding & Use of Proceeds</div>
-            <div class="wp-stats" style="margin-top:12px">
-                <div class="wp-stat"><div class="wp-stat-val">$500K</div><div class="wp-stat-lbl">Pre-Seed Target</div></div>
-                <div class="wp-stat"><div class="wp-stat-val" style="font-size:14px">SAFE</div><div class="wp-stat-lbl">Instrument</div></div>
-                <div class="wp-stat"><div class="wp-stat-val" style="font-size:14px">Q3 2026</div><div class="wp-stat-lbl">Target Close</div></div>
-                <div class="wp-stat"><div class="wp-stat-val">50</div><div class="wp-stat-lbl">Alpha Devices</div></div>
-            </div>
-            <table class="wp-table" style="margin-top:12px">
-                <tr><th>Category</th><th>Amount</th><th>%</th></tr>
-                <tr><td class="dk">WASM Runtime Development</td><td>$200K</td><td class="hl">40%</td></tr>
-                <tr><td class="dk">Node Operator Incentives</td><td>$100K</td><td class="hl">20%</td></tr>
-                <tr><td class="dk">Solana Integration</td><td>$100K</td><td class="hl">20%</td></tr>
-                <tr><td class="dk">Legal & Compliance</td><td>$50K</td><td class="hl">10%</td></tr>
-                <tr><td class="dk">Marketing & Community</td><td>$50K</td><td class="hl">10%</td></tr>
-            </table>
-            <div class="wp-body" style="margin-top:10px">Contact: <a href="mailto:contact@nexaedge.org" style="color:#16a34a">contact@nexaedge.org</a></div>
-            <div class="wp-note">No SAFE or investment contract has been formed. All commitments subject to formal due diligence.</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">9. Risk Factors</div>
-            <div class="wp-h3">Technical Risk</div>
-            <div class="wp-body">WASM runtime performance on mobile NPUs is unproven at scale. SLM inference may exhibit higher latency than projected.</div>
-            <div class="wp-h3">Regulatory Risk</div>
-            <div class="wp-body">Token distribution is subject to evolving securities law. NEXA classification may require legal restructuring before public distribution.</div>
-            <div class="wp-h3">Adoption Risk</div>
-            <div class="wp-body">Node operator acquisition requires sufficient NEXA reward rates. AI buyer acquisition requires demonstrated SLA compliance.</div>
-            <div class="wp-h3">Competition Risk</div>
-            <div class="wp-body">Akash, Render, io.net may pivot to mobile compute. Apple/Google may restrict WASM on mobile in future OS updates.</div>
-            <div class="wp-hl">NexaEdge is at concept stage. All projections and technical claims are design targets, not guarantees.</div>
-        </div>
-        <div class="wp-section">
-            <div class="wp-h2">10. Legal Disclaimer</div>
-            <div class="wp-body">This whitepaper is for informational purposes only. It does not constitute a prospectus, an offer to sell, or a solicitation to purchase any securities or financial instruments.</div>
-            <div class="wp-body">NEXA tokens are utility tokens for use within the NexaEdge protocol. They have not been registered under the securities laws of any jurisdiction.</div>
-            <div class="wp-body">All forward-looking statements are subject to change. Participation in the waitlist does not create any legal right or entitlement to tokens, equity, or financial instruments.</div>
-            <div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:9px;color:#94a3b8;text-align:center;line-height:2">
-                contact@nexaedge.org · nexaedge.streamlit.app · @nexaedge_ · t.me/NexaEdge7<br>
-                © 2026 NexaEdge Network. All rights reserved.
-            </div>
-        </div>
+        <div class="wp-section"><div class="wp-h2">1. Executive Summary</div><div class="wp-body" style="margin-top:12px">NexaEdge is a protocol design to aggregate idle smartphone compute into a permissionless, distributed edge AI inference network. Modern smartphones contain dedicated NPUs that sit idle for 95%+ of the day.</div><div class="wp-hl">The global edge AI market is projected to reach $107B by 2028 (CAGR 19.2%). NexaEdge is designed to be the first protocol to aggregate smartphone NPU compute at scale.</div><div class="wp-body">The project is at Early Beta stage (Q3 2026). Waitlist, node registration, heartbeat system, and task queue are all live and validated. 100M NEXA tokens have been minted on Solana but are not yet in public circulation.</div><div class="wp-note">⚠ This document is for grant committees, accelerators, and accredited investors only. It does not constitute a securities offering or investment contract.</div></div>
+        <div class="wp-section"><div class="wp-h2">2. Current Beta Status</div><div class="wp-h3">Live ✓</div><div class="wp-body">• Waitlist system (2 registered users)<br>• Node registration & token system<br>• Heartbeat data collection (CPU, temperature, battery)<br>• Task queue (slm_inference / rlhf_validation / zk_proof)<br>• Simulated task execution & result reporting<br>• Node portal (OTP login, queue rank, referral code)</div><div class="wp-h3">In Development</div><div class="wp-body">• Native iOS node client (developer recruitment in progress)<br>• Real WASM sandbox (Q4 target)<br>• Solana SPL token distribution</div></div>
+        <div class="wp-section"><div class="wp-h2">3. Development Roadmap</div><div class="wp-rm" style="margin-top:16px"><div class="wp-rm-item done"><div class="wp-rm-phase done">Q2 2026 · COMPLETE ✓</div><div class="wp-rm-title">Concept Validation & Early Community</div><div class="wp-rm-body">Architecture finalized. Whitepaper live. Waitlist, node registration, heartbeat, and task queue all deployed.</div></div><div class="wp-rm-item now"><div class="wp-rm-phase active">Q3 2026 · NOW — EARLY BETA</div><div class="wp-rm-title">Early Beta — Simulated Task Execution</div><div class="wp-rm-body">Task queue live. Node portal active. iOS developer recruitment in progress.</div></div><div class="wp-rm-item"><div class="wp-rm-phase">Q4 2026 · TARGET</div><div class="wp-rm-title">Closed Beta — 1,000 Nodes</div><div class="wp-rm-body">Native iOS/Android node client. Solana SPL deployment. BFT testnet. First paying buyer.</div></div><div class="wp-rm-item"><div class="wp-rm-phase">Q1 2027 · TARGET</div><div class="wp-rm-title">Public Mainnet Launch</div><div class="wp-rm-body">Open enrollment. Solana Seeker integration. Target: 100K active nodes.</div></div></div></div>
+        <div class="wp-section"><div class="wp-h2">4. NEXA Token Model</div><div class="wp-stats" style="margin-top:12px"><div class="wp-stat"><div class="wp-stat-val">100M</div><div class="wp-stat-lbl">Supply (Fixed)</div></div><div class="wp-stat"><div class="wp-stat-val" style="font-size:13px">Solana SPL</div><div class="wp-stat-lbl">Blockchain</div></div><div class="wp-stat"><div class="wp-stat-val">$0.50</div><div class="wp-stat-lbl">Illustrative</div></div><div class="wp-stat"><div class="wp-stat-val" style="font-size:13px">Q4 2026</div><div class="wp-stat-lbl">Distribution</div></div></div><div class="wp-body" style="margin-top:12px">Contract: <code style="background:#f1f5f9;padding:2px 5px;border-radius:3px;font-size:10px">D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2</code></div><div class="wp-note">⚠ Tokens not yet in public circulation. This is not a financial instrument or investment offer.</div></div>
+        <div class="wp-section"><div class="wp-h2">5. Legal Disclaimer</div><div class="wp-body">This whitepaper is for informational purposes only. It does not constitute a prospectus, an offer to sell, or a solicitation to purchase any securities or financial instruments. All forward-looking statements are subject to change.</div><div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:9px;color:#94a3b8;text-align:center;line-height:2">contact@nexaedge.org · @nexaedge_ · t.me/NexaEdge7<br>© 2026 NexaEdge Network. All rights reserved.</div></div>
         """, unsafe_allow_html=True)
 
 st.markdown("""<div class="nx-footer">
-NexaEdge Network &nbsp;·&nbsp; Pre-Seed Concept Demo &nbsp;·&nbsp; All simulations are randomly generated for illustration only<br>
+NexaEdge Network &nbsp;·&nbsp; Early Beta · Q3 2026 &nbsp;·&nbsp; Infrastructure live · Simulated task execution · iOS app in development<br>
 NEXA minted on Solana · Not yet in public circulation &nbsp;·&nbsp; No investment contract formed &nbsp;·&nbsp; contact@nexaedge.org<br>
 © 2026 NexaEdge Network. All rights reserved.
 </div>""", unsafe_allow_html=True)
