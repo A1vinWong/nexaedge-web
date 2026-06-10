@@ -286,78 +286,6 @@ div[data-testid="stHorizontalBlock"] div.stButton > button { width: auto !import
     text-align: center; font-family: 'Space Mono', monospace;
     font-size: 9px; color: #2a3a4a; line-height: 2;
 }
-.app-dashboard {
-    background: linear-gradient(160deg, #0a1018, #060b0f);
-    border: 1px solid #1a2535;
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 12px;
-}
-.app-header {
-    background: linear-gradient(135deg, #0d1a10, #0a1410);
-    border-bottom: 1px solid #1a2535;
-    padding: 16px 18px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.app-header-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px; color: #4a6070;
-    text-transform: uppercase; letter-spacing: .12em;
-}
-.app-temp-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 10px; border-radius: 6px;
-    font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700;
-}
-.app-chart-area {
-    padding: 14px 18px 10px;
-    border-bottom: 1px solid #1a2535;
-}
-.app-stats-row {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 0; border-bottom: 1px solid #1a2535;
-}
-.app-stat-cell {
-    padding: 12px 14px; text-align: center;
-    border-right: 1px solid #1a2535;
-}
-.app-stat-cell:last-child { border-right: none; }
-.app-stat-num {
-    font-family: 'Space Mono', monospace;
-    font-size: 15px; font-weight: 700; color: #e8edf2; line-height: 1.1;
-}
-.app-stat-lbl {
-    font-family: 'Space Mono', monospace;
-    font-size: 7px; color: #4a6070;
-    text-transform: uppercase; letter-spacing: .06em; margin-top: 3px;
-}
-.app-node-section {
-    padding: 14px 18px;
-    border-bottom: 1px solid #1a2535;
-}
-.app-node-label {
-    font-family: 'Space Mono', monospace; font-size: 8px; color: #4a6070;
-    text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px;
-}
-.app-node-id {
-    font-family: 'Space Mono', monospace; font-size: 11px; color: #a2ff00; margin-bottom: 12px;
-}
-.app-status-row {
-    display: flex; justify-content: space-between; align-items: flex-start;
-}
-.app-status-block { flex: 1; }
-.app-status-lbl {
-    font-family: 'Space Mono', monospace; font-size: 8px; color: #4a6070;
-    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px;
-}
-.app-status-val {
-    font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
-}
-.app-nexa-val {
-    font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: #a2ff00;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -613,125 +541,125 @@ if st.session_state.user_email:
     )
 
     # ══════════════════════════════════════
-    # DASHBOARD — App Style
+    # NODE SECTION
     # ══════════════════════════════════════
-    st.markdown('<div style="margin-top:16px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
     node_rec = get_node_record(email)
 
     if node_rec:
         token  = node_rec.get("node_token", "—")
         status = node_rec.get("status", "pending")
+        status_color = {"online": "#a2ff00", "pending": "#ffb300", "offline": "#4a6070"}.get(status, "#4a6070")
+
+        # ── Live heartbeat stats
         hb = get_latest_heartbeat(token)
         task_count = get_node_task_count(token)
 
-        # live stats
-        cpu  = hb.get("cpu_usage", 0) or 0 if hb else 0
-        temp = hb.get("temperature", 0) or 0 if hb else 0
-        batt = hb.get("battery_level", 100) or 100 if hb else 100
-        ts_raw = (hb.get("reported_at", "")[:16] or "").replace("T", " ") if hb else "—"
-
-        is_online = status == "online"
-        temp_safe = temp < 39
-        temp_label = "SAFE" if temp_safe else "HIGH"
-        temp_color = "#a2ff00" if temp_safe else "#f43f5e"
-        temp_bg    = "rgba(162,255,0,.1)" if temp_safe else "rgba(244,63,94,.1)"
-
-        # Simulated NEXA earnings based on tasks completed
-        nexa_earned = round(task_count * 0.0022, 4)
-
-        # Hash rate sparkline data (simulated based on cpu)
-        hr_points = [random.uniform(max(0, cpu-20), cpu+20) for _ in range(12)]
-        hr_max = max(hr_points) if hr_points else 1
-        hr_norm = [round(h / hr_max * 60, 1) for h in hr_points]
-        sparkline_pts = " ".join(f"{i*22},{70 - hr_norm[i]}" for i in range(12))
-
-        st.markdown(f"""
-        <div class="app-dashboard">
-
-            <!-- HEADER -->
-            <div class="app-header">
-                <div>
-                    <div class="app-header-title">Dashboard</div>
-                    <div style="font-size:10px;color:#4a6070;font-family:'Space Mono',monospace;margin-top:2px;">
-                        Network Hash Rate (MH/s)
+        if hb:
+            cpu   = hb.get("cpu_usage", 0) or 0
+            temp  = hb.get("temperature", 0) or 0
+            batt  = hb.get("battery_level", 0) or 0
+            ts_raw = (hb.get("reported_at", "")[:19] or "").replace("T", " ")
+            temp_color = "#f43f5e" if temp >= 39 else "#e8edf2"
+            st.markdown(f"""
+            <div class="nx-card" style="border-color:rgba(162,255,0,.2);">
+                <div class="nx-card-title">▸ Live Node Stats</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:{status_color};
+                                box-shadow:0 0 8px {status_color};"></div>
+                    <div style="font-family:'Space Mono',monospace;font-size:10px;
+                                color:{status_color};text-transform:uppercase;letter-spacing:.08em;">
+                        {status}
+                    </div>
+                    <div style="font-family:'Space Mono',monospace;font-size:9px;
+                                color:#2a3a4a;margin-left:auto;">
+                        Last seen {ts_raw} UTC
                     </div>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="app-temp-badge" style="background:{temp_bg};color:{temp_color};">
-                        🌡 {temp:.1f}°C &nbsp;<strong>{temp_label}</strong>
+                <div class="nx-live-row">
+                    <div class="nx-live-item">
+                        <div class="nx-live-val">{cpu:.1f}%</div>
+                        <div class="nx-live-label">CPU</div>
                     </div>
-                    <span class="app-header-gear">⚙</span>
-                </div>
-            </div>
-
-            <!-- CHART -->
-            <div class="app-chart-area">
-                <svg width="100%" height="72" viewBox="0 0 242 72" preserveAspectRatio="none"
-                     style="display:block;">
-                    <defs>
-                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#a2ff00" stop-opacity="0.3"/>
-                            <stop offset="100%" stop-color="#a2ff00" stop-opacity="0.0"/>
-                        </linearGradient>
-                    </defs>
-                    <polygon points="{sparkline_pts} 242,70 0,70"
-                             fill="url(#chartGrad)"/>
-                    <polyline points="{sparkline_pts}"
-                              fill="none" stroke="#a2ff00" stroke-width="2"
-                              stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-
-            <!-- STATS ROW -->
-            <div class="app-stats-row">
-                <div class="app-stat-cell">
-                    <div class="app-stat-num" style="color:#a2ff00;">{cpu:.1f}%</div>
-                    <div class="app-stat-lbl">CPU</div>
-                </div>
-                <div class="app-stat-cell">
-                    <div class="app-stat-num" style="color:{temp_color};">{temp:.1f}°C</div>
-                    <div class="app-stat-lbl">Temp</div>
-                </div>
-                <div class="app-stat-cell">
-                    <div class="app-stat-num">{batt}%</div>
-                    <div class="app-stat-lbl">Battery</div>
-                </div>
-            </div>
-
-            <!-- NODE INFO -->
-            <div class="app-node-section">
-                <div class="app-node-label">Participant Node</div>
-                <div class="app-node-id">NODE_ID: @nexaedge / {token[-12:]}</div>
-                <div class="app-status-row">
-                    <div class="app-status-block">
-                        <div class="app-status-lbl">Mining Status</div>
-                        <div class="app-status-val" style="color:{'#a2ff00' if is_online else '#ffb300'};">
-                            {'● ACTIVE' if is_online else '○ ' + status.upper()}
-                        </div>
+                    <div class="nx-live-item">
+                        <div class="nx-live-val" style="color:{temp_color};">{temp:.1f}°C</div>
+                        <div class="nx-live-label">Temp</div>
                     </div>
-                    <div class="app-status-block" style="text-align:right;">
-                        <div class="app-status-lbl">Token Earnings</div>
-                        <div class="app-nexa-val">{nexa_earned:.4f} NEXA</div>
+                    <div class="nx-live-item">
+                        <div class="nx-live-val">{batt}%</div>
+                        <div class="nx-live-label">Battery</div>
                     </div>
                 </div>
-            </div>
-
-            <!-- BUTTONS -->
-            <div class="app-btn-row">
-                <div style="font-size:8px;color:#2a3a4a;font-family:'Space Mono',monospace;
-                            text-align:center;margin-bottom:2px;">
-                    Use buttons below ↓ or ACTIVATE NODE above
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
+                            margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">
+                    Node Token
+                </div>
+                <div style="font-family:'Space Mono',monospace;font-size:12px;color:#e8edf2;
+                            background:#060b0f;border:1px solid #182230;border-radius:8px;
+                            padding:10px 14px;word-break:break-all;">
+                    {token}
                 </div>
             </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="nx-card" style="border-color:rgba(162,255,0,.2);">
+                <div class="nx-card-title">▸ Your Node Registration</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:{status_color};
+                                box-shadow:0 0 8px {status_color};"></div>
+                    <div style="font-family:'Space Mono',monospace;font-size:10px;
+                                color:{status_color};text-transform:uppercase;letter-spacing:.08em;">
+                        {status} — no heartbeat yet
+                    </div>
+                </div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
+                            margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">
+                    Node Token
+                </div>
+                <div style="font-family:'Space Mono',monospace;font-size:12px;color:#e8edf2;
+                            background:#060b0f;border:1px solid #182230;border-radius:8px;
+                            padding:10px 14px;word-break:break-all;">
+                    {token}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        </div>
-        """, unsafe_allow_html=True)
+        # ── Task history
+        tasks = get_node_tasks(token)
+        if tasks:
+            task_rows_html = ""
+            for t in tasks:
+                t_type   = t.get("task_type", "—")
+                t_status = t.get("status", "—")
+                t_time   = (t.get("completed_at") or t.get("created_at") or "")[:16].replace("T", " ")
+                s_class  = {"completed": "nx-task-status-done",
+                            "assigned":  "nx-task-status-assigned"}.get(t_status, "nx-task-status-pending")
+                task_rows_html += f"""
+                <div class="nx-task-row">
+                    <div class="nx-task-type">{t_type}</div>
+                    <div class="{s_class}">{t_status}</div>
+                    <div class="nx-task-time">{t_time}</div>
+                </div>"""
 
-        # ── Activate / Stop buttons
+            st.markdown(f"""
+            <div class="nx-card" style="margin-top:4px;">
+                <div class="nx-card-title">▸ Task History
+                    <span style="color:#a2ff00;margin-left:8px;">{task_count} completed</span>
+                </div>
+                {task_rows_html}
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── Python-backend heartbeat + task executor (no JS fetch, iOS safe)
+        st.markdown('<div style="margin-top:4px;"></div>', unsafe_allow_html=True)
+
+        # Activate / Stop buttons
         node_active = st.session_state.get("node_active", False)
+
         col_act, col_stop = st.columns([3, 2])
         with col_act:
-            if st.button("⚡ START COMPUTE SESSION", disabled=node_active, key="btn_activate"):
+            if st.button("⚡ ACTIVATE NODE", disabled=node_active, key="btn_activate"):
                 st.session_state.node_active = True
                 st.session_state.node_tasks  = st.session_state.get("node_tasks", 0)
                 st.session_state.node_log    = []
@@ -748,6 +676,7 @@ if st.session_state.user_email:
             from streamlit_autorefresh import st_autorefresh
             st_autorefresh(interval=30000, key="portal_tick")
 
+            # ── Send heartbeat
             try:
                 cpu_sim  = round(random.uniform(5, 35), 1)
                 temp_sim = round(random.uniform(32, 38), 1)
@@ -774,6 +703,7 @@ if st.session_state.user_email:
                 hb_msg  = f"Heartbeat error: {e}"
                 hb_color = "#f43f5e"
 
+            # ── Poll and execute one task
             task_msg = None
             try:
                 res = (supabase.table("tasks")
@@ -786,27 +716,32 @@ if st.session_state.user_email:
                     t       = res.data[0]
                     tid     = t["id"]
                     ttype   = t.get("task_type", "slm_inference")
+
                     supabase.table("tasks").update({
                         "status":      "assigned",
                         "assigned_to": token,
                     }).eq("id", tid).execute()
+
                     result = f"[Portal] {ttype} OK | latency={round(random.uniform(2,5),1)}ms | node={token[-8:]}"
+
                     supabase.table("tasks").update({
                         "status":       "completed",
                         "result":       result,
                         "completed_at": datetime.now(timezone.utc).isoformat(),
                     }).eq("id", tid).execute()
+
                     st.session_state.node_tasks = st.session_state.get("node_tasks", 0) + 1
                     task_msg = f"✓ {ttype} completed"
             except Exception as e:
                 task_msg = f"Task error: {e}"
 
+            # ── Log display
             log = st.session_state.get("node_log", [])
             ts_str = datetime.now().strftime("%H:%M:%S")
             log.insert(0, (f"[{ts_str}] {hb_msg}", hb_color))
             if task_msg:
                 log.insert(0, (f"[{ts_str}] {task_msg}", "#a2ff00"))
-            log = log[:6]
+            log = log[:8]
             st.session_state.node_log = log
 
             log_html = "".join(
@@ -815,7 +750,8 @@ if st.session_state.user_email:
             )
             st.markdown(f"""
             <div style="background:#040709;border:1px solid #182230;border-radius:10px;
-                        padding:14px;font-family:'Space Mono',monospace;font-size:10px;margin-top:4px;">
+                        padding:14px;font-family:'Space Mono',monospace;font-size:10px;
+                        margin-top:4px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
                     <div style="width:8px;height:8px;border-radius:50%;background:#a2ff00;
                                 box-shadow:0 0 8px #a2ff00;"></div>
@@ -830,32 +766,7 @@ if st.session_state.user_email:
             <div style="background:#040709;border:1px solid #182230;border-radius:10px;
                         padding:14px;font-family:'Space Mono',monospace;font-size:10px;
                         color:#2a3a4a;margin-top:4px;">
-                // Press START COMPUTE SESSION to activate node
-            </div>
-            """, unsafe_allow_html=True)
-
-        # ── Task history
-        tasks = get_node_tasks(token)
-        if tasks:
-            task_rows_html = ""
-            for t in tasks:
-                t_type   = t.get("task_type", "—")
-                t_status = t.get("status", "—")
-                t_time   = (t.get("completed_at") or t.get("created_at") or "")[:16].replace("T", " ")
-                s_class  = {"completed": "nx-task-status-done",
-                            "assigned":  "nx-task-status-assigned"}.get(t_status, "nx-task-status-pending")
-                task_rows_html += f"""
-                <div class="nx-task-row">
-                    <div class="nx-task-type">{t_type}</div>
-                    <div class="{s_class}">{t_status}</div>
-                    <div class="nx-task-time">{t_time}</div>
-                </div>"""
-            st.markdown(f"""
-            <div class="nx-card" style="margin-top:12px;">
-                <div class="nx-card-title">▸ Task History
-                    <span style="color:#a2ff00;margin-left:8px;">{task_count} completed</span>
-                </div>
-                {task_rows_html}
+                // Press ACTIVATE NODE to start heartbeat + task execution
             </div>
             """, unsafe_allow_html=True)
 
