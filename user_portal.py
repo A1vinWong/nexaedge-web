@@ -1,6 +1,6 @@
 """
-NexaEdge User Portal — Beta P2
-Supabase Magic Link Auth + Personal Dashboard
+NexaEdge User Portal — Beta P4
+Supabase OTP Auth + Personal Dashboard + Task Display + Live Node Stats
 Run: streamlit run user_portal.py
 """
 
@@ -23,6 +23,8 @@ st.set_page_config(
 # ══════════════════════════════════════
 SUPABASE_URL = st.secrets.get("url", "https://nfafzigmcdybgbxdtymf.supabase.co")
 SUPABASE_KEY = st.secrets.get("key", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mYWZ6aWdtY2R5YmdieGR0eW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODE3NTMsImV4cCI6MjA5NjU1Nzc1M30.ZIX3sByZ8yQSDGFr-o24CjIXwZ5UsB4rMB3jculLtv0")
+SUPABASE_URL_JS = SUPABASE_URL
+SUPABASE_KEY_JS = SUPABASE_KEY
 
 # ══════════════════════════════════════
 # CSS
@@ -38,7 +40,6 @@ st.markdown("""
     max-width: 680px !important;
 }
 #MainMenu, footer, header, [data-testid="stHeader"] { display: none !important; }
-
 .stApp::before {
     content: '';
     position: fixed;
@@ -50,10 +51,8 @@ st.markdown("""
     pointer-events: none;
     z-index: 0;
 }
-
 *, h1, h2, h3, p, div, span, label { font-family: 'Syne', sans-serif; }
 
-/* Inputs */
 .stTextInput > div > div > input {
     background: #060b0f !important;
     border: 1px solid #182230 !important;
@@ -74,8 +73,6 @@ st.markdown("""
     text-transform: uppercase !important;
     letter-spacing: .08em !important;
 }
-
-/* Buttons */
 div.stButton > button {
     background: linear-gradient(135deg, #a2ff00, #8de600) !important;
     color: #060b0f !important;
@@ -103,13 +100,7 @@ div.stButton > button[kind="secondary"]:hover {
     border-color: #a2ff00 !important;
     color: #a2ff00 !important;
 }
-
-/* Alert overrides */
-.stAlert { border-radius: 8px !important; }
-
-/* Custom components */
 .nx-divider { border: none; border-top: 1px solid #182230; margin: 8px 0 20px; }
-
 .nx-card {
     background: linear-gradient(160deg, #0d1720, #090e14);
     border: 1px solid #182230;
@@ -125,7 +116,6 @@ div.stButton > button[kind="secondary"]:hover {
     letter-spacing: .12em;
     margin-bottom: 16px;
 }
-
 .nx-notice {
     background: rgba(255,179,0,.05);
     border: 1px solid rgba(255,179,0,.2);
@@ -138,260 +128,166 @@ div.stButton > button[kind="secondary"]:hover {
     line-height: 1.7;
     margin-bottom: 18px;
 }
-
-/* Rank badge — the signature element */
 .nx-rank-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 32px 0 24px;
 }
-.nx-rank-ring {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin-bottom: 16px;
-}
-.nx-rank-ring svg {
-    position: absolute;
-    inset: 0;
-    transform: rotate(-90deg);
-}
+.nx-rank-ring { position: relative; width: 120px; height: 120px; margin-bottom: 16px; }
+.nx-rank-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
 .nx-rank-number {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
 }
 .nx-rank-num {
     font-family: 'Space Mono', monospace;
-    font-size: 28px;
-    font-weight: 700;
-    color: #a2ff00;
-    line-height: 1;
+    font-size: 28px; font-weight: 700; color: #a2ff00; line-height: 1;
 }
 .nx-rank-label {
     font-family: 'Space Mono', monospace;
-    font-size: 8px;
-    color: #4a6070;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    margin-top: 4px;
+    font-size: 8px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .1em; margin-top: 4px;
 }
-.nx-rank-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: #e8edf2;
-    margin-bottom: 4px;
-}
+.nx-rank-title { font-size: 18px; font-weight: 800; color: #e8edf2; margin-bottom: 4px; }
 .nx-rank-sub {
     font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #4a6070;
-    text-align: center;
-    line-height: 1.6;
+    font-size: 10px; color: #4a6070; text-align: center; line-height: 1.6;
 }
-
-/* Ref code */
 .nx-ref-box {
     background: #060b0f;
     border: 1px solid rgba(162,255,0,.25);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    margin-bottom: 14px;
+    border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 14px;
 }
 .nx-ref-code {
     font-family: 'Space Mono', monospace;
-    font-size: 28px;
-    font-weight: 700;
-    color: #a2ff00;
-    letter-spacing: .25em;
-    margin: 8px 0 4px;
+    font-size: 28px; font-weight: 700; color: #a2ff00;
+    letter-spacing: .25em; margin: 8px 0 4px;
 }
 .nx-ref-label {
     font-family: 'Space Mono', monospace;
-    font-size: 8px;
-    color: #4a6070;
-    text-transform: uppercase;
-    letter-spacing: .1em;
+    font-size: 8px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .1em;
 }
 .nx-ref-count {
     font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    color: #00e5ff;
-    margin-top: 10px;
+    font-size: 12px; color: #00e5ff; margin-top: 10px;
 }
-
-/* Stats row */
 .nx-stat-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 14px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
 }
 .nx-stat-item {
-    background: #060b0f;
-    border: 1px solid #182230;
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
+    background: #060b0f; border: 1px solid #182230;
+    border-radius: 10px; padding: 16px; text-align: center;
 }
 .nx-stat-val {
     font-family: 'Space Mono', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    color: #e8edf2;
-    line-height: 1.1;
+    font-size: 20px; font-weight: 700; color: #e8edf2; line-height: 1.1;
 }
 .nx-stat-val.green { color: #a2ff00; }
 .nx-stat-val.cyan  { color: #00e5ff; }
 .nx-stat-val.gold  { color: #ffb300; }
 .nx-stat-label {
     font-family: 'Space Mono', monospace;
-    font-size: 8px;
-    color: #4a6070;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    margin-top: 5px;
+    font-size: 8px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .08em; margin-top: 5px;
 }
-
-/* Timeline */
+.nx-live-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px;
+}
+.nx-live-item {
+    background: #060b0f; border: 1px solid #182230;
+    border-radius: 10px; padding: 12px; text-align: center;
+}
+.nx-live-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 16px; font-weight: 700; color: #e8edf2; line-height: 1.1;
+}
+.nx-live-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .07em; margin-top: 4px;
+}
+.nx-task-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid rgba(24,34,48,.6);
+    font-family: 'Space Mono', monospace; font-size: 10px;
+}
+.nx-task-row:last-child { border-bottom: none; }
+.nx-task-type { color: #a2ff00; }
+.nx-task-status-done { color: #a2ff00; }
+.nx-task-status-assigned { color: #ffb300; }
+.nx-task-status-pending { color: #4a6070; }
+.nx-task-time { color: #2a3a4a; font-size: 9px; }
 .nx-timeline { padding: 4px 0; }
 .nx-tl-item {
-    display: flex;
-    gap: 14px;
-    padding-bottom: 20px;
-    position: relative;
+    display: flex; gap: 14px; padding-bottom: 20px; position: relative;
 }
 .nx-tl-item::before {
-    content: '';
-    position: absolute;
-    left: 9px;
-    top: 22px;
-    bottom: 0;
-    width: 1px;
-    background: #182230;
+    content: ''; position: absolute;
+    left: 9px; top: 22px; bottom: 0;
+    width: 1px; background: #182230;
 }
 .nx-tl-item:last-child::before { display: none; }
 .nx-tl-dot {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #182230;
-    border: 2px solid #182230;
-    flex-shrink: 0;
-    margin-top: 2px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #182230; border: 2px solid #182230;
+    flex-shrink: 0; margin-top: 2px;
 }
 .nx-tl-dot.done  { background: #a2ff00; border-color: #a2ff00; }
 .nx-tl-dot.now   { background: #00e5ff; border-color: #00e5ff;
                    box-shadow: 0 0 10px rgba(0,229,255,.5); }
-.nx-tl-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #e8edf2;
-    line-height: 1.3;
-}
+.nx-tl-title { font-size: 13px; font-weight: 700; color: #e8edf2; line-height: 1.3; }
 .nx-tl-title.muted { color: #2a3a4a; }
 .nx-tl-sub {
     font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    color: #4a6070;
-    margin-top: 3px;
-    line-height: 1.6;
+    font-size: 9px; color: #4a6070; margin-top: 3px; line-height: 1.6;
 }
-
-/* Share buttons */
 .nx-share-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    margin-top: 12px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;
 }
 .nx-share-btn {
-    display: block;
-    text-align: center;
-    padding: 10px 8px;
-    background: #0d1720;
-    border: 1px solid #182230;
-    border-radius: 10px;
-    color: #4a6070 !important;
-    font-size: 11px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: all .2s;
+    display: block; text-align: center; padding: 10px 8px;
+    background: #0d1720; border: 1px solid #182230; border-radius: 10px;
+    color: #4a6070 !important; font-size: 11px; font-weight: 700;
+    text-decoration: none; transition: all .2s;
 }
-.nx-share-btn:hover {
-    border-color: #a2ff00;
-    color: #a2ff00 !important;
-}
-
-/* Login page */
-.nx-login-hero {
-    text-align: center;
-    padding: 40px 0 32px;
-}
+.nx-share-btn:hover { border-color: #a2ff00; color: #a2ff00 !important; }
+.nx-login-hero { text-align: center; padding: 40px 0 32px; }
 .nx-login-dot {
-    width: 14px;
-    height: 14px;
-    background: #a2ff00;
-    border-radius: 50%;
-    box-shadow: 0 0 18px #a2ff00;
-    margin: 0 auto 20px;
+    width: 14px; height: 14px; background: #a2ff00; border-radius: 50%;
+    box-shadow: 0 0 18px #a2ff00; margin: 0 auto 20px;
 }
 .nx-login-title {
-    font-size: 28px;
-    font-weight: 800;
-    color: #e8edf2;
-    letter-spacing: -.02em;
-    margin-bottom: 6px;
+    font-size: 28px; font-weight: 800; color: #e8edf2;
+    letter-spacing: -.02em; margin-bottom: 6px;
 }
 .nx-login-sub {
     font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #4a6070;
-    line-height: 1.7;
-    max-width: 340px;
-    margin: 0 auto 32px;
+    font-size: 10px; color: #4a6070; line-height: 1.7;
+    max-width: 340px; margin: 0 auto 32px;
 }
-
-/* Stage badge */
 .nx-stage {
     display: inline-block;
-    background: rgba(0,229,255,.07);
-    border: 1px solid rgba(0,229,255,.2);
-    color: #00e5ff;
+    background: rgba(162,255,0,.08);
+    border: 1px solid rgba(162,255,0,.25);
+    color: #a2ff00;
     font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 6px;
-    letter-spacing: .1em;
-    margin-bottom: 20px;
+    font-size: 9px; font-weight: 700;
+    padding: 4px 10px; border-radius: 6px; letter-spacing: .1em; margin-bottom: 20px;
 }
-
 .nx-footer {
-    border-top: 1px solid #182230;
-    margin-top: 40px;
-    padding-top: 16px;
-    text-align: center;
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    color: #2a3a4a;
-    line-height: 2;
+    border-top: 1px solid #182230; margin-top: 40px; padding-top: 16px;
+    text-align: center; font-family: 'Space Mono', monospace;
+    font-size: 9px; color: #2a3a4a; line-height: 2;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════
-# SUPABASE CLIENT
+# SUPABASE
 # ══════════════════════════════════════
-# Also expose for JS heartbeat component
-SUPABASE_URL_JS = SUPABASE_URL
-SUPABASE_KEY_JS = SUPABASE_KEY
-
 @st.cache_resource
 def get_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -406,80 +302,46 @@ for k, v in {
     "user_data": None,
     "magic_sent": False,
     "magic_email": "",
-    "login_tab": "login",
     "otp_store": {},
 }.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
 # ══════════════════════════════════════
-# HELPERS
+# DB HELPERS
 # ══════════════════════════════════════
-def lookup_waitlist(email: str):
-    """Find user in whitelist table by email."""
+def lookup_waitlist(email):
     try:
-        res = (supabase.table("whitelist")
-               .select("*")
-               .eq("email", email.lower())
-               .execute())
+        res = supabase.table("whitelist").select("*").eq("email", email.lower()).execute()
         return res.data[0] if res.data else None
-    except:
-        return None
+    except: return None
 
-def get_queue_rank(email: str) -> int:
-    """Return 1-based position of email in waitlist ordered by created_at."""
+def get_queue_rank(email):
     try:
-        res = (supabase.table("whitelist")
-               .select("email")
-               .order("created_at", desc=False)
-               .execute())
+        res = supabase.table("whitelist").select("email").order("created_at", desc=False).execute()
         emails = [r["email"] for r in res.data]
-        idx = emails.index(email.lower())
-        return idx + 1
-    except:
-        return 0
+        return emails.index(email.lower()) + 1
+    except: return 0
 
-def get_total_signups() -> int:
+def get_total_signups():
     try:
         res = supabase.table("whitelist").select("id", count="exact").execute()
         return res.count or 0
-    except:
-        return 0
+    except: return 0
 
-def count_referrals(ref_code: str) -> int:
-    """How many people used this ref code."""
+def count_referrals(ref_code):
     try:
-        res = (supabase.table("whitelist")
-               .select("id", count="exact")
-               .eq("used_ref", ref_code)
-               .execute())
+        res = supabase.table("whitelist").select("id", count="exact").eq("used_ref", ref_code).execute()
         return res.count or 0
-    except:
-        return 0
+    except: return 0
 
-def generate_otp() -> str:
-    import random, string
-    return "".join(random.choices(string.digits, k=6))
-
-def generate_node_token() -> str:
-    """Generate unique node token: NXT-XXXX-XXXX-XXXX"""
-    chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-    parts = ["".join(random.choices(chars, k=4)) for _ in range(3)]
-    return "NXT-" + "-".join(parts)
-
-def get_node_record(email: str):
-    """Get existing node registration for this email."""
+def get_node_record(email):
     try:
-        res = (supabase.table("nodes")
-               .select("*")
-               .eq("email", email.lower())
-               .execute())
+        res = supabase.table("nodes").select("*").eq("email", email.lower()).execute()
         return res.data[0] if res.data else None
-    except:
-        return None
+    except: return None
 
-def register_node(email: str, node_token: str) -> bool:
-    """Insert node record into nodes table."""
+def register_node(email, node_token):
     try:
         supabase.table("nodes").insert({
             "email": email.lower(),
@@ -487,45 +349,60 @@ def register_node(email: str, node_token: str) -> bool:
             "status": "pending",
         }).execute()
         return True
-    except:
-        return False
+    except: return False
 
-def get_live_node_stats():
-    """Get real node counts from nodes table."""
+def get_latest_heartbeat(token):
+    """Get most recent heartbeat for this node."""
     try:
-        res = supabase.table("nodes").select("status").execute()
-        rows = res.data or []
-        total   = len(rows)
-        online  = sum(1 for r in rows if r.get("status") == "online")
-        pending = sum(1 for r in rows if r.get("status") == "pending")
-        return {"total": total, "online": online, "pending": pending}
-    except:
-        return {"total": 0, "online": 0, "pending": 0}
+        res = (supabase.table("heartbeats")
+               .select("cpu_usage,temperature,battery_level,tasks_completed,reported_at")
+               .eq("node_token", token)
+               .order("reported_at", desc=True)
+               .limit(1)
+               .execute())
+        return res.data[0] if res.data else None
+    except: return None
 
-def send_otp(email: str, code: str) -> bool:
-    """Send OTP via Supabase Auth built-in email (sign_in_with_otp)."""
+def get_node_tasks(token, limit=10):
+    """Get recent tasks assigned to this node."""
     try:
-        supabase.auth.sign_in_with_otp({
-            "email": email,
-            "options": {"should_create_user": True}
-        })
-        return True
-    except Exception as e:
-        return True  # Still store code even if Supabase email fails
+        res = (supabase.table("tasks")
+               .select("id,task_type,status,result,created_at,completed_at")
+               .eq("assigned_to", token)
+               .order("created_at", desc=True)
+               .limit(limit)
+               .execute())
+        return res.data or []
+    except: return []
 
-def verify_code(email: str, entered: str) -> bool:
-    """Check stored OTP — valid for 10 minutes."""
-    from datetime import datetime, timezone
+def get_node_task_count(token):
+    """Total completed tasks for this node."""
+    try:
+        res = (supabase.table("tasks")
+               .select("id", count="exact")
+               .eq("assigned_to", token)
+               .eq("status", "completed")
+               .execute())
+        return res.count or 0
+    except: return 0
+
+def generate_otp():
+    return "".join(random.choices(string.digits, k=6))
+
+def generate_node_token():
+    chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    parts = ["".join(random.choices(chars, k=4)) for _ in range(3)]
+    return "NXT-" + "-".join(parts)
+
+def verify_code(email, entered):
     store = st.session_state.get("otp_store", {}).get(email.lower())
-    if not store:
-        return False
+    if not store: return False
     age = datetime.now(timezone.utc).timestamp() - store["created"]
-    if age > 600:
-        return False
+    if age > 600: return False
     return entered.strip() == store["code"]
 
 # ══════════════════════════════════════
-# HEADER (always visible)
+# HEADER
 # ══════════════════════════════════════
 c1, c2, c3 = st.columns([1, 2, 1])
 with c2:
@@ -555,7 +432,6 @@ if st.session_state.user_email:
     data  = st.session_state.user_data
 
     if not data:
-        # Email exists in auth but not in waitlist
         st.markdown(f"""
         <div class="nx-notice">
             ⚠ Your email <strong>{email}</strong> is not on the waitlist yet.
@@ -574,13 +450,12 @@ if st.session_state.user_email:
     joined_raw = data.get("created_at", "")
     joined     = joined_raw[:10] if joined_raw else "—"
 
-    rank        = get_queue_rank(email)
-    total       = get_total_signups()
-    referrals   = count_referrals(ref_code)
-    pct_rank    = round((1 - (rank - 1) / max(total, 1)) * 100) if total > 0 else 0
+    rank      = get_queue_rank(email)
+    total     = get_total_signups()
+    referrals = count_referrals(ref_code)
+    pct_rank  = round((1 - (rank - 1) / max(total, 1)) * 100) if total > 0 else 0
 
-    # ── Rank ring (signature element)
-    # SVG ring: circumference = 2π×52 ≈ 326.7
+    # ── Rank ring
     circ = 326.7
     dash = circ * (pct_rank / 100)
     gap  = circ - dash
@@ -609,10 +484,8 @@ if st.session_state.user_email:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Stats
+    # ── Stats grid
     wallet_short = wallet[:6] + "…" + wallet[-4:] if wallet != "—" and len(wallet) > 10 else wallet
-    used_ref = data.get("used_ref") or "—"
-
     st.markdown(f"""
     <div class="nx-stat-grid">
         <div class="nx-stat-item">
@@ -634,11 +507,11 @@ if st.session_state.user_email:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Referral code box
+    # ── Referral box
     share_text = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref_code}"
-    tg_url  = f"https://t.me/share/url?url=https://nexaedge.streamlit.app&text={share_text}"
-    x_url   = f"https://twitter.com/intent/tweet?text={share_text}"
-    wa_url  = f"https://wa.me/?text={share_text}"
+    tg_url = f"https://t.me/share/url?url=https://nexaedge.streamlit.app&text={share_text}"
+    x_url  = f"https://twitter.com/intent/tweet?text={share_text}"
+    wa_url = f"https://wa.me/?text={share_text}"
 
     st.markdown(f"""
     <div class="nx-ref-box">
@@ -656,8 +529,6 @@ if st.session_state.user_email:
     """, unsafe_allow_html=True)
 
     st.markdown('<div style="margin-top:6px;"></div>', unsafe_allow_html=True)
-
-    # Copy button
     if st.button("📋 Copy Referral Code"):
         st.components.v1.html(
             f'<script>navigator.clipboard.writeText("{ref_code}").catch(()=>{{}});</script>',
@@ -665,52 +536,122 @@ if st.session_state.user_email:
         )
         st.toast("✅ Code copied!")
 
-    # ── Node Registration
+    # ══════════════════════════════════════
+    # NODE SECTION
+    # ══════════════════════════════════════
     st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
     node_rec = get_node_record(email)
 
     if node_rec:
-        token = node_rec.get("node_token", "—")
+        token  = node_rec.get("node_token", "—")
         status = node_rec.get("status", "pending")
         status_color = {"online": "#a2ff00", "pending": "#ffb300", "offline": "#4a6070"}.get(status, "#4a6070")
 
-        st.markdown(f"""
-        <div class="nx-card" style="border-color:rgba(162,255,0,.2);">
-            <div class="nx-card-title">▸ Your Node Registration</div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-                <div style="width:8px;height:8px;border-radius:50%;background:{status_color};
-                            box-shadow:0 0 8px {status_color};"></div>
-                <div style="font-family:'Space Mono',monospace;font-size:10px;
-                            color:{status_color};text-transform:uppercase;letter-spacing:.08em;">
-                    {status}
+        # ── Live heartbeat stats
+        hb = get_latest_heartbeat(token)
+        task_count = get_node_task_count(token)
+
+        if hb:
+            cpu   = hb.get("cpu_usage", 0) or 0
+            temp  = hb.get("temperature", 0) or 0
+            batt  = hb.get("battery_level", 0) or 0
+            ts_raw = (hb.get("reported_at", "")[:19] or "").replace("T", " ")
+            temp_color = "#f43f5e" if temp >= 39 else "#e8edf2"
+            st.markdown(f"""
+            <div class="nx-card" style="border-color:rgba(162,255,0,.2);">
+                <div class="nx-card-title">▸ Live Node Stats</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:{status_color};
+                                box-shadow:0 0 8px {status_color};"></div>
+                    <div style="font-family:'Space Mono',monospace;font-size:10px;
+                                color:{status_color};text-transform:uppercase;letter-spacing:.08em;">
+                        {status}
+                    </div>
+                    <div style="font-family:'Space Mono',monospace;font-size:9px;
+                                color:#2a3a4a;margin-left:auto;">
+                        Last seen {ts_raw} UTC
+                    </div>
+                </div>
+                <div class="nx-live-row">
+                    <div class="nx-live-item">
+                        <div class="nx-live-val">{cpu:.1f}%</div>
+                        <div class="nx-live-label">CPU</div>
+                    </div>
+                    <div class="nx-live-item">
+                        <div class="nx-live-val" style="color:{temp_color};">{temp:.1f}°C</div>
+                        <div class="nx-live-label">Temp</div>
+                    </div>
+                    <div class="nx-live-item">
+                        <div class="nx-live-val">{batt}%</div>
+                        <div class="nx-live-label">Battery</div>
+                    </div>
+                </div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
+                            margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">
+                    Node Token
+                </div>
+                <div style="font-family:'Space Mono',monospace;font-size:12px;color:#e8edf2;
+                            background:#060b0f;border:1px solid #182230;border-radius:8px;
+                            padding:10px 14px;word-break:break-all;">
+                    {token}
                 </div>
             </div>
-            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
-                        margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">
-                Node Token
-            </div>
-            <div style="font-family:'Space Mono',monospace;font-size:13px;color:#e8edf2;
-                        background:#060b0f;border:1px solid #182230;border-radius:8px;
-                        padding:10px 14px;word-break:break-all;margin-bottom:12px;">
-                {token}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # ── Web Heartbeat (runs in browser via JS + Streamlit component)
-        if status != "online":
-            st.markdown("""
-            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;
-                        margin-bottom:10px;line-height:1.7;">
-                Activate your node to start sending heartbeats from this browser.
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="nx-card" style="border-color:rgba(162,255,0,.2);">
+                <div class="nx-card-title">▸ Your Node Registration</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:{status_color};
+                                box-shadow:0 0 8px {status_color};"></div>
+                    <div style="font-family:'Space Mono',monospace;font-size:10px;
+                                color:{status_color};text-transform:uppercase;letter-spacing:.08em;">
+                        {status} — no heartbeat yet
+                    </div>
+                </div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
+                            margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">
+                    Node Token
+                </div>
+                <div style="font-family:'Space Mono',monospace;font-size:12px;color:#e8edf2;
+                            background:#060b0f;border:1px solid #182230;border-radius:8px;
+                            padding:10px 14px;word-break:break-all;">
+                    {token}
+                </div>
             </div>
             """, unsafe_allow_html=True)
 
-        # Embed JS heartbeat component
+        # ── Task history
+        tasks = get_node_tasks(token)
+        if tasks:
+            task_rows_html = ""
+            for t in tasks:
+                t_type   = t.get("task_type", "—")
+                t_status = t.get("status", "—")
+                t_time   = (t.get("completed_at") or t.get("created_at") or "")[:16].replace("T", " ")
+                s_class  = {"completed": "nx-task-status-done",
+                            "assigned":  "nx-task-status-assigned"}.get(t_status, "nx-task-status-pending")
+                task_rows_html += f"""
+                <div class="nx-task-row">
+                    <div class="nx-task-type">{t_type}</div>
+                    <div class="{s_class}">{t_status}</div>
+                    <div class="nx-task-time">{t_time}</div>
+                </div>"""
+
+            st.markdown(f"""
+            <div class="nx-card" style="margin-top:4px;">
+                <div class="nx-card-title">▸ Task History
+                    <span style="color:#a2ff00;margin-left:8px;">{task_count} completed</span>
+                </div>
+                {task_rows_html}
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── Browser heartbeat + task executor (JS)
+        st.markdown('<div style="margin-top:4px;"></div>', unsafe_allow_html=True)
         hb_html = f"""
         <div id="nx-node-panel" style="font-family:monospace;font-size:11px;color:#4a6070;
-             background:#040709;border:1px solid #182230;border-radius:10px;padding:16px;
-             margin-top:4px;">
+             background:#040709;border:1px solid #182230;border-radius:10px;padding:16px;">
 
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
                 <div id="nx-dot" style="width:8px;height:8px;border-radius:50%;
@@ -721,7 +662,7 @@ if st.session_state.user_email:
 
             <div id="nx-log" style="color:#2a3a4a;line-height:1.9;min-height:40px;
                  font-size:10px;margin-bottom:12px;">
-                // Press Activate to start sending heartbeats
+                // Press Activate to start heartbeat + task execution
             </div>
 
             <div style="display:flex;gap:8px;">
@@ -743,15 +684,14 @@ if st.session_state.user_email:
         </div>
 
         <script>
-        const SUPABASE_URL = "{SUPABASE_URL_JS}";
-        const SUPABASE_KEY = "{SUPABASE_KEY_JS}";
-        const NODE_TOKEN   = "{token}";
-        let hbInterval = null;
-        let taskCount  = 0;
+        const SUPA_URL = "{SUPABASE_URL_JS}";
+        const SUPA_KEY = "{SUPABASE_KEY_JS}";
+        const TOKEN    = "{token}";
+        let hbTimer = null;
+        let taskTimer = null;
+        let tasksDone = 0;
 
-        function ts() {{
-            return new Date().toISOString();
-        }}
+        function ts() {{ return new Date().toISOString(); }}
 
         function log(msg, color) {{
             const el = document.getElementById("nx-log");
@@ -759,7 +699,6 @@ if st.session_state.user_email:
             line.style.color = color || "#4a6070";
             line.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;
             el.insertBefore(line, el.firstChild);
-            // Keep last 8 lines
             while (el.children.length > 8) el.removeChild(el.lastChild);
         }}
 
@@ -771,93 +710,116 @@ if st.session_state.user_email:
         }}
 
         async function sendHeartbeat() {{
-            const now = ts();
             const battery = navigator.getBattery
-                ? await navigator.getBattery().then(b => Math.round(b.level * 100)).catch(() => 100)
+                ? await navigator.getBattery().then(b => Math.round(b.level*100)).catch(()=>100)
                 : 100;
-
             const payload = {{
-                node_token:      NODE_TOKEN,
-                cpu_usage:       Math.random() * 30 + 5,
-                temperature:     Math.random() * 8 + 32,
+                node_token:      TOKEN,
+                cpu_usage:       Math.random()*30+5,
+                temperature:     Math.random()*8+32,
                 battery_level:   battery,
-                tasks_completed: taskCount,
-                reported_at:     now,
+                tasks_completed: tasksDone,
+                reported_at:     ts(),
             }};
-
             try {{
-                // Send heartbeat
-                const r1 = await fetch(SUPABASE_URL + "/rest/v1/heartbeats", {{
-                    method: "POST",
-                    headers: {{
-                        "Content-Type":  "application/json",
-                        "apikey":        SUPABASE_KEY,
-                        "Authorization": "Bearer " + SUPABASE_KEY,
-                        "Prefer":        "return=minimal"
-                    }},
+                await fetch(SUPA_URL+"/rest/v1/heartbeats", {{
+                    method:"POST",
+                    headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
+                              "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
                     body: JSON.stringify(payload)
                 }});
+                await fetch(SUPA_URL+"/rest/v1/nodes?node_token=eq."+TOKEN, {{
+                    method:"PATCH",
+                    headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
+                              "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
+                    body: JSON.stringify({{status:"online",last_seen:ts()}})
+                }});
+                log("♥ CPU "+payload.cpu_usage.toFixed(1)+"%  Temp "+payload.temperature.toFixed(1)+"°C  Batt "+battery+"%","#a2ff00");
+            }} catch(e) {{
+                log("Heartbeat error: "+e.message,"#f43f5e");
+            }}
+        }}
 
-                // Update node last_seen + status
-                await fetch(SUPABASE_URL + "/rest/v1/nodes?node_token=eq." + NODE_TOKEN, {{
-                    method: "PATCH",
-                    headers: {{
-                        "Content-Type":  "application/json",
-                        "apikey":        SUPABASE_KEY,
-                        "Authorization": "Bearer " + SUPABASE_KEY,
-                        "Prefer":        "return=minimal"
-                    }},
+        async function pollTask() {{
+            try {{
+                // Fetch one pending unassigned task
+                const r = await fetch(
+                    SUPA_URL+"/rest/v1/tasks?status=eq.pending&assigned_to=is.null&limit=1&select=*",
+                    {{headers:{{"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY}}}}
+                );
+                const tasks = await r.json();
+                if (!tasks || tasks.length === 0) return;
+
+                const task = tasks[0];
+                const taskId   = task.id;
+                const taskType = task.task_type || "slm_inference";
+
+                // Claim task
+                await fetch(SUPA_URL+"/rest/v1/tasks?id=eq."+taskId, {{
+                    method:"PATCH",
+                    headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
+                              "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
+                    body: JSON.stringify({{status:"assigned",assigned_to:TOKEN}})
+                }});
+
+                log("▶ Task claimed: "+taskType,"#00e5ff");
+
+                // Simulate execution delay
+                await new Promise(res => setTimeout(res, 800 + Math.random()*1200));
+
+                // Generate result
+                const result = "[Browser] "+taskType+" OK | latency="+
+                               (Math.random()*3+2).toFixed(1)+"ms | node="+TOKEN.slice(-8);
+
+                // Upload result
+                await fetch(SUPA_URL+"/rest/v1/tasks?id=eq."+taskId, {{
+                    method:"PATCH",
+                    headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
+                              "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
                     body: JSON.stringify({{
-                        status:    "online",
-                        last_seen: now
+                        status:"completed",
+                        result: result,
+                        completed_at: ts()
                     }})
                 }});
 
-                taskCount++;
-                log(
-                    "CPU " + payload.cpu_usage.toFixed(1) + "%  " +
-                    "Temp " + payload.temperature.toFixed(1) + "°C  " +
-                    "Batt " + battery + "%",
-                    "#a2ff00"
-                );
+                tasksDone++;
+                log("✓ "+taskType+" done","#a2ff00");
 
             }} catch(e) {{
-                log("Heartbeat failed: " + e.message, "#f43f5e");
+                log("Task error: "+e.message,"#f43f5e");
             }}
         }}
 
         function nxStart() {{
             document.getElementById("nx-btn-start").disabled = true;
             document.getElementById("nx-btn-stop").disabled  = false;
-            setStatus("ONLINE", "#a2ff00");
-            log("Node activated", "#00e5ff");
+            setStatus("ONLINE","#a2ff00");
+            log("Node activated","#00e5ff");
             sendHeartbeat();
-            hbInterval = setInterval(sendHeartbeat, 30000);
+            pollTask();
+            hbTimer   = setInterval(sendHeartbeat, 30000);
+            taskTimer = setInterval(pollTask, 10000);
         }}
 
         function nxStop() {{
-            clearInterval(hbInterval);
-            hbInterval = null;
+            clearInterval(hbTimer);
+            clearInterval(taskTimer);
+            hbTimer = null; taskTimer = null;
             document.getElementById("nx-btn-start").disabled = false;
             document.getElementById("nx-btn-stop").disabled  = true;
-            setStatus("OFFLINE", "#4a6070");
-            log("Node deactivated", "#ffb300");
-
-            // Mark offline in DB
-            fetch(SUPABASE_URL + "/rest/v1/nodes?node_token=eq." + NODE_TOKEN, {{
-                method: "PATCH",
-                headers: {{
-                    "Content-Type":  "application/json",
-                    "apikey":        SUPABASE_KEY,
-                    "Authorization": "Bearer " + SUPABASE_KEY,
-                    "Prefer":        "return=minimal"
-                }},
-                body: JSON.stringify({{ status: "offline" }})
+            setStatus("OFFLINE","#4a6070");
+            log("Node deactivated","#ffb300");
+            fetch(SUPA_URL+"/rest/v1/nodes?node_token=eq."+TOKEN, {{
+                method:"PATCH",
+                headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
+                          "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
+                body: JSON.stringify({{status:"offline"}})
             }});
         }}
         </script>
         """
-        st.components.v1.html(hb_html, height=240)
+        st.components.v1.html(hb_html, height=260)
 
     else:
         st.markdown("""
@@ -865,21 +827,21 @@ if st.session_state.user_email:
             <div class="nx-card-title">▸ Register Your Device as a Node</div>
             <div style="font-size:12px;color:#4a6070;line-height:1.7;margin-bottom:16px;">
                 Generate a unique node token for this device.
-                When the beta app launches (Q3 2026), you'll use this token
-                to activate your node and start earning NEXA.
+                Use this token with the node client to start sending heartbeats
+                and executing tasks.
             </div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("⚡ Register This Device"):
-            token = generate_node_token()
-            ok = register_node(email, token)
+            tok = generate_node_token()
+            ok  = register_node(email, tok)
             if ok:
-                st.success(f"Node registered! Token: **{token}**")
+                st.success(f"Node registered! Token: **{tok}**")
                 st.rerun()
             else:
                 st.error("Registration failed. You may already have a node registered.")
 
-    # ── Node Roadmap
+    # ── Node Journey timeline
     st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="nx-card">
@@ -893,24 +855,24 @@ if st.session_state.user_email:
                 </div>
             </div>
             <div class="nx-tl-item">
+                <div class="nx-tl-dot done"></div>
+                <div>
+                    <div class="nx-tl-title">Node Token Issued</div>
+                    <div class="nx-tl-sub">Device registered · heartbeat active</div>
+                </div>
+            </div>
+            <div class="nx-tl-item">
                 <div class="nx-tl-dot now"></div>
                 <div>
-                    <div class="nx-tl-title">Community Building</div>
-                    <div class="nx-tl-sub">Refer friends to move up the queue · Q2 2026</div>
+                    <div class="nx-tl-title">Beta — Task Execution</div>
+                    <div class="nx-tl-sub">Simulated tasks running · earning sim NEXA · Q3 2026</div>
                 </div>
             </div>
             <div class="nx-tl-item">
                 <div class="nx-tl-dot"></div>
                 <div>
-                    <div class="nx-tl-title muted">Alpha Invite</div>
-                    <div class="nx-tl-sub">50-device internal test · Q3 2026</div>
-                </div>
-            </div>
-            <div class="nx-tl-item">
-                <div class="nx-tl-dot"></div>
-                <div>
-                    <div class="nx-tl-title muted">Beta Node Client</div>
-                    <div class="nx-tl-sub">Install app · start earning sim NEXA · Q4 2026</div>
+                    <div class="nx-tl-title muted">Closed Beta — 1,000 Nodes</div>
+                    <div class="nx-tl-sub">Real node client · ZK proof · Q4 2026</div>
                 </div>
             </div>
             <div class="nx-tl-item">
@@ -924,7 +886,6 @@ if st.session_state.user_email:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── NEXA disclaimer
     st.markdown("""
     <div class="nx-notice">
         ⚠ NEXA tokens are minted on Solana but not yet in public circulation.
@@ -933,7 +894,6 @@ if st.session_state.user_email:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Sign out
     if st.button("Sign Out", type="secondary"):
         st.session_state.user_email = None
         st.session_state.user_data  = None
@@ -941,16 +901,15 @@ if st.session_state.user_email:
         st.rerun()
 
 # ══════════════════════════════════════
-# NOT LOGGED IN — LOGIN FLOW
+# NOT LOGGED IN — LOGIN
 # ══════════════════════════════════════
 else:
     total = get_total_signups()
-
     st.markdown(f"""
     <div class="nx-login-hero">
         <div class="nx-login-dot"></div>
         <div style="margin-bottom:10px;">
-            <span class="nx-stage">⚠ CONCEPT DEMO · PRE-SEED</span>
+            <span class="nx-stage">● BETA · Q3 2026</span>
         </div>
         <div class="nx-login-title">My Node Portal</div>
         <div class="nx-login-sub">
@@ -963,14 +922,8 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Step 1: enter email
     if not st.session_state.magic_sent:
-        email_input = st.text_input(
-            "Email Address",
-            placeholder="you@example.com",
-            key="login_email_input"
-        )
-
+        email_input = st.text_input("Email Address", placeholder="you@example.com", key="login_email_input")
         if st.button("Send Login Code"):
             if not email_input or "@" not in email_input:
                 st.error("Please enter a valid email address.")
@@ -980,17 +933,15 @@ else:
                     st.error("This email is not on the waitlist. Please register at the main site first.")
                 else:
                     code = generate_otp()
-                    # Store OTP in session
                     if "otp_store" not in st.session_state:
                         st.session_state.otp_store = {}
                     st.session_state.otp_store[email_input.lower()] = {
                         "code": code,
                         "created": datetime.now(timezone.utc).timestamp()
                     }
-                    send_otp(email_input, code)
                     st.session_state.magic_sent  = True
                     st.session_state.magic_email = email_input
-                    st.session_state._beta_code  = code  # shown in beta only
+                    st.session_state._beta_code  = code
                     st.rerun()
 
         st.markdown("""
@@ -1004,7 +955,6 @@ else:
         </div>
         """, unsafe_allow_html=True)
 
-    # ── Step 2: enter code
     else:
         beta_code = st.session_state.get("_beta_code", "")
         st.markdown(f"""
@@ -1025,20 +975,13 @@ else:
                         padding:12px 20px;display:inline-block;">
                 {beta_code}
             </div>
-            <div style="font-family:'Space Mono',monospace;font-size:8px;color:#2a3a4a;
-                        margin-top:10px;">
+            <div style="font-family:'Space Mono',monospace;font-size:8px;color:#2a3a4a;margin-top:10px;">
                 ⚠ BETA MODE — Code shown on screen. Valid 10 minutes.
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        otp_input = st.text_input(
-            "Enter the 6-digit code above",
-            placeholder="e.g. 123456",
-            max_chars=6,
-            key="otp_input"
-        )
-
+        otp_input = st.text_input("Enter the 6-digit code above", placeholder="e.g. 123456", max_chars=6, key="otp_input")
         if st.button("Verify & Sign In"):
             if not otp_input or len(otp_input) < 6:
                 st.error("Please enter the 6-digit code.")
@@ -1065,7 +1008,7 @@ else:
 # ══════════════════════════════════════
 st.markdown("""
 <div class="nx-footer">
-    NexaEdge Node Portal · Beta P2 · Email OTP auth<br>
+    NexaEdge Node Portal · Beta P4 · Heartbeat + Task Executor<br>
     NEXA minted on Solana · Not yet in public circulation · contact@nexaedge.org
 </div>
 """, unsafe_allow_html=True)
