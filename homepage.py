@@ -374,6 +374,7 @@ if st.session_state.sim_running:
 # ══════════════════════════════════════
 # HEADER — P4: real node count added
 # ══════════════════════════════════════
+is_zh = st.session_state.lang == 'ZH'
 total_reg_count = db_count()
 live = db_live_nodes()
 
@@ -396,6 +397,17 @@ with col_logo:
         <div class="nx-online-badge">
             {live_dot}<strong style="color:#{node_color};">{live['online']}</strong>&nbsp;node{'s' if live['online']!=1 else ''} online
         </div>
+    </div>
+    <div style="margin-top:10px;">
+        <a href="https://nexaedge-web-port.streamlit.app" target="_blank" style="
+            display:inline-flex;align-items:center;gap:8px;
+            background:linear-gradient(135deg,#a2ff00,#8de600);
+            color:#060b0f;font-family:'Space Mono',monospace;
+            font-size:10px;font-weight:700;text-transform:uppercase;
+            letter-spacing:.06em;padding:8px 16px;border-radius:8px;
+            text-decoration:none;">
+            &#9889; {'登录我的节点' if is_zh else 'My Node Portal'}
+        </a>
     </div>
     """, unsafe_allow_html=True)
 
@@ -704,6 +716,20 @@ elif current_tab == L["nav"][4]:
             <div class="nx-ref-label">{L['wl_your_ref']}</div>
             <div class="nx-ref-code">{ref}</div>
         </div></div>""", unsafe_allow_html=True)
+        portal_label = "📡 登录我的节点 Portal" if is_zh else "📡 Login to My Node Portal"
+        portal_desc  = "查看队列排名、激活节点心跳" if is_zh else "See your queue position and activate your node heartbeat"
+        st.markdown(f"""
+        <a href="https://nexaedge-web-port.streamlit.app" target="_blank" style="
+            display:block;background:rgba(162,255,0,.06);
+            border:1px solid rgba(162,255,0,.25);border-radius:12px;
+            padding:16px 20px;text-decoration:none;margin-bottom:14px;">
+            <div style="font-family:'Space Mono',monospace;font-size:11px;
+                        font-weight:700;color:#a2ff00;margin-bottom:4px;">
+                {portal_label}
+            </div>
+            <div style="font-size:11px;color:#4a6070;">{portal_desc}</div>
+        </a>
+        """, unsafe_allow_html=True)
         cb1,cb2=st.columns(2)
         with cb1:
             if st.button(L["wl_copy"], key="copy_ref_btn"):
@@ -713,6 +739,16 @@ elif current_tab == L["nav"][4]:
             if st.button(L["wl_reset"], type="secondary", key="wl_reset_btn"):
                 st.session_state.wl_success=False; st.session_state.wl_ref_code=''; st.rerun()
     else:
+        already_label = "已注册？登录节点 Portal →" if is_zh else "Already registered? Login to Node Portal →"
+        st.markdown(f"""
+        <div style="text-align:right;margin-bottom:10px;">
+            <a href="https://nexaedge-web-port.streamlit.app" target="_blank"
+               style="font-family:'Space Mono',monospace;font-size:10px;
+                      color:#a2ff00;text-decoration:none;">
+                {already_label}
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
         st.markdown('<div class="nx-card">', unsafe_allow_html=True)
         with st.form("wl_form"):
             f1,f2=st.columns(2)
