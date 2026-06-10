@@ -858,6 +858,12 @@ elif current_tab in ["Whitepaper", "白皮书"]:
     </div>
     """, unsafe_allow_html=True)
 
+    # Logo in whitepaper
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        st.image('IMG_7859.jpeg', use_container_width=True)
+    st.markdown('<div style="margin-bottom:-20px;"></div>', unsafe_allow_html=True)
+
     if is_zh:
         st.markdown("""
         <!-- 1 执行摘要 -->
