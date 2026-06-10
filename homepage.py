@@ -122,7 +122,7 @@ LANGS = {
         "thermal_title": "Hardware Safety Design — 39°C Thermal Protocol",
         "roadmap_title": "Development Roadmap",
         "wl_title": "Join the Early Waitlist",
-        "wl_desc": "Signal interest in the node program. NEXA tokens are minted but not yet distributed — wallet address collected for future node airdrop eligibility.",
+        "wl_desc": "Signal interest in the node program. Early registrants receive priority airdrop eligibility — the earlier you join and the more you refer, the larger your allocation.",
         "wl_email": "Email Address",
         "wl_email_ph": "you@example.com",
         "wl_wallet": "Solana Wallet (SPL) — for future use",
@@ -131,7 +131,7 @@ LANGS = {
         "wl_ref_ph": "Enter a friend's code",
         "wl_submit": "Join Waitlist",
         "wl_success_title": "✅ You're on the waitlist!",
-        "wl_success_desc": "We'll reach out when development begins. Share your code to move up the queue.",
+        "wl_success_desc": "You're in the priority airdrop pool. Share your referral code — every person you bring moves you up the queue and increases your allocation.",
         "wl_your_ref": "Your Referral Code",
         "wl_copy": "📋 Copy Code",
         "wl_copied": "✅ Copied!",
@@ -181,7 +181,7 @@ LANGS = {
         "thermal_title": "硬件安全设计 — 39°C 热保护协议",
         "roadmap_title": "开发路线图",
         "wl_title": "加入早期候补名单",
-        "wl_desc": "表达对节点计划的兴趣。NEXA 代币已铸造但尚未分发——钱包地址将用于未来节点空投资格认定。",
+        "wl_desc": "表达对节点计划的兴趣。早期注册成员享有优先空投资格——注册越早、推荐越多，获得的分配比例越高。",
         "wl_email": "电子邮件",
         "wl_email_ph": "your@email.com",
         "wl_wallet": "Solana 钱包（SPL）— 备用",
@@ -190,7 +190,7 @@ LANGS = {
         "wl_ref_ph": "输入朋友的推荐码",
         "wl_submit": "加入候补名单",
         "wl_success_title": "✅ 已加入候补名单！",
-        "wl_success_desc": "开发启动后我们将与您联系。分享推荐码可提升排名。",
+        "wl_success_desc": "您已进入优先空投池。分享推荐码——每推荐一人，您的排名上升，分配比例也随之提高。",
         "wl_your_ref": "您的推荐码",
         "wl_copy": "📋 复制",
         "wl_copied": "✅ 已复制！",
@@ -780,7 +780,7 @@ elif current_tab == L["nav"][4]:
                     "Wallet address is collected for future node airdrop eligibility only. "
                     "No investment contract is formed by registering."
                     if st.session_state.lang=='EN' else
-                    "注册即表明您了解这是种子前概念演示。NEXA 代币已在 Solana 上铸造，但尚未公开流通。钱包地址仅用于未来节点空投资格认定。注册不构成投资合同。")
+                    "注册即表明您了解这是种子前概念演示。NEXA 代币已在 Solana 上铸造，但尚未公开流通。空投资格与分配比例将在主网上线时根据队列排名和推荐数量确定。注册不构成投资合同。")
         st.markdown(f'<div style="font-family:\'Space Mono\',monospace;font-size:9px;color:#2a3a4a;text-align:center;line-height:1.7;margin-top:10px;">{disclaimer}</div>', unsafe_allow_html=True)
 
     if total_reg > 0:
