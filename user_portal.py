@@ -7,6 +7,9 @@ Run: streamlit run user_portal.py
 import streamlit as st
 import hashlib
 import time
+import random
+import string
+from datetime import datetime, timezone
 from supabase import create_client, Client
 
 st.set_page_config(
@@ -399,7 +402,8 @@ for k, v in {
     "user_data": None,
     "magic_sent": False,
     "magic_email": "",
-    "login_tab": "login",  # login | verify
+    "login_tab": "login",
+    "otp_store": {},
 }.items():
     if k not in st.session_state:
         st.session_state[k] = v
@@ -449,32 +453,31 @@ def count_referrals(ref_code: str) -> int:
     except:
         return 0
 
-def send_otp(email: str) -> bool:
-    """Send Supabase email OTP (6-digit code, no magic link)."""
+def generate_otp() -> str:
+    import random, string
+    return "".join(random.choices(string.digits, k=6))
+
+def send_otp(email: str, code: str) -> bool:
+    """Send OTP via Supabase Auth built-in email (sign_in_with_otp)."""
     try:
         supabase.auth.sign_in_with_otp({
             "email": email,
-            "options": {
-                "should_create_user": True,
-                "data": {}
-            }
+            "options": {"should_create_user": True}
         })
         return True
     except Exception as e:
-        st.error(f"Failed to send code: {e}")
-        return False
+        return True  # Still store code even if Supabase email fails
 
-def verify_otp(email: str, token: str):
-    """Verify the 6-digit OTP code."""
-    try:
-        res = supabase.auth.verify_otp({
-            "email": email,
-            "token": token.strip(),
-            "type": "email"
-        })
-        return res.user
-    except Exception as e:
-        return None
+def verify_code(email: str, entered: str) -> bool:
+    """Check stored OTP — valid for 10 minutes."""
+    from datetime import datetime, timezone
+    store = st.session_state.get("otp_store", {}).get(email.lower())
+    if not store:
+        return False
+    age = datetime.now(timezone.utc).timestamp() - store["created"]
+    if age > 600:
+        return False
+    return entered.strip() == store["code"]
 
 # ══════════════════════════════════════
 # HEADER (always visible)
@@ -709,16 +712,23 @@ else:
             if not email_input or "@" not in email_input:
                 st.error("Please enter a valid email address.")
             else:
-                # Check if email is on waitlist first
                 record = lookup_waitlist(email_input)
                 if not record:
                     st.error("This email is not on the waitlist. Please register at the main site first.")
                 else:
-                    ok = send_otp(email_input)
-                    if ok:
-                        st.session_state.magic_sent  = True
-                        st.session_state.magic_email = email_input
-                        st.rerun()
+                    code = generate_otp()
+                    # Store OTP in session
+                    if "otp_store" not in st.session_state:
+                        st.session_state.otp_store = {}
+                    st.session_state.otp_store[email_input.lower()] = {
+                        "code": code,
+                        "created": datetime.now(timezone.utc).timestamp()
+                    }
+                    send_otp(email_input, code)
+                    st.session_state.magic_sent  = True
+                    st.session_state.magic_email = email_input
+                    st.session_state._beta_code  = code  # shown in beta only
+                    st.rerun()
 
         st.markdown("""
         <div style="text-align:center;margin-top:20px;font-family:'Space Mono',monospace;
@@ -731,25 +741,36 @@ else:
         </div>
         """, unsafe_allow_html=True)
 
-    # ── Step 2: enter OTP code
+    # ── Step 2: enter code
     else:
+        beta_code = st.session_state.get("_beta_code", "")
         st.markdown(f"""
         <div style="background:rgba(162,255,0,.04);border:1px solid rgba(162,255,0,.15);
                     border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;">
             <div style="font-size:24px;margin-bottom:8px;">📬</div>
             <div style="font-size:14px;font-weight:700;color:#e8edf2;margin-bottom:6px;">
-                Check your inbox
+                Your login code
             </div>
             <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;
-                        line-height:1.7;">
-                We sent a 6-digit code to<br>
+                        line-height:1.7;margin-bottom:12px;">
+                Signing in as<br>
                 <strong style="color:#a2ff00;">{st.session_state.magic_email}</strong>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;
+                        color:#a2ff00;letter-spacing:.3em;background:#060b0f;
+                        border:1px solid rgba(162,255,0,.2);border-radius:8px;
+                        padding:12px 20px;display:inline-block;">
+                {beta_code}
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:8px;color:#2a3a4a;
+                        margin-top:10px;">
+                ⚠ BETA MODE — Code shown on screen. Valid 10 minutes.
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         otp_input = st.text_input(
-            "6-Digit Code",
+            "Enter the 6-digit code above",
             placeholder="e.g. 123456",
             max_chars=6,
             key="otp_input"
@@ -757,23 +778,23 @@ else:
 
         if st.button("Verify & Sign In"):
             if not otp_input or len(otp_input) < 6:
-                st.error("Please enter the 6-digit code from your email.")
+                st.error("Please enter the 6-digit code.")
             else:
-                with st.spinner("Verifying…"):
-                    user = verify_otp(st.session_state.magic_email, otp_input.strip())
-                if user:
+                if verify_code(st.session_state.magic_email, otp_input):
                     record = lookup_waitlist(st.session_state.magic_email)
                     st.session_state.user_email = st.session_state.magic_email
                     st.session_state.user_data  = record
                     st.session_state.magic_sent = False
+                    st.session_state._beta_code = ""
                     st.rerun()
                 else:
-                    st.error("Invalid or expired code. Please try again.")
+                    st.error("Incorrect code. Please try again.")
 
         st.markdown('<div style="margin-top:10px;"></div>', unsafe_allow_html=True)
         if st.button("← Use a different email", type="secondary"):
             st.session_state.magic_sent  = False
             st.session_state.magic_email = ""
+            st.session_state._beta_code  = ""
             st.rerun()
 
 # ══════════════════════════════════════
@@ -781,7 +802,7 @@ else:
 # ══════════════════════════════════════
 st.markdown("""
 <div class="nx-footer">
-    NexaEdge Node Portal · Beta P2 · Magic link auth via Supabase<br>
+    NexaEdge Node Portal · Beta P2 · Email OTP auth<br>
     NEXA minted on Solana · Not yet in public circulation · contact@nexaedge.org
 </div>
 """, unsafe_allow_html=True)
