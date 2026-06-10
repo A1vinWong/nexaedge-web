@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="light only">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexaEdge Network — Technical Whitepaper v0.1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8fafc!important;color:#334155!important;line-height:1.7;font-size:15px;color-scheme:light}
+a{color:#16a34a;text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* HEADER */
+.cover{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:white;padding:60px 24px 50px;text-align:center}
+.cover-dot{font-size:48px;color:#22c55e;text-shadow:0 0 20px #22c55e;margin-bottom:16px}
+.cover h1{font-size:clamp(28px,6vw,48px);font-weight:800;letter-spacing:-0.02em;margin-bottom:8px}
+.cover h1 span{color:#22c55e}
+.cover-sub{font-family:'Space Mono',monospace;font-size:12px;color:#94a3b8;margin-bottom:32px;letter-spacing:0.05em}
+.cover-tagline{font-size:clamp(14px,3vw,18px);color:#cbd5e1;font-style:italic;max-width:600px;margin:0 auto 40px}
+.warn-badge{display:inline-block;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.3);color:#fca5a5;font-family:'Space Mono',monospace;font-size:11px;padding:6px 16px;border-radius:6px;letter-spacing:0.05em}
+
+/* STATS ROW */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:#e2e8f0;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;max-width:700px;margin:32px auto 0}
+.stat{background:#f0fdf4;padding:20px 16px;text-align:center}
+.stat-val{font-family:'Space Mono',monospace;font-size:clamp(20px,4vw,28px);font-weight:700;color:#16a34a;line-height:1.1;margin-bottom:4px}
+.stat-lbl{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em}
+
+/* NAV */
+.toc{background:white;border-bottom:1px solid #e2e8f0;padding:16px 24px;position:sticky;top:0;z-index:100;overflow-x:auto;white-space:nowrap}
+.toc a{font-family:'Space Mono',monospace;font-size:11px;color:#64748b;margin-right:20px;text-transform:uppercase;letter-spacing:0.05em;text-decoration:none}
+.toc a:hover{color:#16a34a}
+
+/* CONTENT */
+.container{max-width:800px;margin:0 auto;padding:0 20px;background:#f8fafc}
+section{padding:48px 0 32px;border-bottom:1px solid #e2e8f0;background:#f8fafc!important}
+section:last-child{border-bottom:none}
+
+h2{font-size:clamp(20px,4vw,26px);font-weight:800;color:#0f172a;margin-bottom:16px;padding-bottom:10px;border-bottom:3px solid #22c55e;display:inline-block}
+h3{font-size:16px;font-weight:700;color:#166534;margin:20px 0 8px}
+p{color:#334155!important;margin-bottom:12px;line-height:1.75}
+ul{padding-left:20px;margin-bottom:12px}
+li{color:#334155!important;margin-bottom:6px;line-height:1.6}
+
+.highlight{background:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0;font-style:italic;color:#166534;font-size:15px}
+.note{background:#fffbeb;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13px;color:#92400e}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;margin:16px 0;border-radius:10px;border:1px solid #e2e8f0}
+table{width:100%;border-collapse:collapse;min-width:400px}
+th{background:#0f172a;color:white;padding:10px 14px;text-align:left;font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.05em}
+th.green{background:#166534}
+td{padding:10px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#475569!important;background:white}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#f8fafc!important;color:#475569!important}
+td.highlight-cell{color:#16a34a;font-weight:600}
+td.dark-cell{color:#0f172a;font-weight:600}
+td.now{background:#f0fdf4!important;color:#166534;font-weight:700}
+
+/* ROADMAP */
+.roadmap{position:relative;padding-left:32px}
+.roadmap::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:#e2e8f0}
+.roadmap-item{position:relative;padding-bottom:28px}
+.roadmap-item::before{content:'';position:absolute;left:-28px;top:6px;width:12px;height:12px;border-radius:50%;background:#e2e8f0;border:2px solid #e2e8f0}
+.roadmap-item.now::before{background:#22c55e;border-color:#22c55e;box-shadow:0 0 10px rgba(34,197,94,0.5)}
+.roadmap-phase{font-family:'Space Mono',monospace;font-size:11px;color:#f59e0b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+.roadmap-phase.active{color:#22c55e}
+.roadmap-title{font-size:16px;font-weight:700;color:#0f172a;margin-bottom:4px}
+.roadmap-body{font-size:13px;color:#64748b;line-height:1.6}
+
+/* FOOTER */
+footer{background:#0f172a;color:#64748b;text-align:center;padding:40px 24px;font-family:'Space Mono',monospace;font-size:11px;line-height:2.2}
+footer a{color:#22c55e}
+
+/* MOBILE */
+@media(max-width:600px){
+  .stats{grid-template-columns:1fr 1fr}
+  .cover{padding:40px 16px 36px}
+  section{padding:32px 0 24px}
+}
+
+/* FORCE LIGHT MODE OVERRIDE */
+@media (prefers-color-scheme: dark) {
+  body, .container, section, p, li, td, th { 
+    background-color: #f8fafc !important; 
+    color: #1e293b !important; 
+  }
+  body { background: #f8fafc !important; }
+  .cover { background: linear-gradient(135deg,#0f172a 0%,#1e293b 100%) !important; }
+  .cover p, .cover div, .cover-sub, .cover-tagline { color: #cbd5e1 !important; }
+  .toc { background: white !important; }
+  table { background: white !important; }
+  td { background: white !important; color: #334155 !important; }
+  tr:nth-child(even) td { background: #f8fafc !important; }
+  th { background: #0f172a !important; color: white !important; }
+  th.green { background: #166534 !important; color: white !important; }
+  .highlight { background: #f0fdf4 !important; color: #166534 !important; }
+  .note { background: #fffbeb !important; color: #92400e !important; }
+  h2 { color: #0f172a !important; }
+  h3 { color: #166534 !important; }
+  .stat { background: #f0fdf4 !important; }
+  .stat-val { color: #16a34a !important; }
+  .stat-lbl { color: #475569 !important; }
+  .roadmap-title { color: #0f172a !important; }
+  .roadmap-body { color: #475569 !important; }
+  .highlight-cell { color: #16a34a !important; }
+  .dark-cell { color: #0f172a !important; font-weight: 600 !important; }
+  footer { background: #0f172a !important; }
+  footer, footer a, footer div { color: #94a3b8 !important; }
+  footer a { color: #22c55e !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-dot">●</div>
+  <h1>Nexa<span>Edge</span> Network</h1>
+  <div class="cover-sub">TECHNICAL WHITEPAPER · V0.1 · JUNE 2026</div>
+  <div class="cover-tagline">Aggregating Idle Smartphone Compute into a Distributed Edge AI Inference Network</div>
+  <div class="warn-badge">⚠ PRE-SEED CONCEPT DEMO · NOT AN INVESTMENT OFFER</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-val">6.8B</div><div class="stat-lbl">Idle Smartphones</div></div>
+    <div class="stat"><div class="stat-val">$107B</div><div class="stat-lbl">Edge AI by 2028</div></div>
+    <div class="stat"><div class="stat-val">19.2%</div><div class="stat-lbl">CAGR</div></div>
+    <div class="stat"><div class="stat-val">100M</div><div class="stat-lbl">NEXA Minted</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="toc">
+  <a href="#s1">1. Summary</a>
+  <a href="#s2">2. Problem</a>
+  <a href="#s3">3. Protocol</a>
+  <a href="#s4">4. Token</a>
+  <a href="#s5">5. Market</a>
+  <a href="#s6">6. Roadmap</a>
+  <a href="#s7">7. Moat</a>
+  <a href="#s8">8. Funding</a>
+  <a href="#s9">9. Risks</a>
+  <a href="#s10">10. Legal</a>
+</div>
+
+<div class="container">
+
+<!-- 1 -->
+<section id="s1">
+  <h2>1. Executive Summary</h2>
+  <p>NexaEdge is a protocol design to aggregate idle smartphone compute into a permissionless, distributed edge AI inference network. Modern smartphones contain dedicated Neural Processing Units (NPUs) that sit idle for 95%+ of the day. NexaEdge proposes to harness this latent compute to serve AI inference tasks at sub-5ms latency, at near-zero marginal cost, with native GDPR compliance.</p>
+  <div class="highlight">The global edge AI market is projected to reach $107B by 2028 (CAGR 19.2%). Today, no protocol exists that aggregates smartphone NPU compute at scale. NexaEdge is designed to be the first.</div>
+  <p>The project is at concept validation stage (Q2 2026). A working waitlist portal, node registration system, and browser-based heartbeat client have been deployed. 100,000,000 NEXA tokens have been minted on Solana but are not yet in public circulation.</p>
+  <div class="note">⚠ This document is for grant committees, accelerators, and accredited investors only. It does not constitute a securities offering or investment contract.</div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <h2>2. The Problem</h2>
+  <h3>2.1 The Edge AI Compute Gap</h3>
+  <p>AI inference demand is growing faster than centralized GPU supply. H100 spot prices fluctuate between $2–4/hour, and data center capacity is constrained by geography, power availability, and capital expenditure. Meanwhile:</p>
+  <ul>
+    <li>6.8 billion smartphones contain NPUs capable of running 1.8B–3.8B parameter SLMs</li>
+    <li>These devices are idle for 12–20 hours per day</li>
+    <li>They are distributed across every geography, close to end users</li>
+    <li>Their compute goes entirely unused by the broader AI ecosystem</li>
+  </ul>
+
+  <h3>2.2 Competitive Landscape</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th></th><th>GPU Cloud</th><th>Grass.io</th><th class="green">NexaEdge (Design)</th></tr>
+      <tr><td class="dark-cell">CapEx</td><td>Extreme</td><td>Low</td><td class="highlight-cell">Zero</td></tr>
+      <tr><td class="dark-cell">Latency</td><td>50–150ms</td><td>N/A</td><td class="highlight-cell">&lt;5ms target</td></tr>
+      <tr><td class="dark-cell">Privacy</td><td>Data leaves</td><td>Partial</td><td class="highlight-cell">GDPR-native</td></tr>
+      <tr><td class="dark-cell">Compute</td><td>GPU only</td><td>Network only</td><td class="highlight-cell">NPU + CPU</td></tr>
+      <tr><td class="dark-cell">Sybil Resist.</td><td>Central auth</td><td>IP spoofable</td><td class="highlight-cell">HW fingerprint + ZK</td></tr>
+    </table>
+  </div>
+  <p>Bandwidth proxy networks like Grass aggregate residential IPs for web scraping — not compute. They provide no AI inference capability and no cryptographic verification of work performed. NexaEdge is designed to solve fundamentally different problems.</p>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <h2>3. The NexaEdge Protocol</h2>
+  <div class="highlight">Turn every idle smartphone into a verified edge compute node that earns NEXA tokens for executing AI inference tasks.</div>
+
+  <h3>3.1 Three-Layer Architecture</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Layer</th><th>Component</th><th>Function</th></tr>
+      <tr><td class="dark-cell">Demand</td><td>AI Buyers API</td><td>Submit inference tasks, pay in NEXA</td></tr>
+      <tr><td class="dark-cell">Coordination</td><td>Solana SPL</td><td>BFT consensus, ZK verification, reward distribution</td></tr>
+      <tr><td class="dark-cell">Supply</td><td>Device Nodes</td><td>WASM sandbox, NPU execution, thermal guard</td></tr>
+    </table>
+  </div>
+
+  <h3>3.2 Proof of Compute (PoC)</h3>
+  <p>Every node must solve a cryptographic ML inference verification puzzle before claiming rewards. The PoC mechanism combines:</p>
+  <ul>
+    <li><strong>Hardware fingerprint</strong> — device-specific, non-spoofable identifier</li>
+    <li><strong>ZK proof of inference execution</strong> — verifiable without revealing model weights</li>
+    <li><strong>BFT cross-validation</strong> — minimum quorum of independent nodes required</li>
+  </ul>
+
+  <h3>3.3 Privacy Architecture</h3>
+  <p>NexaEdge is designed to be GDPR-compliant by architecture, not by policy:</p>
+  <ul>
+    <li>Inference executes locally — data never leaves the jurisdiction</li>
+    <li>WASM sandbox provides OS-level isolation</li>
+    <li>Zero-knowledge proofs validate work without exposing input data</li>
+    <li>Node operators earn rewards without seeing the content of tasks they execute</li>
+  </ul>
+
+  <h3>3.4 39°C Thermal Protocol</h3>
+  <p>If device temperature reaches 39°C, the task queue pauses automatically and passive cooling is activated. This constraint is enforced at the WASM sandbox level and is not overridable by the node operator — ensuring institutional buyers can rely on hardware safety guarantees.</p>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <h2>4. NEXA Token Model</h2>
+  <div class="stats" style="margin:0 0 20px">
+    <div class="stat"><div class="stat-val">100M</div><div class="stat-lbl">Total Supply (Fixed)</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:18px">Solana SPL</div><div class="stat-lbl">Blockchain</div></div>
+    <div class="stat"><div class="stat-val">$0.50</div><div class="stat-lbl">Illustrative Price</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:18px">Q4 2026</div><div class="stat-lbl">Target Distribution</div></div>
+  </div>
+
+  <p>Contract: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;color:#0f172a">D7h9MvFDkVxPYeJwSTcE7VkKXo6mygCHYph36P8oeic2</code></p>
+  <p>Tokens are <strong>not yet in public circulation</strong>. Distribution rules and reward rates will be finalized at mainnet launch.</p>
+
+  <h3>Token Utility</h3>
+  <ul>
+    <li>Node operators earn NEXA for verified compute contributions</li>
+    <li>AI buyers pay NEXA to submit inference tasks</li>
+    <li>Governance: token holders vote on protocol parameter changes</li>
+    <li>Staking: nodes stake NEXA as collateral for high-value task queues</li>
+  </ul>
+
+  <h3>Planned Allocation (Illustrative)</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Category</th><th>Allocation</th><th>Vesting</th></tr>
+      <tr><td class="dark-cell">Node Operator Rewards</td><td class="highlight-cell">40%</td><td>Earned per task — no cliff</td></tr>
+      <tr><td class="dark-cell">Ecosystem & Grants</td><td class="highlight-cell">20%</td><td>3-year linear vest</td></tr>
+      <tr><td class="dark-cell">Team & Advisors</td><td class="highlight-cell">15%</td><td>1-year cliff, 3-year vest</td></tr>
+      <tr><td class="dark-cell">Reserve</td><td class="highlight-cell">15%</td><td>DAO-controlled, 4-year lock</td></tr>
+      <tr><td class="dark-cell">Early Waitlist Airdrop</td><td class="highlight-cell">10%</td><td>Snapshot at mainnet launch</td></tr>
+    </table>
+  </div>
+  <div class="note">⚠ Token allocation is illustrative and subject to change. This is not a financial instrument or investment offer.</div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <h2>5. Market Opportunity</h2>
+  <div class="stats" style="margin:0 0 24px">
+    <div class="stat"><div class="stat-val">$107B</div><div class="stat-lbl">Edge AI 2028</div></div>
+    <div class="stat"><div class="stat-val">$28B</div><div class="stat-lbl">AI Inference 2026</div></div>
+    <div class="stat"><div class="stat-val">6.8B</div><div class="stat-lbl">NPU Smartphones</div></div>
+    <div class="stat"><div class="stat-val">19.2%</div><div class="stat-lbl">CAGR</div></div>
+  </div>
+
+  <h3>Target Buyer Segments</h3>
+  <p><strong>Edge AI Agent Deployers</strong> — AI developers building autonomous agents require low-latency, privacy-preserving inference. Running 1.8B–3.8B SLMs on device eliminates round-trip latency and keeps user data local. → AI developers, enterprise SaaS</p>
+  <p><strong>AI Dataset Cleaning (RLHF)</strong> — AI labs need distributed WASM sandboxes to run automated dataset validation at scale. NexaEdge nodes can process RLHF labeling jobs across thousands of devices simultaneously. → AI labs, data pipeline companies</p>
+  <p><strong>ZK-ML Inference Verification</strong> — DeFi protocols require cryptographically verified AI outputs. NexaEdge's ZK proof mechanism enables trustless inference verification without centralized oracles. → DeFi protocols, compliance platforms</p>
+  <p><strong>Sensor-Context AI</strong> — Smartphone GPS, camera, and IMU sensors enable context-aware AI tasks that are structurally impossible in any datacenter. → Location AI, autonomous systems</p>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <h2>6. Development Roadmap</h2>
+  <div class="roadmap">
+    <div class="roadmap-item now">
+      <div class="roadmap-phase active">Q2 2026 · NOW</div>
+      <div class="roadmap-title">Concept Validation & Early Community</div>
+      <div class="roadmap-body">Architecture finalized. Waitlist portal, node registration, and browser heartbeat live. Real data flowing into Supabase. 100M NEXA minted. Grant applications submitted to Solana Foundation, Alliance DAO, and Y Combinator.</div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-phase">Q3 2026 · TARGET</div>
+      <div class="roadmap-title">WASM Sandbox MVP</div>
+      <div class="roadmap-body">Functional WASM runtime on iOS/Android. First SLM inference (Phi-3 mini) on device NPU. Thermal guard daemon. Internal alpha: 50 devices.</div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-phase">Q4 2026 · TARGET</div>
+      <div class="roadmap-title">Closed Beta — 1,000 Nodes</div>
+      <div class="roadmap-body">Solana SPL token deployment. BFT testnet. First paying buyer pilot. ZK proof of compute live.</div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-phase">Q1 2027 · TARGET</div>
+      <div class="roadmap-title">Public Mainnet Launch</div>
+      <div class="roadmap-body">Open enrollment. Solana Seeker integration. Marketplace live. Target: 100K active nodes, 3 enterprise buyers.</div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-phase">2027+ · VISION</div>
+      <div class="roadmap-title">Scale & Ecosystem</div>
+      <div class="roadmap-body">ZK-ML verification live. Expand to laptop/IoT. Series A exploration.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <h2>7. Technical Moat</h2>
+  <h3>NPU-Native Execution</h3>
+  <p>Apple A17 Pro NPU delivers 35 TOPS. Qualcomm Snapdragon 8 Gen 3 delivers 45 TOPS. These hardware accelerators are purpose-built for the matrix operations used in SLM inference. NexaEdge targets these NPUs directly via Core ML (iOS) and NNAPI (Android) through the WASM runtime.</p>
+
+  <h3>39°C Thermal Protocol</h3>
+  <p>Institutional AI buyers require SLA guarantees. The 39°C thermal ceiling is a planned daemon-level constraint enforced at the WASM sandbox — not overridable by node operators. This is the supply-side durability guarantee that enables enterprise SLA commitments.</p>
+
+  <h3>Solana Mobile Integration</h3>
+  <p>Solana Seeker and Saga are Web3-native smartphones with hardware-level key storage (Seed Vault). NexaEdge is designed to integrate natively with these devices, enabling seamless node enrollment and on-device NEXA wallet management.</p>
+
+  <h3>Geographic Density Advantage</h3>
+  <p>6.8 billion smartphones exist in every city, neighborhood, and rural area on Earth. This geographic density is structurally impossible to replicate with datacenters. As edge AI adoption grows, proximity to end users becomes a competitive moat that NexaEdge is uniquely positioned to occupy.</p>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <h2>8. Funding & Use of Proceeds</h2>
+  <div class="stats" style="margin:0 0 20px">
+    <div class="stat"><div class="stat-val">$500K</div><div class="stat-lbl">Pre-Seed Target</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:18px">SAFE</div><div class="stat-lbl">Instrument</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:18px">Q3 2026</div><div class="stat-lbl">Target Close</div></div>
+    <div class="stat"><div class="stat-val">50</div><div class="stat-lbl">Alpha Devices</div></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Category</th><th>Amount</th><th>%</th></tr>
+      <tr><td class="dark-cell">WASM Runtime Development (iOS/Android)</td><td>$200K</td><td class="highlight-cell">40%</td></tr>
+      <tr><td class="dark-cell">Node Operator Incentives (Alpha 50 devices)</td><td>$100K</td><td class="highlight-cell">20%</td></tr>
+      <tr><td class="dark-cell">Solana Integration & Smart Contracts</td><td>$100K</td><td class="highlight-cell">20%</td></tr>
+      <tr><td class="dark-cell">Legal & Compliance</td><td>$50K</td><td class="highlight-cell">10%</td></tr>
+      <tr><td class="dark-cell">Marketing & Community Growth</td><td>$50K</td><td class="highlight-cell">10%</td></tr>
+    </table>
+  </div>
+
+  <p style="margin-top:16px">Interested investors please contact: <a href="mailto:contact@nexaedge.org">contact@nexaedge.org</a></p>
+  <div class="note">No SAFE or investment contract has been formed. All commitments are subject to formal due diligence.</div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <h2>9. Risk Factors</h2>
+  <h3>Technical Risk</h3>
+  <p>WASM runtime performance on mobile NPUs is unproven at scale. SLM inference on device may exhibit higher latency than projected. Thermal management may limit sustained workloads on certain device classes.</p>
+  <h3>Regulatory Risk</h3>
+  <p>Cryptocurrency token distribution is subject to evolving securities law across jurisdictions. NEXA token classification may require legal restructuring before public distribution.</p>
+  <h3>Adoption Risk</h3>
+  <p>Node operator acquisition requires sufficient NEXA reward rates to justify battery and compute usage. AI buyer acquisition requires demonstrated reliability and SLA compliance before enterprise commitments.</p>
+  <h3>Competition Risk</h3>
+  <p>Well-funded protocols (Akash, Render, io.net) may pivot to mobile compute. Apple and Google may restrict WASM execution on mobile in future OS updates.</p>
+  <div class="highlight">NexaEdge is at concept stage. All projections, timelines, and technical claims are design targets, not guarantees.</div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <h2>10. Legal Disclaimer</h2>
+  <p>This whitepaper is published for informational purposes only. It does not constitute a prospectus, an offer to sell, or a solicitation to purchase any securities or financial instruments.</p>
+  <p>NEXA tokens are utility tokens designed for use within the NexaEdge protocol. They have not been registered under the securities laws of any jurisdiction. No regulatory authority has reviewed or approved this document.</p>
+  <p>All forward-looking statements and technical claims are based on current design intent and are subject to change without notice. Participation in the NexaEdge waitlist does not create any legal right, contractual obligation, or entitlement to tokens, equity, or other financial instruments.</p>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <div style="font-size:18px;color:#22c55e;margin-bottom:12px">●</div>
+  <div style="font-size:14px;color:#94a3b8;font-family:'Inter',sans-serif;margin-bottom:12px">NexaEdge Network · Technical Whitepaper v0.1 · June 2026</div>
+  <div>
+    <a href="https://nexaedge.streamlit.app">nexaedge.streamlit.app</a> &nbsp;·&nbsp;
+    <a href="mailto:contact@nexaedge.org">contact@nexaedge.org</a> &nbsp;·&nbsp;
+    <a href="https://x.com/nexaedge_">@nexaedge_</a> &nbsp;·&nbsp;
+    <a href="https://t.me/NexaEdge7">Telegram</a>
+  </div>
+  <div style="margin-top:12px;color:#374151">© 2026 NexaEdge Network. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
