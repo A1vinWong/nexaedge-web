@@ -286,6 +286,78 @@ div[data-testid="stHorizontalBlock"] div.stButton > button { width: auto !import
     text-align: center; font-family: 'Space Mono', monospace;
     font-size: 9px; color: #2a3a4a; line-height: 2;
 }
+.app-dashboard {
+    background: linear-gradient(160deg, #0a1018, #060b0f);
+    border: 1px solid #1a2535;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+.app-header {
+    background: linear-gradient(135deg, #0d1a10, #0a1410);
+    border-bottom: 1px solid #1a2535;
+    padding: 16px 18px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.app-header-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .12em;
+}
+.app-temp-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 6px;
+    font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700;
+}
+.app-chart-area {
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid #1a2535;
+}
+.app-stats-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 0; border-bottom: 1px solid #1a2535;
+}
+.app-stat-cell {
+    padding: 12px 14px; text-align: center;
+    border-right: 1px solid #1a2535;
+}
+.app-stat-cell:last-child { border-right: none; }
+.app-stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px; font-weight: 700; color: #e8edf2; line-height: 1.1;
+}
+.app-stat-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 7px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .06em; margin-top: 3px;
+}
+.app-node-section {
+    padding: 14px 18px;
+    border-bottom: 1px solid #1a2535;
+}
+.app-node-label {
+    font-family: 'Space Mono', monospace; font-size: 8px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px;
+}
+.app-node-id {
+    font-family: 'Space Mono', monospace; font-size: 11px; color: #a2ff00; margin-bottom: 12px;
+}
+.app-status-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+}
+.app-status-block { flex: 1; }
+.app-status-lbl {
+    font-family: 'Space Mono', monospace; font-size: 8px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px;
+}
+.app-status-val {
+    font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
+}
+.app-nexa-val {
+    font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: #a2ff00;
+}
 </style>
 """, unsafe_allow_html=True)
 
