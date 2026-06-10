@@ -257,6 +257,8 @@ div.stButton > button[kind="secondary"]:hover {
 .nx-btn-row { display: flex !important; flex-direction: row !important; gap: 10px !important; margin: 8px 0 12px !important; }
 .nx-btn-row a { display: block !important; text-align: center !important; padding: 11px 0 !important; border-radius: 8px !important; font-family: 'Space Mono', monospace !important; font-size: 11px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .06em !important; text-decoration: none !important; }
 .nx-login-hero { text-align: center; padding: 40px 0 32px; }
+/* Fix node activate/stop button row */
+div[data-testid="stHorizontalBlock"] div.stButton > button { width: auto !important; }
 .nx-login-dot {
     width: 14px; height: 14px; background: #a2ff00; border-radius: 50%;
     box-shadow: 0 0 18px #a2ff00; margin: 0 auto 20px;
@@ -655,43 +657,20 @@ if st.session_state.user_email:
         # Activate / Stop buttons
         node_active = st.session_state.get("node_active", False)
 
-        # Handle URL param actions
-        params = st.query_params
-        if params.get("node_action") == "activate" and not node_active:
-            st.session_state.node_active = True
-            st.session_state.node_tasks  = st.session_state.get("node_tasks", 0)
-            st.session_state.node_log    = []
-            st.query_params.clear()
-            st.rerun()
-        if params.get("node_action") == "stop" and node_active:
-            st.session_state.node_active = False
-            try:
-                supabase.table("nodes").update({"status": "offline"}).eq("node_token", token).execute()
-            except: pass
-            st.query_params.clear()
-            st.rerun()
-
-        act_style = "background:linear-gradient(135deg,#a2ff00,#8de600);color:#060b0f;opacity:1;" if not node_active else "background:#182230;color:#2a3a4a;cursor:not-allowed;"
-        stop_style = "background:transparent;color:#a2ff00;border:1px solid #a2ff00;" if node_active else "background:transparent;color:#2a3a4a;border:1px solid #182230;cursor:not-allowed;"
-        act_href  = "?node_action=activate" if not node_active else "#"
-        stop_href = "?node_action=stop" if node_active else "#"
-
-        st.markdown(f"""
-        <div style="display:flex;gap:10px;margin:8px 0 12px;">
-            <a href="{act_href}" style="flex:3;text-align:center;padding:11px 0;
-               border-radius:8px;font-family:'Space Mono',monospace;
-               font-size:11px;font-weight:700;text-transform:uppercase;
-               letter-spacing:.06em;text-decoration:none;{act_style}">
-               ⚡ ACTIVATE NODE
-            </a>
-            <a href="{stop_href}" style="flex:2;text-align:center;padding:11px 0;
-               border-radius:8px;font-family:'Space Mono',monospace;
-               font-size:11px;font-weight:700;text-transform:uppercase;
-               letter-spacing:.06em;text-decoration:none;{stop_style}">
-               ■ STOP
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
+        col_act, col_stop = st.columns([3, 2])
+        with col_act:
+            if st.button("⚡ ACTIVATE NODE", disabled=node_active, key="btn_activate"):
+                st.session_state.node_active = True
+                st.session_state.node_tasks  = st.session_state.get("node_tasks", 0)
+                st.session_state.node_log    = []
+                st.rerun()
+        with col_stop:
+            if st.button("■ STOP", disabled=not node_active, type="secondary", key="btn_stop"):
+                st.session_state.node_active = False
+                try:
+                    supabase.table("nodes").update({"status": "offline"}).eq("node_token", token).execute()
+                except: pass
+                st.rerun()
 
         if node_active:
             from streamlit_autorefresh import st_autorefresh
