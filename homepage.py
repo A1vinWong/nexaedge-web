@@ -12,9 +12,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# ══════════════════════════════════════
-# Supabase 连接
-# ══════════════════════════════════════
 SUPABASE_URL = "https://nfafzigmcdybgbxdtymf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mYWZ6aWdtY2R5YmdieGR0eW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODE3NTMsImV4cCI6MjA5NjU1Nzc1M30.ZIX3sByZ8yQSDGFr-o24CjIXwZ5UsB4rMB3jculLtv0"
 
@@ -60,7 +57,6 @@ def db_get_registrations():
     except:
         return []
 
-# ── P4: Real node data ──────────────────
 def db_live_nodes():
     try:
         res = supabase.table("nodes").select("status").execute()
@@ -80,11 +76,7 @@ def db_latest_heartbeat():
         return res.data[0] if res.data else None
     except:
         return None
-# ───────────────────────────────────────
 
-# ══════════════════════════════════════
-# 语言配置
-# ══════════════════════════════════════
 LANGS = {
     "EN": {
         "nav": ["Market", "Network Sim", "Differentiation", "Roadmap", "Waitlist", "Whitepaper"],
@@ -225,9 +217,6 @@ TASK_TYPES_ZH = [
 
 REWARD_BASE = 0.0022
 
-# ══════════════════════════════════════
-# CSS
-# ══════════════════════════════════════
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
@@ -326,9 +315,6 @@ div.stButton>button[kind="secondary"]:hover{border-color:#a2ff00!important;color
 </style>
 """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════
-# Session State
-# ══════════════════════════════════════
 _defaults = {
     'lang': 'EN',
     'sim_running': False, 'sim_tasks': 0, 'sim_log': [],
@@ -344,9 +330,6 @@ for k, v in _defaults.items():
 L = LANGS[st.session_state.lang]
 TASK_TYPES = TASK_TYPES_EN if st.session_state.lang == "EN" else TASK_TYPES_ZH
 
-# ══════════════════════════════════════
-# Sim engine
-# ══════════════════════════════════════
 if st.session_state.sim_running:
     st_autorefresh(interval=1200, key="nexa_tick")
     real_cpu = random.randint(15, 85)
@@ -371,14 +354,10 @@ if st.session_state.sim_running:
     st.session_state.nexa_rate = reward
     st.session_state.nexa_earned += reward
 
-# ══════════════════════════════════════
-# HEADER — P4: real node count added
-# ══════════════════════════════════════
 is_zh = st.session_state.lang == 'ZH'
 total_reg_count = db_count()
 live = db_live_nodes()
 
-# Logo — centered, full width on mobile
 c1, c2, c3 = st.columns([1, 2, 1])
 with c2:
     st.image('IMG_7859.jpeg', use_container_width=True)
@@ -425,9 +404,6 @@ with col_right:
 st.markdown('<hr class="nx-divider">', unsafe_allow_html=True)
 current_tab = st.radio("Nav", L["nav"], horizontal=True, label_visibility="collapsed")
 
-# ══════════════════════════════════════
-# TAB 1 — MARKET
-# ══════════════════════════════════════
 if current_tab == L["nav"][0]:
     c1, c2, c3 = st.columns(3)
     with c1: st.metric("Global Idle Smartphones" if st.session_state.lang=="EN" else "全球闲置智能手机", "6.8B", "NPU-capable" if st.session_state.lang=="EN" else "配备NPU")
@@ -510,11 +486,7 @@ if current_tab == L["nav"][0]:
     <a class="nx-social-btn" href="mailto:contact@nexaedge.org" style="border-color:rgba(0,229,255,.3);color:#00e5ff!important;">📧 Email</a>
     </div>""", unsafe_allow_html=True)
 
-# ══════════════════════════════════════
-# TAB 2 — NETWORK SIM
-# ══════════════════════════════════════
 elif current_tab == L["nav"][1]:
-    # P4: Real node live banner
     live2 = db_live_nodes()
     hb2   = db_latest_heartbeat()
     if live2["online"] > 0 and hb2:
@@ -613,9 +585,6 @@ elif current_tab == L["nav"][1]:
     <div class="nx-prog-row"><span>{L['wl_zk']}</span><span style="color:#a2ff00;">{p3}%</span></div>
     <div class="nx-prog-bar"><div class="nx-prog-fill" style="width:{p3}%"></div></div></div>""", unsafe_allow_html=True)
 
-# ══════════════════════════════════════
-# TAB 3 — DIFFERENTIATION
-# ══════════════════════════════════════
 elif current_tab == L["nav"][2]:
     if st.session_state.lang=="EN":
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['diff_title']}</div>
@@ -659,9 +628,6 @@ elif current_tab == L["nav"][2]:
     st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['thermal_title']}</div>
     <div style="font-size:12px;color:#4a6070;line-height:1.9;">{thermal_en if st.session_state.lang=="EN" else thermal_zh}</div></div>""", unsafe_allow_html=True)
 
-# ══════════════════════════════════════
-# TAB 4 — ROADMAP
-# ══════════════════════════════════════
 elif current_tab == L["nav"][3]:
     if st.session_state.lang=="EN":
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['roadmap_title']}</div>
@@ -694,9 +660,6 @@ elif current_tab == L["nav"][3]:
     <div class="nx-card-title"><span style="color:#ffb300;">◈</span> {L['nexa_proj_title']}</div>
     <div style="font-size:11px;color:#4a6070;line-height:1.8;">{L['nexa_disclaimer']}</div></div>""", unsafe_allow_html=True)
 
-# ══════════════════════════════════════
-# TAB 5 — WAITLIST
-# ══════════════════════════════════════
 elif current_tab == L["nav"][4]:
     total_reg = db_count()
 
@@ -795,10 +758,6 @@ elif current_tab == L["nav"][4]:
             ledger_rows=[{"Timestamp":r["created_at"][:19].replace("T"," "),"Node Hash":hashlib.sha256(r["email"].encode()).hexdigest()[:22]+"... @SPL"} for r in regs]
             st.dataframe(ledger_rows, use_container_width=True, hide_index=True)
 
-
-# ══════════════════════════════════════
-# TAB 6 — WHITEPAPER
-# ══════════════════════════════════════
 elif current_tab in ["Whitepaper", "白皮书"]:
     is_zh = st.session_state.lang == "ZH"
 
@@ -858,15 +817,10 @@ elif current_tab in ["Whitepaper", "白皮书"]:
     </div>
     """, unsafe_allow_html=True)
 
-    # Logo in whitepaper
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
-        st.image('IMG_7859.jpeg', use_container_width=True)
-    st.markdown('<div style="margin-bottom:-20px;"></div>', unsafe_allow_html=True)
+    # ── Whitepaper logo has been removed ──
 
     if is_zh:
         st.markdown("""
-        <!-- 1 执行摘要 -->
         <div class="wp-section">
             <div class="wp-h2">1. 执行摘要</div>
             <div class="wp-body" style="margin-top:12px">NexaEdge 是一个将闲置智能手机算力汇聚成无需许可的分布式边缘 AI 推理网络的协议设计。现代智能手机内置专用神经处理单元（NPU），每天有超过 95% 的时间处于闲置状态。NexaEdge 旨在利用这些潜在算力，以低于 5ms 的延迟、接近零边际成本提供 AI 推理服务，并原生支持 GDPR 合规。</div>
@@ -874,8 +828,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
             <div class="wp-body">项目目前处于概念验证阶段（2026年Q2）。候补名单门户、节点注册系统和基于浏览器的心跳客户端已部署完成。1亿枚 NEXA 代币已在 Solana 上铸造，但尚未公开流通。</div>
             <div class="wp-note">⚠ 本文件仅供资助委员会、加速器项目及合格投资人参考，不构成证券发行或投资合同。</div>
         </div>
-
-        <!-- 2 问题 -->
         <div class="wp-section">
             <div class="wp-h2">2. 问题陈述</div>
             <div class="wp-h3">2.1 边缘 AI 算力缺口</div>
@@ -891,8 +843,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
                 <tr><td class="dk">女巫抵抗</td><td>中心化认证</td><td>IP可伪造</td><td class="hl">硬件指纹+ZK</td></tr>
             </table>
         </div>
-
-        <!-- 3 协议 -->
         <div class="wp-section">
             <div class="wp-h2">3. NexaEdge 协议</div>
             <div class="wp-hl">将每一部闲置智能手机变成经过验证的边缘计算节点，通过执行 AI 推理任务赚取 NEXA 代币。</div>
@@ -908,8 +858,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
             <div class="wp-h3">3.3 39°C 热保护协议</div>
             <div class="wp-body">设备温度达到 39°C 时，任务队列自动暂停。在 WASM 沙箱层面强制执行——节点运营者不可覆盖。为机构买家提供 SLA 保证。</div>
         </div>
-
-        <!-- 4 代币 -->
         <div class="wp-section">
             <div class="wp-h2">4. NEXA 代币模型</div>
             <div class="wp-stats" style="margin-top:12px">
@@ -930,8 +878,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
             </table>
             <div class="wp-note">⚠ 代币分配仅供示意，可能调整。本内容不构成金融工具或投资要约。</div>
         </div>
-
-        <!-- 5 市场 -->
         <div class="wp-section">
             <div class="wp-h2">5. 市场机会</div>
             <div class="wp-stats" style="margin-top:12px">
@@ -946,8 +892,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
             <div class="wp-body"><b>ZK-ML推理验证</b> — 无需中心化预言机的可信推理验证。→ DeFi协议、合规平台</div>
             <div class="wp-body"><b>传感器上下文AI</b> — GPS、摄像头、IMU实现数据中心无法提供的上下文感知推理。→ 位置AI、自主系统</div>
         </div>
-
-        <!-- 6 路线图 -->
         <div class="wp-section">
             <div class="wp-h2">6. 开发路线图</div>
             <div class="wp-rm" style="margin-top:16px">
@@ -978,8 +922,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
                 </div>
             </div>
         </div>
-
-        <!-- 7 技术护城河 -->
         <div class="wp-section">
             <div class="wp-h2">7. 技术护城河</div>
             <div class="wp-h3">NPU 原生执行</div>
@@ -989,8 +931,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
             <div class="wp-h3">地理密度优势</div>
             <div class="wp-body">68亿部智能手机遍布全球每个城市和农村地区——数据中心在结构上无法复制。随着边缘 AI 普及，贴近终端用户的地理优势将成为核心护城河。</div>
         </div>
-
-        <!-- 8 融资 -->
         <div class="wp-section">
             <div class="wp-h2">8. 融资与资金用途</div>
             <div class="wp-stats" style="margin-top:12px">
@@ -1010,8 +950,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
             <div class="wp-body" style="margin-top:10px">联系方式：<a href="mailto:contact@nexaedge.org" style="color:#16a34a">contact@nexaedge.org</a></div>
             <div class="wp-note">目前尚未签署任何 SAFE 或投资合同。所有承诺须经正式尽职调查后方可生效。</div>
         </div>
-
-        <!-- 9 风险 -->
         <div class="wp-section">
             <div class="wp-h2">9. 风险因素</div>
             <div class="wp-h3">技术风险</div>
@@ -1024,8 +962,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
             <div class="wp-body">Akash、Render、io.net 等资金充裕的协议可能转向移动算力。苹果和谷歌可能在未来 OS 更新中限制移动端 WASM 执行。</div>
             <div class="wp-hl">NexaEdge 处于概念阶段。所有预测、时间表和技术主张均为设计目标，不构成保证。</div>
         </div>
-
-        <!-- 10 免责声明 -->
         <div class="wp-section">
             <div class="wp-h2">10. 法律免责声明</div>
             <div class="wp-body">本白皮书仅供参考。不构成招股说明书、出售要约或购买任何证券或金融工具的邀请。</div>
@@ -1040,7 +976,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
 
     else:
         st.markdown("""
-        <!-- 1. EXECUTIVE SUMMARY -->
         <div class="wp-section">
             <div class="wp-h2">1. Executive Summary</div>
             <div class="wp-body" style="margin-top:12px">NexaEdge is a protocol design to aggregate idle smartphone compute into a permissionless, distributed edge AI inference network. Modern smartphones contain dedicated Neural Processing Units (NPUs) that sit idle for 95%+ of the day. NexaEdge proposes to harness this latent compute to serve AI inference tasks at sub-5ms latency, at near-zero marginal cost, with native GDPR compliance.</div>
@@ -1193,8 +1128,6 @@ elif current_tab in ["Whitepaper", "白皮书"]:
             </div>
         </div>
         """, unsafe_allow_html=True)
-
-
 
 st.markdown("""<div class="nx-footer">
 NexaEdge Network &nbsp;·&nbsp; Pre-Seed Concept Demo &nbsp;·&nbsp; All simulations are randomly generated for illustration only<br>
