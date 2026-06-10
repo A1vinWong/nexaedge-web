@@ -378,7 +378,11 @@ is_zh = st.session_state.lang == 'ZH'
 total_reg_count = db_count()
 live = db_live_nodes()
 
-st.image('IMG_7859.jpeg', width=160)
+# Logo — centered, full width on mobile
+c1, c2, c3 = st.columns([1, 2, 1])
+with c2:
+    st.image('IMG_7859.jpeg', use_container_width=True)
+st.markdown('<div style="margin-bottom:8px;"></div>', unsafe_allow_html=True)
 col_logo, col_right = st.columns([3, 1])
 with col_logo:
     live_dot = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#a2ff00;box-shadow:0 0 6px #a2ff00;margin-right:5px;"></span>' if live["online"] > 0 else ''
