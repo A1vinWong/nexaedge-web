@@ -1,644 +1,689 @@
+"""
+NexaEdge Admin Dashboard — Beta P1
+Run: streamlit run admin_dashboard.py
+Access via password — set ADMIN_PASSWORD in Streamlit secrets or .env
+"""
+
 import streamlit as st
-import time
+import pandas as pd
 import hashlib
+import io
+from datetime import datetime, timedelta, timezone
+from collections import Counter
 from supabase import create_client, Client
 
 st.set_page_config(
-    page_title="NexaEdge Admin",
-    page_icon="🔐",
+    page_title="NexaEdge · Admin",
+    page_icon="🛡",
     layout="wide"
 )
 
 # ══════════════════════════════════════
-# Supabase
+# CONFIG — change these or move to st.secrets
 # ══════════════════════════════════════
 SUPABASE_URL = "https://nfafzigmcdybgbxdtymf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mYWZ6aWdtY2R5YmdieGR0eW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODE3NTMsImV4cCI6MjA5NjU1Nzc1M30.ZIX3sByZ8yQSDGFr-o24CjIXwZ5UsB4rMB3jculLtv0"
 
+# ⚠️ Change this password before deploying
+ADMIN_PASSWORD = "nexaedge2026"
+
+# ══════════════════════════════════════
+# CSS — matches NexaEdge dark theme
+# ══════════════════════════════════════
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+.stApp { background-color: #060b0f; }
+.main .block-container { padding-top: 1.5rem !important; padding-bottom: 3rem !important; max-width: 1400px !important; }
+#MainMenu, footer, header, [data-testid="stHeader"] { display: none !important; }
+
+.stApp::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(162,255,0,.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(162,255,0,.015) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+*, h1, h2, h3, p, div, span, label { font-family: 'Syne', sans-serif; }
+
+/* Metrics */
+[data-testid="stMetric"] {
+    background: linear-gradient(135deg, #0d1720, #0a1118) !important;
+    border: 1px solid #182230 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+}
+[data-testid="stMetricLabel"] {
+    font-family: 'Space Mono', monospace !important;
+    font-size: 9px !important;
+    color: #4a6070 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .1em !important;
+}
+[data-testid="stMetricValue"] {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    color: #e8edf2 !important;
+}
+[data-testid="stMetricDelta"] { font-size: 10px !important; color: #a2ff00 !important; }
+
+/* Buttons */
+div.stButton > button {
+    background: linear-gradient(135deg, #a2ff00, #8de600) !important;
+    color: #060b0f !important;
+    font-family: 'Space Mono', monospace !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .06em !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+}
+div.stButton > button[kind="secondary"] {
+    background: transparent !important;
+    color: #4a6070 !important;
+    border: 1px solid #182230 !important;
+}
+div.stButton > button[kind="secondary"]:hover {
+    border-color: #a2ff00 !important;
+    color: #a2ff00 !important;
+}
+
+/* Inputs */
+.stTextInput > div > div > input {
+    background: #060b0f !important;
+    border: 1px solid #182230 !important;
+    border-radius: 8px !important;
+    color: #e8edf2 !important;
+    font-family: 'Space Mono', monospace !important;
+    font-size: 12px !important;
+    padding: 12px 14px !important;
+}
+.stTextInput > div > div > input:focus {
+    border-color: #a2ff00 !important;
+    box-shadow: 0 0 0 2px rgba(162,255,0,.1) !important;
+}
+.stTextInput label {
+    font-family: 'Space Mono', monospace !important;
+    font-size: 10px !important;
+    color: #4a6070 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+}
+
+/* Dataframe */
+[data-testid="stDataFrame"] {
+    border: 1px solid #182230 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+
+/* Selectbox */
+.stSelectbox label {
+    font-family: 'Space Mono', monospace !important;
+    font-size: 10px !important;
+    color: #4a6070 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+}
+
+/* Charts */
+[data-testid="stVegaLiteChart"] { background: transparent !important; }
+
+/* Cards */
+.nx-card {
+    background: linear-gradient(160deg, #0d1720, #090e14);
+    border: 1px solid #182230;
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+}
+.nx-card-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #4a6070;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.nx-notice {
+    background: rgba(255,179,0,.05);
+    border: 1px solid rgba(255,179,0,.2);
+    border-left: 3px solid #ffb300;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: #ffb300;
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+.nx-stat-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+.nx-mini-stat {
+    background: #060b0f;
+    border: 1px solid #182230;
+    border-radius: 10px;
+    padding: 14px 18px;
+    min-width: 140px;
+    flex: 1;
+}
+.nx-mini-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: #a2ff00;
+    line-height: 1.1;
+}
+.nx-mini-val.cyan { color: #00e5ff; }
+.nx-mini-val.gold { color: #ffb300; }
+.nx-mini-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: #4a6070;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-top: 5px;
+}
+.nx-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+.nx-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #4a6070;
+    border-bottom: 1px solid #182230;
+}
+.nx-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(24,34,48,.6);
+    color: #4a6070;
+    line-height: 1.5;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+}
+.nx-table td:first-child { color: #d0d8e4; }
+.nx-table tr:hover td { background: rgba(24,34,48,.4); }
+.nx-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+}
+.badge-en { background: rgba(162,255,0,.1); color: #a2ff00; }
+.badge-zh { background: rgba(0,229,255,.1); color: #00e5ff; }
+.badge-ref { background: rgba(255,179,0,.1); color: #ffb300; }
+.badge-no-ref { background: rgba(74,96,112,.1); color: #4a6070; }
+.nx-divider { border: none; border-top: 1px solid #182230; margin: 6px 0 20px; }
+.login-wrap {
+    max-width: 380px;
+    margin: 80px auto 0;
+    background: linear-gradient(160deg, #0d1720, #090e14);
+    border: 1px solid #182230;
+    border-radius: 16px;
+    padding: 36px 32px;
+    text-align: center;
+}
+.login-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #e8edf2;
+    margin-bottom: 6px;
+}
+.login-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: #4a6070;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    margin-bottom: 28px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# AUTH — simple password gate
+# ══════════════════════════════════════
+if "admin_authed" not in st.session_state:
+    st.session_state.admin_authed = False
+
+if not st.session_state.admin_authed:
+    st.markdown("""
+    <div class="login-wrap">
+        <div style="width:12px;height:12px;background:#a2ff00;border-radius:50%;
+                    box-shadow:0 0 14px #a2ff00;margin:0 auto 16px;"></div>
+        <div class="login-title">NexaEdge</div>
+        <div class="login-sub">Admin Dashboard · Restricted Access</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_c, col_m, col_c2 = st.columns([1, 2, 1])
+    with col_m:
+        pw = st.text_input("Password", type="password", label_visibility="collapsed",
+                           placeholder="Enter admin password")
+        if st.button("Unlock Dashboard"):
+            if pw == ADMIN_PASSWORD:
+                st.session_state.admin_authed = True
+                st.rerun()
+            else:
+                st.error("Incorrect password.")
+    st.stop()
+
+# ══════════════════════════════════════
+# SUPABASE
+# ══════════════════════════════════════
 @st.cache_resource
 def get_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 supabase = get_supabase()
 
-def db_get_all():
+@st.cache_data(ttl=60)
+def load_all():
     try:
-        res = supabase.table("whitelist").select("*").order("created_at", desc=True).execute()
+        res = supabase.table("whitelist").select("*").order("created_at", desc=False).execute()
         return res.data or []
     except Exception as e:
+        st.error(f"Supabase error: {e}")
         return []
 
-def db_delete(row_id):
-    try:
-        supabase.table("whitelist").delete().eq("id", row_id).execute()
-        return True
-    except:
-        return False
-
-ADMIN_PASSWORD = "nexaedge2026admin"
-
 # ══════════════════════════════════════
-# CSS — 完全不同于前台，纯管理风格
+# HEADER
 # ══════════════════════════════════════
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-
-.main .block-container {
-    padding-top: 0 !important;
-    padding-bottom: 2rem !important;
-    max-width: 100% !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
-}
-.stApp { background-color: #0f1117; }
-#MainMenu, footer, header, [data-testid="stHeader"] { display: none !important; }
-
-/* Override font to Inter for admin */
-*, h1, h2, h3, h4, p, div, span, label {
-    font-family: 'Inter', sans-serif !important;
-}
-
-/* TOP BAR */
-.admin-topbar {
-    background: #1a1d27;
-    border-bottom: 1px solid #2d3142;
-    padding: 14px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: -1rem -2rem 2rem -2rem;
-}
-.admin-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    font-weight: 700;
-    color: #fff;
-}
-.admin-logo-dot {
-    width: 8px; height: 8px;
-    background: #22c55e;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #22c55e;
-}
-.admin-badge-restricted {
-    background: rgba(239,68,68,0.15);
-    border: 1px solid rgba(239,68,68,0.3);
-    color: #ef4444;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 4px;
-    letter-spacing: 0.08em;
-}
-
-/* STAT CARDS */
-.stat-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.stat-card {
-    background: #1a1d27;
-    border: 1px solid #2d3142;
-    border-radius: 10px;
-    padding: 20px 24px;
-}
-.stat-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 8px;
-}
-.stat-value {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 30px;
-    font-weight: 700;
-    color: #fff;
-    line-height: 1;
-}
-.stat-value.green { color: #22c55e; }
-.stat-value.blue { color: #3b82f6; }
-.stat-value.yellow { color: #f59e0b; }
-.stat-sub {
-    font-size: 11px;
-    color: #4b5563;
-    margin-top: 6px;
-}
-
-/* TABLE */
-.admin-panel {
-    background: #1a1d27;
-    border: 1px solid #2d3142;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 20px;
-}
-.admin-panel-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid #2d3142;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #1e2130;
-}
-.admin-panel-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #e5e7eb;
-}
-.admin-panel-count {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 11px;
-    color: #22c55e;
-    background: rgba(34,197,94,0.1);
-    border: 1px solid rgba(34,197,94,0.2);
-    padding: 3px 10px;
-    border-radius: 20px;
-}
-
-.reg-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.reg-table th {
-    text-align: left;
-    padding: 12px 20px;
-    font-size: 10px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    border-bottom: 1px solid #2d3142;
-    background: #1a1d27;
-    white-space: nowrap;
-}
-.reg-table td {
-    padding: 13px 20px;
-    font-size: 12px;
-    color: #d1d5db;
-    border-bottom: 1px solid rgba(45,49,66,0.5);
-    vertical-align: middle;
-}
-.reg-table td.email { color: #fff; font-weight: 500; }
-.reg-table td.wallet {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 11px;
-    color: #6b7280;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.reg-table td.ts {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 10px;
-    color: #4b5563;
-    white-space: nowrap;
-}
-.reg-table tr:last-child td { border-bottom: none; }
-.reg-table tr:hover td { background: rgba(255,255,255,0.02); }
-
-.ref-pill {
-    display: inline-block;
-    background: rgba(34,197,94,0.1);
-    color: #22c55e;
-    border: 1px solid rgba(34,197,94,0.2);
-    border-radius: 20px;
-    padding: 2px 10px;
-    font-family: 'Space Mono', monospace !important;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-}
-.lang-pill-en {
-    display: inline-block;
-    background: rgba(59,130,246,0.1);
-    color: #3b82f6;
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: 600;
-}
-.lang-pill-zh {
-    display: inline-block;
-    background: rgba(245,158,11,0.1);
-    color: #f59e0b;
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: 600;
-}
-.used-ref-active {
-    color: #22c55e;
-    font-family: 'Space Mono', monospace !important;
-    font-size: 10px;
-}
-.used-ref-none { color: #374151; }
-
-/* ROW NUMBER */
-.row-num {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 10px;
-    color: #374151;
-}
-
-/* REFERRAL BOARD */
-.ref-board {
-    background: #1a1d27;
-    border: 1px solid #2d3142;
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 20px;
-}
-.ref-board-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #e5e7eb;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #2d3142;
-}
-.ref-rank-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(45,49,66,0.4);
-}
-.ref-rank-row:last-child { border-bottom: none; }
-.ref-rank-num {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 12px;
-    color: #4b5563;
-    width: 20px;
-}
-.ref-rank-code {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 13px;
-    font-weight: 700;
-    color: #22c55e;
-    flex: 1;
-}
-.ref-rank-bar-wrap {
-    flex: 2;
-    background: #2d3142;
-    border-radius: 3px;
-    height: 4px;
-    overflow: hidden;
-}
-.ref-rank-bar { height: 100%; background: #22c55e; border-radius: 3px; }
-.ref-rank-count {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 11px;
-    color: #9ca3af;
-    width: 50px;
-    text-align: right;
-}
-
-/* HASH DISPLAY */
-.hash-cell {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 10px;
-    color: #4b5563;
-}
-
-/* BUTTONS */
-div.stButton > button {
-    background: #22c55e !important;
-    color: #0f1117 !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    border: none !important;
-    border-radius: 6px !important;
-    padding: 9px 18px !important;
-    width: 100% !important;
-}
-div.stButton > button:hover { background: #16a34a !important; }
-div.stButton > button[kind="secondary"] {
-    background: #1a1d27 !important;
-    color: #9ca3af !important;
-    border: 1px solid #2d3142 !important;
-}
-div.stButton > button[kind="secondary"]:hover {
-    border-color: #ef4444 !important;
-    color: #ef4444 !important;
-}
-
-/* LOGIN */
-.login-wrap {
-    max-width: 380px;
-    margin: 80px auto 0;
-}
-.login-card {
-    background: #1a1d27;
-    border: 1px solid #2d3142;
-    border-radius: 14px;
-    padding: 40px 32px;
-    text-align: center;
-}
-.login-icon { font-size: 44px; margin-bottom: 16px; }
-.login-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-.login-sub { font-size: 12px; color: #4b5563; margin-bottom: 28px; }
-
-.stTextInput > div > div > input {
-    background: #0f1117 !important;
-    border: 1px solid #2d3142 !important;
-    border-radius: 6px !important;
-    color: #e5e7eb !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 13px !important;
-    padding: 10px 14px !important;
-}
-.stTextInput > div > div > input:focus {
-    border-color: #22c55e !important;
-    box-shadow: 0 0 0 2px rgba(34,197,94,0.15) !important;
-}
-.stTextInput label {
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    color: #6b7280 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.06em !important;
-    font-family: 'Inter', sans-serif !important;
-}
-
-/* EXPORT BUTTON */
-.stDownloadButton > button {
-    background: #1e2130 !important;
-    color: #22c55e !important;
-    border: 1px solid rgba(34,197,94,0.3) !important;
-    border-radius: 6px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    padding: 9px 18px !important;
-    width: 100% !important;
-}
-.stDownloadButton > button:hover {
-    background: rgba(34,197,94,0.1) !important;
-    border-color: #22c55e !important;
-}
-
-.nx-empty {
-    text-align: center;
-    padding: 60px 0;
-    color: #4b5563;
-    font-size: 13px;
-}
-.nx-empty-icon { font-size: 40px; margin-bottom: 12px; }
-</style>
-""", unsafe_allow_html=True)
-
-# Session state
-if 'admin_auth' not in st.session_state:
-    st.session_state.admin_auth = False
-if 'admin_err' not in st.session_state:
-    st.session_state.admin_err = False
-
-# ══════════════════════════════════════
-# LOGIN GATE
-# ══════════════════════════════════════
-if not st.session_state.admin_auth:
-    st.markdown('<div class="login-wrap">', unsafe_allow_html=True)
+h_left, h_right = st.columns([4, 1])
+with h_left:
     st.markdown("""
-    <div class="login-card">
-        <div class="login-icon">🔐</div>
-        <div class="login-title">Admin Access</div>
-        <div class="login-sub">NexaEdge Whitelist Registry<br>Restricted — Authorised Personnel Only</div>
+    <div style="display:flex;align-items:center;gap:12px;padding:6px 0 2px;">
+        <div style="width:11px;height:11px;background:#a2ff00;border-radius:50%;
+                    box-shadow:0 0 14px #a2ff00;flex-shrink:0;"></div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+                    color:#e8edf2;letter-spacing:-.02em;">
+            Nexa<span style="color:#a2ff00;">Edge</span>
+            <span style="font-size:13px;color:#4a6070;font-weight:400;
+                         font-family:'Space Mono',monospace;margin-left:10px;">
+                ADMIN · BETA P1
+            </span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-    pw = st.text_input("Password", type="password", placeholder="Enter admin password")
-    if st.button("Unlock Console"):
-        if pw == ADMIN_PASSWORD:
-            st.session_state.admin_auth = True
-            st.session_state.admin_err = False
-            st.rerun()
-        else:
-            st.session_state.admin_err = True
-    if st.session_state.admin_err:
-        st.error("Incorrect password.")
-    st.markdown('</div>', unsafe_allow_html=True)
+with h_right:
+    if st.button("Refresh Data", type="secondary"):
+        st.cache_data.clear()
+        st.rerun()
+    if st.button("Sign Out", type="secondary"):
+        st.session_state.admin_authed = False
+        st.rerun()
+
+st.markdown('<hr class="nx-divider">', unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# LOAD DATA
+# ══════════════════════════════════════
+raw = load_all()
+
+if not raw:
+    st.markdown("""
+    <div style="text-align:center;padding:60px 0;font-family:'Space Mono',monospace;
+                font-size:12px;color:#4a6070;">
+        No registrations found. The waitlist is empty.
+    </div>
+    """, unsafe_allow_html=True)
     st.stop()
 
+df = pd.DataFrame(raw)
+
+# Parse timestamps
+df["created_at"] = pd.to_datetime(df["created_at"], utc=True)
+df["date"] = df["created_at"].dt.date
+df["hour"] = df["created_at"].dt.hour
+
+now_utc = datetime.now(timezone.utc)
+today = now_utc.date()
+yesterday = today - timedelta(days=1)
+last_7 = today - timedelta(days=6)
+last_30 = today - timedelta(days=29)
+
+count_total   = len(df)
+count_today   = len(df[df["date"] == today])
+count_7d      = len(df[df["date"] >= last_7])
+count_30d     = len(df[df["date"] >= last_30])
+count_ref     = df["used_ref"].notna().sum() if "used_ref" in df.columns else 0
+ref_rate      = f"{(count_ref / count_total * 100):.1f}%" if count_total > 0 else "—"
+count_zh      = len(df[df.get("lang", pd.Series(dtype=str)) == "ZH"]) if "lang" in df.columns else 0
+count_en      = count_total - count_zh
+
 # ══════════════════════════════════════
-# ADMIN DASHBOARD
+# KPI ROW
 # ══════════════════════════════════════
+k1, k2, k3, k4, k5, k6 = st.columns(6)
+with k1: st.metric("Total Signups",   f"{count_total:,}")
+with k2: st.metric("Today",           f"{count_today:,}")
+with k3: st.metric("Last 7 Days",     f"{count_7d:,}")
+with k4: st.metric("Last 30 Days",    f"{count_30d:,}")
+with k5: st.metric("Referred",        f"{count_ref:,}", ref_rate)
+with k6: st.metric("EN / ZH",         f"{count_en} / {count_zh}")
 
-# Top bar
-st.markdown("""
-<div class="admin-topbar">
-    <div class="admin-logo">
-        <div class="admin-logo-dot"></div>
-        NexaEdge &nbsp;<span style="color:#6b7280;font-weight:400;">/ Admin Console</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:11px;color:#4b5563;">Supabase · Live Data</span>
-        <span class="admin-badge-restricted">🔐 RESTRICTED</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
 
-# Load data
-regs = db_get_all()
-total = len(regs)
-en_count = sum(1 for r in regs if r.get('lang') == 'EN')
-zh_count = sum(1 for r in regs if r.get('lang') == 'ZH')
-ref_used_list = [r for r in regs if r.get('used_ref') and r['used_ref'] not in [None, '', '—']]
-ref_used_count = len(ref_used_list)
-latest_date = regs[0]['created_at'][:10] if regs else "—"
+# ══════════════════════════════════════
+# CHARTS ROW
+# ══════════════════════════════════════
+ch1, ch2 = st.columns([3, 2])
 
-# ── Stat Cards
-st.markdown(f"""
-<div class="stat-grid">
-    <div class="stat-card">
-        <div class="stat-label">Total Registered</div>
-        <div class="stat-value green">{total}</div>
-        <div class="stat-sub">All whitelist entries</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Language Split</div>
-        <div class="stat-value blue" style="font-size:22px;">{en_count} EN / {zh_count} ZH</div>
-        <div class="stat-sub">English vs Chinese users</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Referrals Used</div>
-        <div class="stat-value yellow">{ref_used_count}</div>
-        <div class="stat-sub">{round(ref_used_count/total*100) if total else 0}% conversion rate</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Latest Registration</div>
-        <div class="stat-value" style="font-size:20px;color:#9ca3af;">{latest_date}</div>
-        <div class="stat-sub">Most recent signup</div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+with ch1:
+    st.markdown("""
+    <div class="nx-card-title" style="margin-bottom:10px;">
+        <span style="color:#a2ff00;">▸</span> Daily Signups (Last 30 Days)
+    </div>""", unsafe_allow_html=True)
 
-# ── Two-column layout
-col_main, col_side = st.columns([3, 1])
+    daily = (
+        df[df["date"] >= last_30]
+        .groupby("date")
+        .size()
+        .reset_index(name="signups")
+    )
+    daily["date"] = daily["date"].astype(str)
 
-with col_main:
-    # Main registrations table
-    st.markdown(f"""
-    <div class="admin-panel">
-        <div class="admin-panel-header">
-            <div class="admin-panel-title">📋 Whitelist Registrations</div>
-            <span class="admin-panel-count">{total} entries</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-    if regs:
-        rows_html = ""
-        for i, r in enumerate(regs):
-            idx = total - i
-            lang = r.get('lang', '')
-            lang_html = f'<span class="lang-pill-en">EN</span>' if lang == 'EN' else f'<span class="lang-pill-zh">ZH</span>'
-            used = r.get('used_ref') or ''
-            used_html = f'<span class="used-ref-active">{used}</span>' if used and used != '—' else '<span class="used-ref-none">—</span>'
-            wallet = r.get('wallet', '')
-            wallet_short = f"{wallet[:12]}...{wallet[-6:]}" if len(wallet) > 20 else wallet
-            ts = r.get('created_at', '')[:16].replace('T', ' ')
-            ref_code = r.get('ref_code') or r.get('invitation_code', '—')
-            email = r.get('email', '')
-            email_hash = hashlib.sha256(email.encode()).hexdigest()[:8]
-            rows_html += f"""<tr>
-                <td class="row-num">{idx}</td>
-                <td class="email">{email}</td>
-                <td class="wallet" title="{wallet}">{wallet_short}</td>
-                <td><span class="ref-pill">{ref_code}</span></td>
-                <td>{used_html}</td>
-                <td>{lang_html}</td>
-                <td class="ts">{ts}</td>
-                <td class="hash-cell">{email_hash}...</td>
-            </tr>"""
-
-        st.markdown(f"""
-        <div style="overflow-x:auto;max-height:520px;overflow-y:auto;">
-            <table class="reg-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Email</th>
-                        <th>Solana Wallet</th>
-                        <th>Ref Code</th>
-                        <th>Used Ref</th>
-                        <th>Lang</th>
-                        <th>Registered</th>
-                        <th>Hash</th>
-                    </tr>
-                </thead>
-                <tbody>{rows_html}</tbody>
-            </table>
-        </div>
-        """, unsafe_allow_html=True)
+    if not daily.empty:
+        st.bar_chart(
+            daily.set_index("date")["signups"],
+            color="#a2ff00",
+            height=220,
+        )
     else:
-        st.markdown("""
-        <div class="nx-empty">
-            <div class="nx-empty-icon">📭</div>
-            No registrations yet.<br>
-            <span style="font-size:11px;color:#374151;">Entries appear here once users register on the main site.</span>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:#4a6070;padding:20px 0;">No data in last 30 days.</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+with ch2:
+    st.markdown("""
+    <div class="nx-card-title" style="margin-bottom:10px;">
+        <span style="color:#00e5ff;">▸</span> Cumulative Growth
+    </div>""", unsafe_allow_html=True)
 
-with col_side:
-    # Referral leaderboard
-    from collections import Counter
-    if ref_used_list:
-        top_refs = Counter(r['used_ref'] for r in ref_used_list if r.get('used_ref'))
-        top_list = top_refs.most_common(8)
-        max_count = top_list[0][1] if top_list else 1
+    cum = (
+        df.groupby("date")
+        .size()
+        .reset_index(name="n")
+        .sort_values("date")
+    )
+    cum["cumulative"] = cum["n"].cumsum()
+    cum["date"] = cum["date"].astype(str)
 
-        rows_html = ""
-        for i, (code, count) in enumerate(top_list):
-            pct = int((count / max_count) * 100)
-            rows_html += f"""
-            <div class="ref-rank-row">
-                <div class="ref-rank-num">#{i+1}</div>
-                <div class="ref-rank-code">{code}</div>
-                <div class="ref-rank-bar-wrap"><div class="ref-rank-bar" style="width:{pct}%;"></div></div>
-                <div class="ref-rank-count">{count}x</div>
-            </div>"""
-
-        st.markdown(f"""
-        <div class="ref-board">
-            <div class="ref-board-title">🏆 Top Referral Codes</div>
-            {rows_html}
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class="ref-board">
-            <div class="ref-board-title">🏆 Referral Leaderboard</div>
-            <div style="text-align:center;padding:30px 0;font-size:12px;color:#4b5563;">No referrals used yet.</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Daily signups mini chart
-    if regs:
-        from collections import Counter
-        days = Counter(r['created_at'][:10] for r in regs)
-        day_list = sorted(days.items())[-7:]
-        if day_list:
-            max_d = max(v for _,v in day_list) or 1
-            bars = ""
-            for day, count in day_list:
-                h = max(6, int((count/max_d)*60))
-                short_day = day[5:]
-                bars += f'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;"><div style="width:100%;background:#22c55e;border-radius:3px 3px 0 0;height:{h}px;"></div><div style="font-size:8px;color:#4b5563;font-family:\'Space Mono\',monospace;">{count}</div><div style="font-size:7px;color:#374151;">{short_day}</div></div>'
-
-            st.markdown(f"""
-            <div class="ref-board">
-                <div class="ref-board-title">📈 Daily Signups (7d)</div>
-                <div style="display:flex;gap:6px;align-items:flex-end;height:80px;padding-top:10px;">
-                    {bars}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # Actions
-    st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
-    if regs:
-        csv_lines = ["#,Email,Wallet,RefCode,UsedRef,ReferredBy,Lang,RegisteredAt"]
-        for i, r in enumerate(reversed(regs)):
-            ref_code = r.get('ref_code') or r.get('invitation_code','')
-            csv_lines.append(
-                f"{i+1},"
-                f"{r.get('email','')},"
-                f"{r.get('wallet','')},"
-                f"{ref_code},"
-                f"{r.get('used_ref','')},"
-                f"{r.get('referred_by','')},"
-                f"{r.get('lang','')},"
-                f"{r.get('created_at','')[:19]}"
-            )
-        st.download_button(
-            label="⬇ Export CSV",
-            data="\n".join(csv_lines),
-            file_name=f"nexaedge_whitelist_{time.strftime('%Y%m%d_%H%M')}.csv",
-            mime="text/csv",
-            key="dl_csv"
+    if not cum.empty:
+        st.line_chart(
+            cum.set_index("date")["cumulative"],
+            color="#00e5ff",
+            height=220,
         )
 
-    st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
-    b1, b2 = st.columns(2)
-    with b1:
-        if st.button("🔄 Refresh", type="secondary"):
-            st.rerun()
-    with b2:
-        if st.button("🔒 Logout", type="secondary"):
-            st.session_state.admin_auth = False
-            st.rerun()
+# ══════════════════════════════════════
+# REFERRAL LEADERBOARD
+# ══════════════════════════════════════
+st.markdown('<hr class="nx-divider">', unsafe_allow_html=True)
 
-# Footer
+ref_left, ref_right = st.columns([3, 2])
+
+with ref_left:
+    st.markdown("""
+    <div class="nx-card-title">
+        <span style="color:#ffb300;">▸</span> Referral Leaderboard
+    </div>""", unsafe_allow_html=True)
+
+    if "used_ref" in df.columns:
+        ref_counts = (
+            df[df["used_ref"].notna()]
+            .groupby("used_ref")
+            .size()
+            .reset_index(name="referred")
+            .sort_values("referred", ascending=False)
+            .head(15)
+        )
+        ref_counts.columns = ["Referral Code", "Signups Brought"]
+
+        if not ref_counts.empty:
+            # Build HTML table
+            rows_html = ""
+            for i, row in ref_counts.iterrows():
+                rank = ref_counts.index.get_loc(i) + 1
+                medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, f"#{rank}")
+                rows_html += f"""
+                <tr>
+                    <td style="color:#4a6070;font-size:11px;">{medal}</td>
+                    <td style="color:#a2ff00;">{row['Referral Code']}</td>
+                    <td style="color:#e8edf2;text-align:right;">{row['Signups Brought']}</td>
+                </tr>"""
+            st.markdown(f"""
+            <table class="nx-table">
+                <thead><tr>
+                    <th>#</th>
+                    <th>Code</th>
+                    <th style="text-align:right;">Signups</th>
+                </tr></thead>
+                <tbody>{rows_html}</tbody>
+            </table>""", unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:#4a6070;padding:12px 0;">No referrals yet.</div>', unsafe_allow_html=True)
+
+with ref_right:
+    st.markdown("""
+    <div class="nx-card-title">
+        <span style="color:#a2ff00;">▸</span> Breakdown
+    </div>""", unsafe_allow_html=True)
+
+    # Referred vs organic
+    organic = count_total - count_ref
+    st.markdown(f"""
+    <div class="nx-mini-stat" style="margin-bottom:10px;">
+        <div class="nx-mini-val">{count_ref}</div>
+        <div class="nx-mini-label">Referred Signups</div>
+    </div>
+    <div class="nx-mini-stat" style="margin-bottom:10px;">
+        <div class="nx-mini-val cyan">{organic}</div>
+        <div class="nx-mini-label">Organic (No Referral)</div>
+    </div>
+    <div class="nx-mini-stat">
+        <div class="nx-mini-val gold">{ref_rate}</div>
+        <div class="nx-mini-label">Referral Conversion Rate</div>
+    </div>""", unsafe_allow_html=True)
+
+    # Language split
+    if "lang" in df.columns:
+        st.markdown('<div style="margin-top:16px;"></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="nx-card-title">
+            <span style="color:#4a6070;">▸</span> Language Split
+        </div>""", unsafe_allow_html=True)
+
+        lang_counts = df["lang"].value_counts().reset_index()
+        lang_counts.columns = ["Language", "Count"]
+        st.bar_chart(
+            lang_counts.set_index("Language")["Count"],
+            color="#a2ff00",
+            height=120,
+        )
+
+# ══════════════════════════════════════
+# REGISTRANT TABLE WITH SEARCH / FILTER
+# ══════════════════════════════════════
+st.markdown('<hr class="nx-divider">', unsafe_allow_html=True)
 st.markdown("""
-<div style="margin-top:40px;padding-top:16px;border-top:1px solid #2d3142;text-align:center;font-size:10px;color:#374151;font-family:'Space Mono',monospace;">
-    NexaEdge Admin Console &nbsp;·&nbsp; Live Supabase Connection &nbsp;·&nbsp; contact@nexaedge.org
-</div>
+<div class="nx-card-title">
+    <span style="color:#a2ff00;">▸</span> All Registrants
+</div>""", unsafe_allow_html=True)
+
+f1, f2, f3 = st.columns([3, 2, 2])
+with f1:
+    search = st.text_input("Search", placeholder="Search email hash, wallet, ref code…")
+with f2:
+    lang_filter = st.selectbox("Language", ["All", "EN", "ZH"])
+with f3:
+    ref_filter = st.selectbox("Referral", ["All", "Has referral", "No referral"])
+
+# Build display dataframe
+display_df = df.copy()
+
+# Mask email with hash (privacy)
+display_df["email_hash"] = display_df["email"].apply(
+    lambda e: hashlib.sha256(str(e).encode()).hexdigest()[:14] + "…"
+)
+
+# Wallet truncated
+display_df["wallet_short"] = display_df["wallet"].apply(
+    lambda w: str(w)[:6] + "…" + str(w)[-4:] if w and len(str(w)) > 10 else str(w)
+) if "wallet" in display_df.columns else "—"
+
+# Ref code
+display_df["ref_code_show"] = display_df.get("ref_code", pd.Series(dtype=str)).fillna("—")
+display_df["used_ref_show"] = display_df.get("used_ref", pd.Series(dtype=str)).fillna("—")
+
+# Filters
+if search:
+    mask = (
+        display_df["email_hash"].str.contains(search, case=False, na=False)
+        | display_df["wallet_short"].str.contains(search, case=False, na=False)
+        | display_df["ref_code_show"].str.contains(search, case=False, na=False)
+        | display_df["used_ref_show"].str.contains(search, case=False, na=False)
+    )
+    display_df = display_df[mask]
+
+if lang_filter != "All" and "lang" in display_df.columns:
+    display_df = display_df[display_df["lang"] == lang_filter]
+
+if ref_filter == "Has referral":
+    display_df = display_df[display_df.get("used_ref", pd.Series(dtype=str)).notna()]
+elif ref_filter == "No referral":
+    display_df = display_df[display_df.get("used_ref", pd.Series(dtype=str)).isna()]
+
+# Sort newest first
+display_df = display_df.sort_values("created_at", ascending=False)
+
+# Build HTML table
+rows_html = ""
+for _, row in display_df.iterrows():
+    ts = row["created_at"].strftime("%Y-%m-%d %H:%M") if pd.notna(row["created_at"]) else "—"
+    lang_val = row.get("lang", "—") or "—"
+    lang_badge = f'<span class="nx-badge badge-{lang_val.lower()}">{lang_val}</span>'
+
+    used_ref = row.get("used_ref_show", "—")
+    ref_badge = (f'<span class="nx-badge badge-ref">{used_ref}</span>'
+                 if used_ref not in ["—", None, ""]
+                 else '<span class="nx-badge badge-no-ref">Organic</span>')
+
+    rows_html += f"""
+    <tr>
+        <td>{ts}</td>
+        <td style="color:#a2ff00;">{row['email_hash']}</td>
+        <td>{row['wallet_short']}</td>
+        <td>{row['ref_code_show']}</td>
+        <td>{ref_badge}</td>
+        <td>{lang_badge}</td>
+    </tr>"""
+
+count_shown = len(display_df)
+st.markdown(f"""
+<div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
+            margin-bottom:10px;">Showing {count_shown} of {count_total} registrants</div>
+<div style="max-height:420px;overflow-y:auto;border:1px solid #182230;
+            border-radius:10px;background:#040709;">
+<table class="nx-table" style="width:100%;">
+    <thead><tr>
+        <th>Timestamp (UTC)</th>
+        <th>Email Hash</th>
+        <th>Wallet</th>
+        <th>Their Ref Code</th>
+        <th>Used Ref</th>
+        <th>Lang</th>
+    </tr></thead>
+    <tbody>{rows_html}</tbody>
+</table></div>
 """, unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# CSV EXPORT
+# ══════════════════════════════════════
+st.markdown('<div style="margin-top:16px;"></div>', unsafe_allow_html=True)
+exp_left, exp_right = st.columns([2, 5])
+
+with exp_left:
+    export_df = display_df[[
+        c for c in ["created_at", "email_hash", "wallet_short",
+                    "ref_code_show", "used_ref_show", "lang"]
+        if c in display_df.columns
+    ]].copy()
+    export_df.columns = ["Timestamp", "Email Hash", "Wallet", "Ref Code", "Used Ref", "Lang"]
+
+    csv_buf = io.StringIO()
+    export_df.to_csv(csv_buf, index=False)
+    fname = f"nexaedge_waitlist_{today.strftime('%Y%m%d')}.csv"
+
+    st.download_button(
+        label="⬇ Export CSV",
+        data=csv_buf.getvalue(),
+        file_name=fname,
+        mime="text/csv",
+    )
+
+with exp_right:
+    st.markdown(f"""
+    <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;
+                line-height:1.8;padding-top:10px;">
+        Emails are SHA-256 hashed before export. Raw PII stays in Supabase only.<br>
+        Export includes {count_shown} rows · {fname}
+    </div>""", unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# HOURLY HEATMAP (signup patterns)
+# ══════════════════════════════════════
+st.markdown('<hr class="nx-divider">', unsafe_allow_html=True)
+st.markdown("""
+<div class="nx-card-title">
+    <span style="color:#00e5ff;">▸</span> Signup Hour Distribution (UTC)
+</div>""", unsafe_allow_html=True)
+
+hourly = df.groupby("hour").size().reset_index(name="signups")
+all_hours = pd.DataFrame({"hour": range(24)})
+hourly = all_hours.merge(hourly, on="hour", how="left").fillna(0)
+hourly["hour_label"] = hourly["hour"].apply(lambda h: f"{h:02d}:00")
+
+st.bar_chart(
+    hourly.set_index("hour_label")["signups"],
+    color="#00e5ff",
+    height=160,
+)
+st.markdown("""
+<div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;
+            margin-top:4px;line-height:1.7;">
+    Peaks indicate your most active user timezones — useful for scheduling announcements.
+</div>""", unsafe_allow_html=True)
+
+# ══════════════════════════════════════
+# FOOTER
+# ══════════════════════════════════════
+st.markdown("""
+<div style="border-top:1px solid #182230;margin-top:40px;padding-top:16px;
+            text-align:center;font-family:'Space Mono',monospace;
+            font-size:9px;color:#2a3a4a;line-height:2;">
+    NexaEdge Admin · Beta P1 · Data refreshes every 60s · All emails hashed<br>
+    contact@nexaedge.org
+</div>""", unsafe_allow_html=True)
