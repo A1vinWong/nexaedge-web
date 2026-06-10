@@ -60,23 +60,41 @@ def db_get_registrations():
     except:
         return []
 
+# ── P4: Real node data ──────────────────
+def db_live_nodes():
+    try:
+        res = supabase.table("nodes").select("status").execute()
+        rows = res.data or []
+        online = sum(1 for r in rows if r.get("status") == "online")
+        return {"online": online, "total": len(rows)}
+    except:
+        return {"online": 0, "total": 0}
+
+def db_latest_heartbeat():
+    try:
+        res = (supabase.table("heartbeats")
+               .select("cpu_usage,temperature,battery_level,reported_at")
+               .order("reported_at", desc=True)
+               .limit(1)
+               .execute())
+        return res.data[0] if res.data else None
+    except:
+        return None
+# ───────────────────────────────────────
+
 # ══════════════════════════════════════
 # 语言配置
 # ══════════════════════════════════════
 LANGS = {
     "EN": {
         "nav": ["Market", "Network Sim", "Differentiation", "Roadmap", "Waitlist"],
-        # FIX: removed "institutional-grade" puffery, kept factual
         "tagline": "A protocol design to aggregate idle smartphone compute into a distributed edge AI inference network.",
-        # FIX: clearer pre-launch label, removed "Investor Demo"
         "stage": "⚠ CONCEPT DEMO · PRE-SEED",
-        # FIX: stronger simulation disclaimer
         "sim_only": "⚠ SIMULATION ONLY — All nodes, metrics, and NEXA figures are randomly generated for concept illustration. No real compute is running.",
         "start_sim": "▶ Start Simulation",
         "stop_sim": "■ Stop",
         "running": "● SIMULATION ACTIVE",
         "idle": "○ STANDBY",
-        # FIX: removed fake "online now" count from header (was adding +12 hardcoded)
         "registered": "Waitlist Signups",
         "active_nodes": "Simulated Active Nodes",
         "tasks_done": "Simulated Tasks",
@@ -354,13 +372,15 @@ if st.session_state.sim_running:
     st.session_state.nexa_earned += reward
 
 # ══════════════════════════════════════
-# HEADER
-# FIX: removed hardcoded +12 fake node offset; only show real waitlist count
+# HEADER — P4: real node count added
 # ══════════════════════════════════════
 total_reg_count = db_count()
+live = db_live_nodes()
 
 col_logo, col_right = st.columns([3, 1])
 with col_logo:
+    live_dot = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#a2ff00;box-shadow:0 0 6px #a2ff00;margin-right:5px;"></span>' if live["online"] > 0 else ''
+    node_color = "a2ff00" if live["online"] > 0 else "4a6070"
     st.markdown(f"""
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0 4px;">
         <div style="width:11px;height:11px;background:#a2ff00;border-radius:50%;box-shadow:0 0 14px #a2ff00;flex-shrink:0;"></div>
@@ -369,8 +389,13 @@ with col_logo:
         </div>
     </div>
     <div style="font-size:12px;color:#4a6070;line-height:1.65;max-width:500px;padding-bottom:8px;">{L['tagline']}</div>
-    <div class="nx-online-badge">
-        {L['registered']}: <strong style="color:#e8edf2;">{total_reg_count}</strong>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+        <div class="nx-online-badge">
+            {L['registered']}: <strong style="color:#e8edf2;">{total_reg_count}</strong>
+        </div>
+        <div class="nx-online-badge">
+            {live_dot}<strong style="color:#{node_color};">{live['online']}</strong>&nbsp;node{'s' if live['online']!=1 else ''} online
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -392,7 +417,6 @@ if current_tab == L["nav"][0]:
     with c2: st.metric("Edge AI Market 2028" if st.session_state.lang=="EN" else "边缘AI市场 2028", "$107B", "CAGR 19.2%")
     with c3: st.metric("GPU Spot Cost" if st.session_state.lang=="EN" else "GPU即时价", "$2–4/hr", "H100 volatile" if st.session_state.lang=="EN" else "H100波动")
 
-    # FIX: added "PLANNED" tags on NexaEdge column to be accurate about unbuilt features
     if st.session_state.lang == "EN":
         st.markdown(f"""<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L['comp_title']}</div>
         <table class="nx-table"><thead><tr><th>Dimension</th><th>GPU Cloud</th><th>Grass</th><th class="hl">NexaEdge (Planned)</th></tr></thead><tbody>
@@ -443,8 +467,6 @@ if current_tab == L["nav"][0]:
     arch_html += '</div>'
     st.markdown(f'<div class="nx-card"><div class="nx-card-title"><span class="dot">▸</span> {L["arch_title"]}</div>{arch_html}</div>', unsafe_allow_html=True)
 
-    # FIX: removed fake AngelList investment gateway button entirely
-    # Replaced with honest contact card
     if st.session_state.lang == "EN":
         st.markdown("""<div class="nx-card" style="border-color:rgba(0,229,255,.15);background:rgba(0,229,255,.02);">
         <div class="nx-card-title"><span style="color:#00e5ff;">◈</span> INVESTOR CONTACT</div>
@@ -475,6 +497,40 @@ if current_tab == L["nav"][0]:
 # TAB 2 — NETWORK SIM
 # ══════════════════════════════════════
 elif current_tab == L["nav"][1]:
+    # P4: Real node live banner
+    live2 = db_live_nodes()
+    hb2   = db_latest_heartbeat()
+    if live2["online"] > 0 and hb2:
+        cpu  = hb2.get("cpu_usage", 0) or 0
+        temp = hb2.get("temperature", 0) or 0
+        batt = hb2.get("battery_level", 0) or 0
+        ts_raw = (hb2.get("reported_at", "")[:19] or "").replace("T", " ")
+        temp_color = "f43f5e" if temp >= 39 else "e8edf2"
+        st.markdown(f"""
+        <div style="background:rgba(162,255,0,.04);border:1px solid rgba(162,255,0,.2);
+                    border-left:3px solid #a2ff00;border-radius:0 10px 10px 0;
+                    padding:12px 16px;font-family:'Space Mono',monospace;
+                    font-size:10px;color:#4a6070;line-height:1.8;margin-bottom:14px;">
+            <span style="color:#a2ff00;font-weight:700;">● LIVE NODE DATA</span>
+            &nbsp;·&nbsp; {live2['online']} node{'s' if live2['online']!=1 else ''} online
+            &nbsp;·&nbsp; CPU <span style="color:#e8edf2;">{cpu:.1f}%</span>
+            &nbsp;·&nbsp; Temp <span style="color:#{temp_color};">{temp:.1f}°C</span>
+            &nbsp;·&nbsp; Batt <span style="color:#e8edf2;">{batt}%</span>
+            &nbsp;·&nbsp; {ts_raw} UTC
+        </div>
+        """, unsafe_allow_html=True)
+    elif live2["total"] > 0:
+        st.markdown(f"""
+        <div style="background:rgba(74,96,112,.05);border:1px solid #182230;
+                    border-left:3px solid #4a6070;border-radius:0 10px 10px 0;
+                    padding:10px 16px;font-family:'Space Mono',monospace;
+                    font-size:10px;color:#4a6070;margin-bottom:14px;">
+            ○ {live2['total']} node{'s' if live2['total']!=1 else ''} registered · None online now ·
+            <a href="https://nexaedge-web-port.streamlit.app" target="_blank"
+               style="color:#4a6070;">Activate yours →</a>
+        </div>
+        """, unsafe_allow_html=True)
+
     st.markdown(f'<div class="nx-notice">{L["sim_only"]}</div>', unsafe_allow_html=True)
     b_start, b_stop, col_status = st.columns([2,2,3])
     with b_start:
@@ -588,8 +644,6 @@ elif current_tab == L["nav"][2]:
 
 # ══════════════════════════════════════
 # TAB 4 — ROADMAP
-# FIX: removed YC / Solana Grant / Alliance DAO "in pipeline" claims
-# Replaced with honest milestone framing
 # ══════════════════════════════════════
 elif current_tab == L["nav"][3]:
     if st.session_state.lang=="EN":
@@ -625,8 +679,6 @@ elif current_tab == L["nav"][3]:
 
 # ══════════════════════════════════════
 # TAB 5 — WAITLIST
-# FIX: renamed from "Whitelist" to "Waitlist" — more accurate for pre-launch
-# FIX: clearer disclaimer that no tokens are issued at this stage
 # ══════════════════════════════════════
 elif current_tab == L["nav"][4]:
     total_reg = db_count()
