@@ -534,7 +534,7 @@ if st.session_state.user_email:
 
     st.markdown('<div style="margin-top:6px;"></div>', unsafe_allow_html=True)
     st.text_input(
-        "长按复制推荐码 / Long press to copy",
+        "Tap & hold to copy your referral code",
         value=ref_code,
         key="ref_code_display",
         label_visibility="visible",
