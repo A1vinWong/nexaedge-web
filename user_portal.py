@@ -924,8 +924,8 @@ if st.session_state.user_email:
     st.markdown("""
     <div class="nx-notice">
         ⚠ NEXA tokens are minted on Solana but not yet in public circulation.
-        Your wallet address is saved for future airdrop eligibility.
-        No tokens have been distributed. This is not a financial instrument.
+        Airdrop eligibility and allocation are determined at mainnet launch
+        based on your queue position and referral count. This is not a financial instrument.
     </div>
     """, unsafe_allow_html=True)
 
