@@ -378,6 +378,7 @@ is_zh = st.session_state.lang == 'ZH'
 total_reg_count = db_count()
 live = db_live_nodes()
 
+st.image('IMG_7859.jpeg', width=160)
 col_logo, col_right = st.columns([3, 1])
 with col_logo:
     live_dot = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#a2ff00;box-shadow:0 0 6px #a2ff00;margin-right:5px;"></span>' if live["online"] > 0 else ''
