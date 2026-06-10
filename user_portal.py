@@ -533,12 +533,12 @@ if st.session_state.user_email:
     """, unsafe_allow_html=True)
 
     st.markdown('<div style="margin-top:6px;"></div>', unsafe_allow_html=True)
-    if st.button("📋 Copy Referral Code"):
-        st.components.v1.html(
-            f'<script>navigator.clipboard.writeText("{ref_code}").catch(()=>{{}});</script>',
-            height=0, width=0
-        )
-        st.toast("✅ Code copied!")
+    st.text_input(
+        "长按复制推荐码 / Long press to copy",
+        value=ref_code,
+        key="ref_code_display",
+        label_visibility="visible",
+    )
 
     # ══════════════════════════════════════
     # NODE SECTION
@@ -663,14 +663,14 @@ if st.session_state.user_email:
                 st.session_state.node_active = True
                 st.session_state.node_tasks  = st.session_state.get("node_tasks", 0)
                 st.session_state.node_log    = []
-                st.rerun()
+                node_active = True
         with col_stop:
             if st.button("■ STOP", disabled=not node_active, type="secondary", key="btn_stop"):
                 st.session_state.node_active = False
+                node_active = False
                 try:
                     supabase.table("nodes").update({"status": "offline"}).eq("node_token", token).execute()
                 except: pass
-                st.rerun()
 
         if node_active:
             from streamlit_autorefresh import st_autorefresh
