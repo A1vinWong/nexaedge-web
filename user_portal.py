@@ -527,7 +527,10 @@ def verify_code(email: str, entered: str) -> bool:
 # ══════════════════════════════════════
 # HEADER (always visible)
 # ══════════════════════════════════════
-st.image('IMG_7859.jpeg', width=100)
+c1, c2, c3 = st.columns([1, 2, 1])
+with c2:
+    st.image('IMG_7859.jpeg', use_container_width=True)
+st.markdown('<div style="margin-bottom:8px;"></div>', unsafe_allow_html=True)
 st.markdown("""
 <div style="display:flex;align-items:center;gap:10px;padding:8px 0 4px;">
     <div style="width:10px;height:10px;background:#a2ff00;border-radius:50%;
