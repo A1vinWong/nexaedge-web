@@ -457,6 +457,47 @@ def generate_otp() -> str:
     import random, string
     return "".join(random.choices(string.digits, k=6))
 
+def generate_node_token() -> str:
+    """Generate unique node token: NXT-XXXX-XXXX-XXXX"""
+    chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    parts = ["".join(random.choices(chars, k=4)) for _ in range(3)]
+    return "NXT-" + "-".join(parts)
+
+def get_node_record(email: str):
+    """Get existing node registration for this email."""
+    try:
+        res = (supabase.table("nodes")
+               .select("*")
+               .eq("email", email.lower())
+               .execute())
+        return res.data[0] if res.data else None
+    except:
+        return None
+
+def register_node(email: str, node_token: str) -> bool:
+    """Insert node record into nodes table."""
+    try:
+        supabase.table("nodes").insert({
+            "email": email.lower(),
+            "node_token": node_token,
+            "status": "pending",
+        }).execute()
+        return True
+    except:
+        return False
+
+def get_live_node_stats():
+    """Get real node counts from nodes table."""
+    try:
+        res = supabase.table("nodes").select("status").execute()
+        rows = res.data or []
+        total   = len(rows)
+        online  = sum(1 for r in rows if r.get("status") == "online")
+        pending = sum(1 for r in rows if r.get("status") == "pending")
+        return {"total": total, "online": online, "pending": pending}
+    except:
+        return {"total": 0, "online": 0, "pending": 0}
+
 def send_otp(email: str, code: str) -> bool:
     """Send OTP via Supabase Auth built-in email (sign_in_with_otp)."""
     try:
@@ -615,6 +656,60 @@ if st.session_state.user_email:
             height=0, width=0
         )
         st.toast("✅ Code copied!")
+
+    # ── Node Registration
+    st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
+    node_rec = get_node_record(email)
+
+    if node_rec:
+        token = node_rec.get("node_token", "—")
+        status = node_rec.get("status", "pending")
+        status_color = {"online": "#a2ff00", "pending": "#ffb300", "offline": "#4a6070"}.get(status, "#4a6070")
+        st.markdown(f"""
+        <div class="nx-card" style="border-color:rgba(162,255,0,.2);">
+            <div class="nx-card-title">▸ Your Node Registration</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                <div style="width:8px;height:8px;border-radius:50%;background:{status_color};
+                            box-shadow:0 0 8px {status_color};"></div>
+                <div style="font-family:'Space Mono',monospace;font-size:10px;
+                            color:{status_color};text-transform:uppercase;letter-spacing:.08em;">
+                    {status}
+                </div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
+                        margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">
+                Node Token
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:13px;color:#e8edf2;
+                        background:#060b0f;border:1px solid #182230;border-radius:8px;
+                        padding:10px 14px;word-break:break-all;margin-bottom:12px;">
+                {token}
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;
+                        line-height:1.7;">
+                Node client app coming Q3 2026. Keep this token safe — it identifies your device.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="nx-card">
+            <div class="nx-card-title">▸ Register Your Device as a Node</div>
+            <div style="font-size:12px;color:#4a6070;line-height:1.7;margin-bottom:16px;">
+                Generate a unique node token for this device.
+                When the beta app launches (Q3 2026), you'll use this token
+                to activate your node and start earning NEXA.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("⚡ Register This Device"):
+            token = generate_node_token()
+            ok = register_node(email, token)
+            if ok:
+                st.success(f"Node registered! Token: **{token}**")
+                st.rerun()
+            else:
+                st.error("Registration failed. You may already have a node registered.")
 
     # ── Node Roadmap
     st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
