@@ -449,21 +449,27 @@ def count_referrals(ref_code: str) -> int:
     except:
         return 0
 
-def send_magic_link(email: str) -> bool:
-    """Send Supabase magic link OTP to email."""
+def send_otp(email: str) -> bool:
+    """Send Supabase email OTP (6-digit code, no magic link)."""
     try:
-        supabase.auth.sign_in_with_otp({"email": email})
+        supabase.auth.sign_in_with_otp({
+            "email": email,
+            "options": {
+                "should_create_user": True,
+                "data": {}
+            }
+        })
         return True
     except Exception as e:
-        st.error(f"Failed to send link: {e}")
+        st.error(f"Failed to send code: {e}")
         return False
 
 def verify_otp(email: str, token: str):
-    """Verify the 6-digit OTP from magic link email."""
+    """Verify the 6-digit OTP code."""
     try:
         res = supabase.auth.verify_otp({
             "email": email,
-            "token": token,
+            "token": token.strip(),
             "type": "email"
         })
         return res.user
@@ -708,7 +714,7 @@ else:
                 if not record:
                     st.error("This email is not on the waitlist. Please register at the main site first.")
                 else:
-                    ok = send_magic_link(email_input)
+                    ok = send_otp(email_input)
                     if ok:
                         st.session_state.magic_sent  = True
                         st.session_state.magic_email = email_input
