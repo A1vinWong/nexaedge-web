@@ -332,6 +332,8 @@ def load_heartbeats(limit=100):
 # ══════════════════════════════════════
 # HEADER
 # ══════════════════════════════════════
+st.image('IMG_7859.jpeg', width=100)
+st.markdown('<div style="margin-top:-10px;"></div>', unsafe_allow_html=True)
 h_left, h_right = st.columns([4, 1])
 with h_left:
     st.markdown("""
