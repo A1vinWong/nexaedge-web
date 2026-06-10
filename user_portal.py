@@ -647,179 +647,125 @@ if st.session_state.user_email:
             </div>
             """, unsafe_allow_html=True)
 
-        # ── Browser heartbeat + task executor (JS)
+        # ── Python-backend heartbeat + task executor (no JS fetch, iOS safe)
         st.markdown('<div style="margin-top:4px;"></div>', unsafe_allow_html=True)
-        hb_html = f"""
-        <div id="nx-node-panel" style="font-family:monospace;font-size:11px;color:#4a6070;
-             background:#040709;border:1px solid #182230;border-radius:10px;padding:16px;">
 
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                <div id="nx-dot" style="width:8px;height:8px;border-radius:50%;
-                     background:#4a6070;transition:background .3s;"></div>
-                <div id="nx-status" style="font-size:10px;text-transform:uppercase;
-                     letter-spacing:.08em;color:#4a6070;">STANDBY</div>
+        # Activate / Stop buttons
+        node_active = st.session_state.get("node_active", False)
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("⚡ ACTIVATE NODE", disabled=node_active, key="btn_activate"):
+                st.session_state.node_active   = True
+                st.session_state.node_tasks    = st.session_state.get("node_tasks", 0)
+                st.session_state.node_log      = []
+                st.rerun()
+        with b2:
+            if st.button("■ STOP", disabled=not node_active, type="secondary", key="btn_stop"):
+                st.session_state.node_active = False
+                try:
+                    supabase.table("nodes").update({
+                        "status": "offline"
+                    }).eq("node_token", token).execute()
+                except: pass
+                st.rerun()
+
+        if node_active:
+            from streamlit_autorefresh import st_autorefresh
+            st_autorefresh(interval=30000, key="portal_tick")
+
+            # ── Send heartbeat
+            try:
+                cpu_sim  = round(random.uniform(5, 35), 1)
+                temp_sim = round(random.uniform(32, 38), 1)
+                batt_sim = 100
+                now_iso  = datetime.now(timezone.utc).isoformat()
+
+                supabase.table("heartbeats").insert({
+                    "node_token":      token,
+                    "cpu_usage":       cpu_sim,
+                    "temperature":     temp_sim,
+                    "battery_level":   batt_sim,
+                    "tasks_completed": st.session_state.get("node_tasks", 0),
+                    "reported_at":     now_iso,
+                }).execute()
+
+                supabase.table("nodes").update({
+                    "status":    "online",
+                    "last_seen": now_iso,
+                }).eq("node_token", token).execute()
+
+                hb_msg = f"♥ CPU {cpu_sim}%  Temp {temp_sim}°C  Batt {batt_sim}%"
+                hb_color = "#a2ff00"
+            except Exception as e:
+                hb_msg  = f"Heartbeat error: {e}"
+                hb_color = "#f43f5e"
+
+            # ── Poll and execute one task
+            task_msg = None
+            try:
+                res = (supabase.table("tasks")
+                       .select("*")
+                       .eq("status", "pending")
+                       .is_("assigned_to", "null")
+                       .limit(1)
+                       .execute())
+                if res.data:
+                    t       = res.data[0]
+                    tid     = t["id"]
+                    ttype   = t.get("task_type", "slm_inference")
+
+                    supabase.table("tasks").update({
+                        "status":      "assigned",
+                        "assigned_to": token,
+                    }).eq("id", tid).execute()
+
+                    result = f"[Portal] {ttype} OK | latency={round(random.uniform(2,5),1)}ms | node={token[-8:]}"
+
+                    supabase.table("tasks").update({
+                        "status":       "completed",
+                        "result":       result,
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                    }).eq("id", tid).execute()
+
+                    st.session_state.node_tasks = st.session_state.get("node_tasks", 0) + 1
+                    task_msg = f"✓ {ttype} completed"
+            except Exception as e:
+                task_msg = f"Task error: {e}"
+
+            # ── Log display
+            log = st.session_state.get("node_log", [])
+            ts_str = datetime.now().strftime("%H:%M:%S")
+            log.insert(0, (f"[{ts_str}] {hb_msg}", hb_color))
+            if task_msg:
+                log.insert(0, (f"[{ts_str}] {task_msg}", "#a2ff00"))
+            log = log[:8]
+            st.session_state.node_log = log
+
+            log_html = "".join(
+                f'<div style="color:{c};line-height:1.9;">{l}</div>'
+                for l, c in log
+            )
+            st.markdown(f"""
+            <div style="background:#040709;border:1px solid #182230;border-radius:10px;
+                        padding:14px;font-family:'Space Mono',monospace;font-size:10px;
+                        margin-top:4px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#a2ff00;
+                                box-shadow:0 0 8px #a2ff00;"></div>
+                    <span style="color:#a2ff00;font-size:10px;text-transform:uppercase;
+                                 letter-spacing:.08em;">ONLINE · refreshes every 30s</span>
+                </div>
+                {log_html}
             </div>
-
-            <div id="nx-log" style="color:#2a3a4a;line-height:1.9;min-height:40px;
-                 font-size:10px;margin-bottom:12px;">
-                // Press Activate to start heartbeat + task execution
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="background:#040709;border:1px solid #182230;border-radius:10px;
+                        padding:14px;font-family:'Space Mono',monospace;font-size:10px;
+                        color:#2a3a4a;margin-top:4px;">
+                // Press ACTIVATE NODE to start heartbeat + task execution
             </div>
-
-            <div style="display:flex;gap:8px;">
-                <button id="nx-btn-start" onclick="nxStart()"
-                    style="background:linear-gradient(135deg,#a2ff00,#8de600);
-                           color:#060b0f;border:none;border-radius:6px;
-                           padding:8px 16px;font-family:monospace;font-size:10px;
-                           font-weight:700;letter-spacing:.06em;cursor:pointer;">
-                    ⚡ ACTIVATE NODE
-                </button>
-                <button id="nx-btn-stop" onclick="nxStop()" disabled
-                    style="background:transparent;color:#4a6070;
-                           border:1px solid #182230;border-radius:6px;
-                           padding:8px 16px;font-family:monospace;font-size:10px;
-                           cursor:pointer;">
-                    ■ STOP
-                </button>
-            </div>
-        </div>
-
-        <script>
-        const SUPA_URL = "{SUPABASE_URL_JS}";
-        const SUPA_KEY = "{SUPABASE_KEY_JS}";
-        const TOKEN    = "{token}";
-        let hbTimer = null;
-        let taskTimer = null;
-        let tasksDone = 0;
-
-        function ts() {{ return new Date().toISOString(); }}
-
-        function log(msg, color) {{
-            const el = document.getElementById("nx-log");
-            const line = document.createElement("div");
-            line.style.color = color || "#4a6070";
-            line.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;
-            el.insertBefore(line, el.firstChild);
-            while (el.children.length > 8) el.removeChild(el.lastChild);
-        }}
-
-        function setStatus(text, color) {{
-            document.getElementById("nx-status").textContent = text;
-            document.getElementById("nx-status").style.color = color;
-            document.getElementById("nx-dot").style.background = color;
-            document.getElementById("nx-dot").style.boxShadow = "0 0 8px " + color;
-        }}
-
-        async function sendHeartbeat() {{
-            const battery = navigator.getBattery
-                ? await navigator.getBattery().then(b => Math.round(b.level*100)).catch(()=>100)
-                : 100;
-            const payload = {{
-                node_token:      TOKEN,
-                cpu_usage:       Math.random()*30+5,
-                temperature:     Math.random()*8+32,
-                battery_level:   battery,
-                tasks_completed: tasksDone,
-                reported_at:     ts(),
-            }};
-            try {{
-                await fetch(SUPA_URL+"/rest/v1/heartbeats", {{
-                    method:"POST",
-                    headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
-                              "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
-                    body: JSON.stringify(payload)
-                }});
-                await fetch(SUPA_URL+"/rest/v1/nodes?node_token=eq."+TOKEN, {{
-                    method:"PATCH",
-                    headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
-                              "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
-                    body: JSON.stringify({{status:"online",last_seen:ts()}})
-                }});
-                log("♥ CPU "+payload.cpu_usage.toFixed(1)+"%  Temp "+payload.temperature.toFixed(1)+"°C  Batt "+battery+"%","#a2ff00");
-            }} catch(e) {{
-                log("Heartbeat error: "+e.message,"#f43f5e");
-            }}
-        }}
-
-        async function pollTask() {{
-            try {{
-                // Fetch one pending unassigned task
-                const r = await fetch(
-                    SUPA_URL+"/rest/v1/tasks?status=eq.pending&assigned_to=is.null&limit=1&select=*",
-                    {{headers:{{"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY}}}}
-                );
-                const tasks = await r.json();
-                if (!tasks || tasks.length === 0) return;
-
-                const task = tasks[0];
-                const taskId   = task.id;
-                const taskType = task.task_type || "slm_inference";
-
-                // Claim task
-                await fetch(SUPA_URL+"/rest/v1/tasks?id=eq."+taskId, {{
-                    method:"PATCH",
-                    headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
-                              "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
-                    body: JSON.stringify({{status:"assigned",assigned_to:TOKEN}})
-                }});
-
-                log("▶ Task claimed: "+taskType,"#00e5ff");
-
-                // Simulate execution delay
-                await new Promise(res => setTimeout(res, 800 + Math.random()*1200));
-
-                // Generate result
-                const result = "[Browser] "+taskType+" OK | latency="+
-                               (Math.random()*3+2).toFixed(1)+"ms | node="+TOKEN.slice(-8);
-
-                // Upload result
-                await fetch(SUPA_URL+"/rest/v1/tasks?id=eq."+taskId, {{
-                    method:"PATCH",
-                    headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
-                              "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
-                    body: JSON.stringify({{
-                        status:"completed",
-                        result: result,
-                        completed_at: ts()
-                    }})
-                }});
-
-                tasksDone++;
-                log("✓ "+taskType+" done","#a2ff00");
-
-            }} catch(e) {{
-                log("Task error: "+e.message,"#f43f5e");
-            }}
-        }}
-
-        function nxStart() {{
-            document.getElementById("nx-btn-start").disabled = true;
-            document.getElementById("nx-btn-stop").disabled  = false;
-            setStatus("ONLINE","#a2ff00");
-            log("Node activated","#00e5ff");
-            sendHeartbeat();
-            pollTask();
-            hbTimer   = setInterval(sendHeartbeat, 30000);
-            taskTimer = setInterval(pollTask, 10000);
-        }}
-
-        function nxStop() {{
-            clearInterval(hbTimer);
-            clearInterval(taskTimer);
-            hbTimer = null; taskTimer = null;
-            document.getElementById("nx-btn-start").disabled = false;
-            document.getElementById("nx-btn-stop").disabled  = true;
-            setStatus("OFFLINE","#4a6070");
-            log("Node deactivated","#ffb300");
-            fetch(SUPA_URL+"/rest/v1/nodes?node_token=eq."+TOKEN, {{
-                method:"PATCH",
-                headers:{{"Content-Type":"application/json","apikey":SUPA_KEY,
-                          "Authorization":"Bearer "+SUPA_KEY,"Prefer":"return=minimal"}},
-                body: JSON.stringify({{status:"offline"}})
-            }});
-        }}
-        </script>
-        """
-        st.components.v1.html(hb_html, height=260)
+            """, unsafe_allow_html=True)
 
     else:
         st.markdown("""
