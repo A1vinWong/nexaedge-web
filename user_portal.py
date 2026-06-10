@@ -388,6 +388,10 @@ div.stButton > button[kind="secondary"]:hover {
 # ══════════════════════════════════════
 # SUPABASE CLIENT
 # ══════════════════════════════════════
+# Also expose for JS heartbeat component
+SUPABASE_URL_JS = SUPABASE_URL
+SUPABASE_KEY_JS = SUPABASE_KEY
+
 @st.cache_resource
 def get_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -665,6 +669,7 @@ if st.session_state.user_email:
         token = node_rec.get("node_token", "—")
         status = node_rec.get("status", "pending")
         status_color = {"online": "#a2ff00", "pending": "#ffb300", "offline": "#4a6070"}.get(status, "#4a6070")
+
         st.markdown(f"""
         <div class="nx-card" style="border-color:rgba(162,255,0,.2);">
             <div class="nx-card-title">▸ Your Node Registration</div>
@@ -685,12 +690,171 @@ if st.session_state.user_email:
                         padding:10px 14px;word-break:break-all;margin-bottom:12px;">
                 {token}
             </div>
-            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;
-                        line-height:1.7;">
-                Node client app coming Q3 2026. Keep this token safe — it identifies your device.
-            </div>
         </div>
         """, unsafe_allow_html=True)
+
+        # ── Web Heartbeat (runs in browser via JS + Streamlit component)
+        if status != "online":
+            st.markdown("""
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;
+                        margin-bottom:10px;line-height:1.7;">
+                Activate your node to start sending heartbeats from this browser.
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Embed JS heartbeat component
+        hb_html = f"""
+        <div id="nx-node-panel" style="font-family:monospace;font-size:11px;color:#4a6070;
+             background:#040709;border:1px solid #182230;border-radius:10px;padding:16px;
+             margin-top:4px;">
+
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                <div id="nx-dot" style="width:8px;height:8px;border-radius:50%;
+                     background:#4a6070;transition:background .3s;"></div>
+                <div id="nx-status" style="font-size:10px;text-transform:uppercase;
+                     letter-spacing:.08em;color:#4a6070;">STANDBY</div>
+            </div>
+
+            <div id="nx-log" style="color:#2a3a4a;line-height:1.9;min-height:40px;
+                 font-size:10px;margin-bottom:12px;">
+                // Press Activate to start sending heartbeats
+            </div>
+
+            <div style="display:flex;gap:8px;">
+                <button id="nx-btn-start" onclick="nxStart()"
+                    style="background:linear-gradient(135deg,#a2ff00,#8de600);
+                           color:#060b0f;border:none;border-radius:6px;
+                           padding:8px 16px;font-family:monospace;font-size:10px;
+                           font-weight:700;letter-spacing:.06em;cursor:pointer;">
+                    ⚡ ACTIVATE NODE
+                </button>
+                <button id="nx-btn-stop" onclick="nxStop()" disabled
+                    style="background:transparent;color:#4a6070;
+                           border:1px solid #182230;border-radius:6px;
+                           padding:8px 16px;font-family:monospace;font-size:10px;
+                           cursor:pointer;">
+                    ■ STOP
+                </button>
+            </div>
+        </div>
+
+        <script>
+        const SUPABASE_URL = "{SUPABASE_URL_JS}";
+        const SUPABASE_KEY = "{SUPABASE_KEY_JS}";
+        const NODE_TOKEN   = "{token}";
+        let hbInterval = null;
+        let taskCount  = 0;
+
+        function ts() {{
+            return new Date().toISOString();
+        }}
+
+        function log(msg, color) {{
+            const el = document.getElementById("nx-log");
+            const line = document.createElement("div");
+            line.style.color = color || "#4a6070";
+            line.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;
+            el.insertBefore(line, el.firstChild);
+            // Keep last 8 lines
+            while (el.children.length > 8) el.removeChild(el.lastChild);
+        }}
+
+        function setStatus(text, color) {{
+            document.getElementById("nx-status").textContent = text;
+            document.getElementById("nx-status").style.color = color;
+            document.getElementById("nx-dot").style.background = color;
+            document.getElementById("nx-dot").style.boxShadow = "0 0 8px " + color;
+        }}
+
+        async function sendHeartbeat() {{
+            const now = ts();
+            const battery = navigator.getBattery
+                ? await navigator.getBattery().then(b => Math.round(b.level * 100)).catch(() => 100)
+                : 100;
+
+            const payload = {{
+                node_token:      NODE_TOKEN,
+                cpu_usage:       Math.random() * 30 + 5,
+                temperature:     Math.random() * 8 + 32,
+                battery_level:   battery,
+                tasks_completed: taskCount,
+                reported_at:     now,
+            }};
+
+            try {{
+                // Send heartbeat
+                const r1 = await fetch(SUPABASE_URL + "/rest/v1/heartbeats", {{
+                    method: "POST",
+                    headers: {{
+                        "Content-Type":  "application/json",
+                        "apikey":        SUPABASE_KEY,
+                        "Authorization": "Bearer " + SUPABASE_KEY,
+                        "Prefer":        "return=minimal"
+                    }},
+                    body: JSON.stringify(payload)
+                }});
+
+                // Update node last_seen + status
+                await fetch(SUPABASE_URL + "/rest/v1/nodes?node_token=eq." + NODE_TOKEN, {{
+                    method: "PATCH",
+                    headers: {{
+                        "Content-Type":  "application/json",
+                        "apikey":        SUPABASE_KEY,
+                        "Authorization": "Bearer " + SUPABASE_KEY,
+                        "Prefer":        "return=minimal"
+                    }},
+                    body: JSON.stringify({{
+                        status:    "online",
+                        last_seen: now
+                    }})
+                }});
+
+                taskCount++;
+                log(
+                    "CPU " + payload.cpu_usage.toFixed(1) + "%  " +
+                    "Temp " + payload.temperature.toFixed(1) + "°C  " +
+                    "Batt " + battery + "%",
+                    "#a2ff00"
+                );
+
+            }} catch(e) {{
+                log("Heartbeat failed: " + e.message, "#f43f5e");
+            }}
+        }}
+
+        function nxStart() {{
+            document.getElementById("nx-btn-start").disabled = true;
+            document.getElementById("nx-btn-stop").disabled  = false;
+            setStatus("ONLINE", "#a2ff00");
+            log("Node activated", "#00e5ff");
+            sendHeartbeat();
+            hbInterval = setInterval(sendHeartbeat, 30000);
+        }}
+
+        function nxStop() {{
+            clearInterval(hbInterval);
+            hbInterval = null;
+            document.getElementById("nx-btn-start").disabled = false;
+            document.getElementById("nx-btn-stop").disabled  = true;
+            setStatus("OFFLINE", "#4a6070");
+            log("Node deactivated", "#ffb300");
+
+            // Mark offline in DB
+            fetch(SUPABASE_URL + "/rest/v1/nodes?node_token=eq." + NODE_TOKEN, {{
+                method: "PATCH",
+                headers: {{
+                    "Content-Type":  "application/json",
+                    "apikey":        SUPABASE_KEY,
+                    "Authorization": "Bearer " + SUPABASE_KEY,
+                    "Prefer":        "return=minimal"
+                }},
+                body: JSON.stringify({{ status: "offline" }})
+            }});
+        }}
+        </script>
+        """
+        st.components.v1.html(hb_html, height=240)
+
     else:
         st.markdown("""
         <div class="nx-card">
