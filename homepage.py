@@ -615,14 +615,16 @@ elif current_tab == L["nav"][4]:
 
     if st.session_state.wl_success:
         ref = st.session_state.wl_ref_code
-        site_url   = "https://nexaedge.org"
+        site_url = "https://nexaedge.org"
 
         if is_zh:
-            share_msg = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref}\n{site_url}"
+            share_text_only = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref}"
+            share_msg       = f"{share_text_only}\n{site_url}"
         else:
-            share_msg = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref}\n{site_url}"
+            share_text_only = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref}"
+            share_msg       = f"{share_text_only}\n{site_url}"
 
-        x_url  = "https://twitter.com/intent/tweet?text=" + urllib.parse.quote(share_msg + "\n" + site_url)
+        x_url  = "https://twitter.com/intent/tweet?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text_only)
         tg_url = "https://telegram.me/share/url?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_msg)
         wa_url = "https://wa.me/?text=" + urllib.parse.quote(share_msg)
 
