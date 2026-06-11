@@ -330,7 +330,7 @@ with col_logo:
         <div class="nx-online-badge">{live_dot}<strong style="color:#{node_color};">{live['online']}</strong>&nbsp;node{'s' if live['online']!=1 else ''} online</div>
     </div>
     <div style="margin-top:10px;">
-        <a href="https://nexaedge-web-port.streamlit.app?lang={st.session_state.lang}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#a2ff00,#8de600);color:#060b0f;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:8px 16px;border-radius:8px;text-decoration:none;">
+        <a href="https://portal.nexaedge.org?lang={st.session_state.lang}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#a2ff00,#8de600);color:#060b0f;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:8px 16px;border-radius:8px;text-decoration:none;">
             &#9889; {'登录我的节点' if is_zh else 'My Node Portal'}
         </a>
     </div>
@@ -451,7 +451,7 @@ elif current_tab == L["nav"][1]:
     elif live2["total"] > 0:
         st.markdown(f"""<div style="background:rgba(74,96,112,.05);border:1px solid #182230;border-left:3px solid #4a6070;border-radius:0 10px 10px 0;padding:10px 16px;font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;margin-bottom:14px;">
             {live2['total']} node{'s' if live2['total']!=1 else ''} registered · None online now ·
-            <a href="https://nexaedge-web-port.streamlit.app?lang={st.session_state.lang}" target="_blank" style="color:#4a6070;">Activate yours -></a>
+            <a href="https://portal.nexaedge.org?lang={st.session_state.lang}" target="_blank" style="color:#4a6070;">Activate yours -></a>
         </div>""", unsafe_allow_html=True)
 
     st.markdown(f'<div class="nx-notice">{L["sim_only"]}</div>', unsafe_allow_html=True)
@@ -615,7 +615,7 @@ elif current_tab == L["nav"][4]:
 
     if st.session_state.wl_success:
         ref = st.session_state.wl_ref_code
-        site_url   = "https://nexaedge.streamlit.app"
+        site_url   = "https://nexaedge.org"
 
         if is_zh:
             share_msg = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref}\n{site_url}"
@@ -633,7 +633,7 @@ elif current_tab == L["nav"][4]:
 
         portal_label = "Login to My Node Portal" if not is_zh else "登录节点控制台"
         portal_desc  = "See your queue position and activate your node heartbeat" if not is_zh else "查看队列排名、激活节点心跳"
-        st.markdown(f"""<a href="https://nexaedge-web-port.streamlit.app?lang={st.session_state.lang}" target="_blank" style="display:block;background:rgba(162,255,0,.06);border:1px solid rgba(162,255,0,.25);border-radius:12px;padding:16px 20px;text-decoration:none;margin-bottom:14px;">
+        st.markdown(f"""<a href="https://portal.nexaedge.org?lang={st.session_state.lang}" target="_blank" style="display:block;background:rgba(162,255,0,.06);border:1px solid rgba(162,255,0,.25);border-radius:12px;padding:16px 20px;text-decoration:none;margin-bottom:14px;">
         <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#a2ff00;margin-bottom:4px;">{portal_label}</div>
         <div style="font-size:11px;color:#4a6070;">{portal_desc}</div></a>""", unsafe_allow_html=True)
 
@@ -679,7 +679,7 @@ elif current_tab == L["nav"][4]:
                 st.session_state.wl_success=False; st.session_state.wl_ref_code=''; st.rerun()
     else:
         already_label = "Already registered? Login to Node Portal ->" if not is_zh else "已注册？登录节点 Portal ->"
-        st.markdown(f'<div style="text-align:right;margin-bottom:10px;"><a href="https://nexaedge-web-port.streamlit.app?lang={st.session_state.lang}" target="_blank" style="font-family:\'Space Mono\',monospace;font-size:10px;color:#a2ff00;text-decoration:none;">{already_label}</a></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="text-align:right;margin-bottom:10px;"><a href="https://portal.nexaedge.org?lang={st.session_state.lang}" target="_blank" style="font-family:\'Space Mono\',monospace;font-size:10px;color:#a2ff00;text-decoration:none;">{already_label}</a></div>', unsafe_allow_html=True)
         st.markdown('<div class="nx-card">', unsafe_allow_html=True)
         with st.form("wl_form"):
             f1,f2=st.columns(2)
