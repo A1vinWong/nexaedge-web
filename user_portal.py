@@ -371,6 +371,147 @@ def get_supabase() -> Client:
 supabase = get_supabase()
 
 # ══════════════════════════════════════
+# LANGUAGE — detect from URL param
+# ══════════════════════════════════════
+if "portal_lang" not in st.session_state:
+    # Read ?lang=ZH from URL if present
+    url_lang = st.query_params.get("lang", "EN")
+    st.session_state.portal_lang = "ZH" if url_lang == "ZH" else "EN"
+
+is_zh = st.session_state.portal_lang == "ZH"
+
+PORTAL_TEXT = {
+    "EN": {
+        "title": "NODE PORTAL",
+        "stage": "● BETA · Q3 2026",
+        "not_on_waitlist": "Your email is not on the waitlist yet. Please register at the main site first.",
+        "sign_out": "Sign Out",
+        "node_reserved": "Your node is reserved.",
+        "top_pct": "Top",
+        "of": "of",
+        "waitlist_members": "waitlist members",
+        "joined": "Joined",
+        "referrals_made": "Referrals Made",
+        "queue_position": "Queue Position",
+        "spl_wallet": "SPL Wallet",
+        "language": "Language",
+        "your_ref": "Your Referral Code",
+        "joined_with_code": "person joined with your code",
+        "joined_with_code_pl": "persons joined with your code",
+        "tap_copy": "Tap & hold to copy your referral code",
+        "mining_status": "Mining Status",
+        "token_earnings": "Token Earnings",
+        "participant_node": "Participant Node",
+        "start_session": "⚡ START COMPUTE SESSION",
+        "stop": "■ STOP",
+        "online_refresh": "ONLINE · refreshes every 30s",
+        "press_start": "// Press START COMPUTE SESSION to activate node",
+        "task_history": "Task History",
+        "completed": "completed",
+        "register_device": "Register Your Device as a Node",
+        "register_desc": "Generate a unique node token for this device. Use this token with the node client to start sending heartbeats and executing tasks.",
+        "register_btn": "⚡ Register This Device",
+        "register_fail": "Registration failed. You may already have a node registered.",
+        "wasm_title": "WASM COMPUTE DEMO",
+        "wasm_badge": "RUNS IN YOUR BROWSER",
+        "wasm_desc": "This demo compiles and executes a real WebAssembly module directly in your browser — no server, no Python. It runs a matrix multiplication kernel that simulates the core compute of AI inference workloads.",
+        "journey_title": "Your Node Journey",
+        "j1_title": "Waitlist Registered", "j1_sub": "Spot secured · NEXA airdrop eligible",
+        "j2_title": "Node Token Issued", "j2_sub": "Device registered · heartbeat active",
+        "j3_title": "Beta — Task Execution", "j3_sub": "Simulated tasks running · earning sim NEXA · Q3 2026",
+        "j4_title": "Closed Beta — 1,000 Nodes", "j4_sub": "Real node client · ZK proof · Q4 2026",
+        "j5_title": "Mainnet Launch", "j5_sub": "Real compute · real rewards · Q1 2027",
+        "nexa_notice": "NEXA tokens are minted on Solana but not yet in public circulation. Airdrop eligibility and allocation are determined at mainnet launch based on your queue position and referral count. This is not a financial instrument.",
+        "login_title": "My Node Portal",
+        "login_sub": "Sign in with the email you used to join the waitlist. We'll send you a one-time code — no password needed.",
+        "nodes_reserved": "nodes reserved",
+        "email_label": "Email Address",
+        "email_ph": "you@example.com",
+        "send_code": "Send Login Code",
+        "invalid_email": "Please enter a valid email address.",
+        "not_on_wl": "This email is not on the waitlist. Please register at the main site first.",
+        "your_code": "Your login code",
+        "signing_in": "Signing in as",
+        "beta_warning": "BETA MODE — Code shown on screen. Valid 10 minutes.",
+        "enter_code": "Enter the 6-digit code above",
+        "code_ph": "e.g. 123456",
+        "verify": "Verify & Sign In",
+        "wrong_code": "Incorrect code. Please try again.",
+        "diff_email": "← Use a different email",
+        "lang_btn": "中文",
+        "portal_link": "Login to My Node Portal",
+        "portal_desc": "See your queue position and activate your node heartbeat",
+        "already_reg": "Already registered? Login to Node Portal →",
+        "register_at": "Register at nexaedge.streamlit.app →",
+        "footer": "NexaEdge Node Portal · Beta P4 · Heartbeat + Task Executor\nNEXA minted on Solana · Not yet in public circulation · contact@nexaedge.org",
+    },
+    "ZH": {
+        "title": "节点 PORTAL",
+        "stage": "● Beta · 2026年Q3",
+        "not_on_waitlist": "您的邮箱尚未在候补名单中。请先在主网站注册。",
+        "sign_out": "退出登录",
+        "node_reserved": "您的节点已预留。",
+        "top_pct": "前",
+        "of": "/",
+        "waitlist_members": "位候补名单成员",
+        "joined": "加入于",
+        "referrals_made": "已推荐人数",
+        "queue_position": "队列排名",
+        "spl_wallet": "SPL 钱包",
+        "language": "语言",
+        "your_ref": "您的推荐码",
+        "joined_with_code": "人使用了您的推荐码",
+        "joined_with_code_pl": "人使用了您的推荐码",
+        "tap_copy": "长按复制推荐码",
+        "mining_status": "挖矿状态",
+        "token_earnings": "代币收益",
+        "participant_node": "参与节点",
+        "start_session": "⚡ 启动算力会话",
+        "stop": "■ 停止",
+        "online_refresh": "在线 · 每30秒刷新",
+        "press_start": "// 按启动算力会话激活节点",
+        "task_history": "任务历史",
+        "completed": "已完成",
+        "register_device": "将此设备注册为节点",
+        "register_desc": "为此设备生成唯一节点 Token。使用此 Token 运行节点客户端，开始发送心跳并执行任务。",
+        "register_btn": "⚡ 注册此设备",
+        "register_fail": "注册失败。您可能已经注册了节点。",
+        "wasm_title": "WASM 算力演示",
+        "wasm_badge": "在您的浏览器中运行",
+        "wasm_desc": "本演示直接在您的浏览器中编译并执行真实的 WebAssembly 模块——无需服务器，无需 Python。它运行矩阵乘法内核，模拟 AI 推理工作负载的核心计算。",
+        "journey_title": "您的节点旅程",
+        "j1_title": "候补名单注册", "j1_sub": "名额已确保 · NEXA 空投资格",
+        "j2_title": "节点 Token 已发放", "j2_sub": "设备已注册 · 心跳已激活",
+        "j3_title": "Beta — 任务执行", "j3_sub": "模拟任务运行中 · 赚取模拟 NEXA · 2026年Q3",
+        "j4_title": "封闭测试——1,000 节点", "j4_sub": "真实节点客户端 · ZK证明 · 2026年Q4",
+        "j5_title": "主网上线", "j5_sub": "真实算力 · 真实奖励 · 2027年Q1",
+        "nexa_notice": "NEXA 代币已在 Solana 上铸造，但尚未公开流通。空投资格与分配比例将在主网上线时根据队列排名和推荐数量确定。本内容不构成金融工具。",
+        "login_title": "我的节点 Portal",
+        "login_sub": "使用注册候补名单时的邮箱登录。我们将发送一次性验证码——无需密码。",
+        "nodes_reserved": "个节点已预留",
+        "email_label": "电子邮件",
+        "email_ph": "your@email.com",
+        "send_code": "发送登录验证码",
+        "invalid_email": "请输入有效的电子邮件地址。",
+        "not_on_wl": "此邮箱不在候补名单中。请先在主网站注册。",
+        "your_code": "您的登录验证码",
+        "signing_in": "正在登录",
+        "beta_warning": "Beta 模式 — 验证码显示在屏幕上。有效期10分钟。",
+        "enter_code": "输入上方的6位验证码",
+        "code_ph": "如 123456",
+        "verify": "验证并登录",
+        "wrong_code": "验证码错误，请重试。",
+        "diff_email": "← 使用其他邮箱",
+        "lang_btn": "English",
+        "portal_link": "登录我的节点 Portal",
+        "portal_desc": "查看队列排名、激活节点心跳",
+        "already_reg": "已注册？登录节点 Portal →",
+        "register_at": "在 nexaedge.streamlit.app 注册 →",
+        "footer": "NexaEdge 节点 Portal · Beta P4 · 心跳 + 任务执行器\nNEXA 已在 Solana 铸造 · 尚未公开流通 · contact@nexaedge.org",
+    }
+}
+
+# ══════════════════════════════════════
 # SESSION STATE
 # ══════════════════════════════════════
 for k, v in {
@@ -480,25 +621,34 @@ def verify_code(email, entered):
 # ══════════════════════════════════════
 # HEADER
 # ══════════════════════════════════════
+T = PORTAL_TEXT[st.session_state.portal_lang]
+
 c1, c2, c3 = st.columns([1, 2, 1])
 with c2:
     st.image('IMG_7859.jpeg', use_container_width=True)
 st.markdown('<div style="margin-bottom:8px;"></div>', unsafe_allow_html=True)
-st.markdown("""
-<div style="display:flex;align-items:center;gap:10px;padding:8px 0 4px;">
-    <div style="width:10px;height:10px;background:#a2ff00;border-radius:50%;
-                box-shadow:0 0 12px #a2ff00;flex-shrink:0;"></div>
-    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
-                color:#e8edf2;letter-spacing:-.02em;">
-        Nexa<span style="color:#a2ff00;">Edge</span>
-        <span style="font-size:11px;color:#4a6070;font-weight:400;
-                     font-family:'Space Mono',monospace;margin-left:8px;">
-            NODE PORTAL
-        </span>
+
+# Language toggle in header
+h1, h2 = st.columns([3, 1])
+with h1:
+    st.markdown(f"""
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0 4px;">
+        <div style="width:10px;height:10px;background:#a2ff00;border-radius:50%;box-shadow:0 0 12px #a2ff00;flex-shrink:0;"></div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#e8edf2;letter-spacing:-.02em;">
+            Nexa<span style="color:#a2ff00;">Edge</span>
+            <span style="font-size:11px;color:#4a6070;font-weight:400;font-family:'Space Mono',monospace;margin-left:8px;">{T['title']}</span>
+        </div>
     </div>
-</div>
-<hr class="nx-divider">
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+with h2:
+    st.markdown(f'<div style="text-align:right;padding-top:10px;"><span style="display:inline-block;background:rgba(162,255,0,.08);border:1px solid rgba(162,255,0,.25);color:#a2ff00;font-family:\'Space Mono\',monospace;font-size:9px;font-weight:700;padding:4px 10px;border-radius:6px;">{T["stage"]}</span></div>', unsafe_allow_html=True)
+    if st.button(T["lang_btn"], key="lang_toggle", type="secondary"):
+        st.session_state.portal_lang = "ZH" if st.session_state.portal_lang == "EN" else "EN"
+        T = PORTAL_TEXT[st.session_state.portal_lang]
+        is_zh = st.session_state.portal_lang == "ZH"
+        st.rerun()
+
+st.markdown('<hr class="nx-divider">', unsafe_allow_html=True)
 
 # ══════════════════════════════════════
 # LOGGED IN — DASHBOARD
@@ -510,11 +660,10 @@ if st.session_state.user_email:
     if not data:
         st.markdown(f"""
         <div class="nx-notice">
-            ⚠ Your email <strong>{email}</strong> is not on the waitlist yet.
-            Please register at the main site first.
+            {T['not_on_waitlist'].replace('{email}', email)}
         </div>
         """, unsafe_allow_html=True)
-        if st.button("Sign Out", type="secondary"):
+        if st.button(T["sign_out"], type="secondary"):
             st.session_state.user_email = None
             st.session_state.user_data  = None
             st.rerun()
@@ -540,45 +689,42 @@ if st.session_state.user_email:
     <div class="nx-rank-wrap">
         <div class="nx-rank-ring">
             <svg viewBox="0 0 120 120" width="120" height="120">
-                <circle cx="60" cy="60" r="52"
-                    fill="none" stroke="#182230" stroke-width="6"/>
-                <circle cx="60" cy="60" r="52"
-                    fill="none" stroke="#a2ff00" stroke-width="6"
-                    stroke-linecap="round"
-                    stroke-dasharray="{dash:.1f} {gap:.1f}"/>
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#182230" stroke-width="6"/>
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#a2ff00" stroke-width="6"
+                    stroke-linecap="round" stroke-dasharray="{dash:.1f} {gap:.1f}"/>
             </svg>
             <div class="nx-rank-number">
                 <div class="nx-rank-num">#{rank}</div>
                 <div class="nx-rank-label">Queue</div>
             </div>
         </div>
-        <div class="nx-rank-title">Your node is reserved.</div>
+        <div class="nx-rank-title">{T['node_reserved']}</div>
         <div class="nx-rank-sub">
-            Top {100 - pct_rank + 1}% of {total} waitlist members<br>
-            Joined {joined}
+            {T['top_pct']} {100 - pct_rank + 1}% {T['of']} {total} {T['waitlist_members']}<br>
+            {T['joined']} {joined}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     # ── Stats grid
-    wallet_short = wallet[:6] + "…" + wallet[-4:] if wallet != "—" and len(wallet) > 10 else wallet
+    wallet_short = wallet[:6] + "..." + wallet[-4:] if wallet != "—" and len(wallet) > 10 else wallet
     st.markdown(f"""
     <div class="nx-stat-grid">
         <div class="nx-stat-item">
             <div class="nx-stat-val green">{referrals}</div>
-            <div class="nx-stat-label">Referrals Made</div>
+            <div class="nx-stat-label">{T['referrals_made']}</div>
         </div>
         <div class="nx-stat-item">
             <div class="nx-stat-val cyan">{rank} / {total}</div>
-            <div class="nx-stat-label">Queue Position</div>
+            <div class="nx-stat-label">{T['queue_position']}</div>
         </div>
         <div class="nx-stat-item">
             <div class="nx-stat-val">{wallet_short}</div>
-            <div class="nx-stat-label">SPL Wallet</div>
+            <div class="nx-stat-label">{T['spl_wallet']}</div>
         </div>
         <div class="nx-stat-item">
             <div class="nx-stat-val gold">{lang}</div>
-            <div class="nx-stat-label">Language</div>
+            <div class="nx-stat-label">{T['language']}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -591,10 +737,10 @@ if st.session_state.user_email:
 
     st.markdown(f"""
     <div class="nx-ref-box">
-        <div class="nx-ref-label">Your Referral Code</div>
+        <div class="nx-ref-label">{T['your_ref']}</div>
         <div class="nx-ref-code">{ref_code}</div>
         <div class="nx-ref-count">
-            {referrals} person{'s' if referrals != 1 else ''} joined with your code
+            {referrals} {T['joined_with_code_pl'] if referrals != 1 else T['joined_with_code']}
         </div>
     </div>
     <div class="nx-share-row">
@@ -606,7 +752,7 @@ if st.session_state.user_email:
 
     st.markdown('<div style="margin-top:6px;"></div>', unsafe_allow_html=True)
     st.text_input(
-        "Tap & hold to copy your referral code",
+        T["tap_copy"],
         value=ref_code,
         key="ref_code_display",
         label_visibility="visible",
@@ -710,11 +856,11 @@ if st.session_state.user_email:
             <div class="node-id">NODE_ID: @nexaedge / {token[-12:]}</div>
             <div class="status-row">
               <div class="status-block">
-                <div class="status-lbl">Mining Status</div>
+                <div class="status-lbl">{T['mining_status']}</div>
                 <div class="status-val" style="color:{mining_status_color};">{mining_status_text}</div>
               </div>
               <div class="status-block" style="text-align:right;">
-                <div class="status-lbl">Token Earnings</div>
+                <div class="status-lbl">{T['token_earnings']}</div>
                 <div class="nexa-val">{nexa_earned:.4f} NEXA</div>
               </div>
             </div>
@@ -726,13 +872,13 @@ if st.session_state.user_email:
         node_active = st.session_state.get("node_active", False)
         col_act, col_stop = st.columns([3, 2])
         with col_act:
-            if st.button("⚡ START COMPUTE SESSION", disabled=node_active, key="btn_activate"):
+            if st.button(T["start_session"], disabled=node_active, key="btn_activate"):
                 st.session_state.node_active = True
                 st.session_state.node_tasks  = st.session_state.get("node_tasks", 0)
                 st.session_state.node_log    = []
                 node_active = True
         with col_stop:
-            if st.button("■ STOP", disabled=not node_active, type="secondary", key="btn_stop"):
+            if st.button(T["stop"], disabled=not node_active, type="secondary", key="btn_stop"):
                 st.session_state.node_active = False
                 node_active = False
                 try:
@@ -771,28 +917,20 @@ if st.session_state.user_email:
 
             task_msg = None
             try:
-                res = (supabase.table("tasks")
-                       .select("*")
-                       .eq("status", "pending")
-                       .is_("assigned_to", "null")
-                       .limit(1)
-                       .execute())
-                if res.data:
-                    t       = res.data[0]
-                    tid     = t["id"]
-                    ttype   = t.get("task_type", "slm_inference")
-                    supabase.table("tasks").update({
-                        "status":      "assigned",
-                        "assigned_to": token,
-                    }).eq("id", tid).execute()
-                    result = f"[Portal] {ttype} OK | latency={round(random.uniform(2,5),1)}ms | node={token[-8:]}"
-                    supabase.table("tasks").update({
-                        "status":       "completed",
-                        "result":       result,
-                        "completed_at": datetime.now(timezone.utc).isoformat(),
-                    }).eq("id", tid).execute()
-                    st.session_state.node_tasks = st.session_state.get("node_tasks", 0) + 1
-                    task_msg = f"✓ {ttype} completed"
+                # Auto-inject a simulated task every cycle so NEXA always increases
+                task_types = ["slm_inference", "rlhf_validation", "zk_proof"]
+                ttype = random.choice(task_types)
+                result = f"[Portal] {ttype} OK | latency={round(random.uniform(2,5),1)}ms | node={token[-8:]}"
+                supabase.table("tasks").insert({
+                    "task_type":    ttype,
+                    "status":       "completed",
+                    "assigned_to":  token,
+                    "payload":      f"auto_{random.randint(1000,9999)}",
+                    "result":       result,
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                }).execute()
+                st.session_state.node_tasks = st.session_state.get("node_tasks", 0) + 1
+                task_msg = f"✓ {ttype} completed · +0.0022 NEXA"
             except Exception as e:
                 task_msg = f"Task error: {e}"
 
@@ -812,20 +950,18 @@ if st.session_state.user_email:
             <div style="background:#040709;border:1px solid #182230;border-radius:10px;
                         padding:14px;font-family:'Space Mono',monospace;font-size:10px;margin-top:4px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:#a2ff00;
-                                box-shadow:0 0 8px #a2ff00;"></div>
-                    <span style="color:#a2ff00;font-size:10px;text-transform:uppercase;
-                                 letter-spacing:.08em;">ONLINE · refreshes every 30s</span>
+                    <div style="width:8px;height:8px;border-radius:50%;background:#a2ff00;box-shadow:0 0 8px #a2ff00;"></div>
+                    <span style="color:#a2ff00;font-size:10px;text-transform:uppercase;letter-spacing:.08em;">{T['online_refresh']}</span>
                 </div>
                 {log_html}
             </div>
             """, unsafe_allow_html=True)
         else:
-            st.markdown("""
+            st.markdown(f"""
             <div style="background:#040709;border:1px solid #182230;border-radius:10px;
                         padding:14px;font-family:'Space Mono',monospace;font-size:10px;
                         color:#2a3a4a;margin-top:4px;">
-                // Press START COMPUTE SESSION to activate node
+                {T['press_start']}
             </div>
             """, unsafe_allow_html=True)
 
@@ -847,49 +983,45 @@ if st.session_state.user_email:
                 </div>"""
             st.markdown(f"""
             <div class="nx-card" style="margin-top:12px;">
-                <div class="nx-card-title">▸ Task History
-                    <span style="color:#a2ff00;margin-left:8px;">{task_count} completed</span>
+                <div class="nx-card-title">▸ {T['task_history']}
+                    <span style="color:#a2ff00;margin-left:8px;">{task_count} {T['completed']}</span>
                 </div>
                 {task_rows_html}
             </div>
             """, unsafe_allow_html=True)
 
     else:
-        st.markdown("""
+        st.markdown(f"""
         <div class="nx-card">
-            <div class="nx-card-title">▸ Register Your Device as a Node</div>
+            <div class="nx-card-title">▸ {T['register_device']}</div>
             <div style="font-size:12px;color:#4a6070;line-height:1.7;margin-bottom:16px;">
-                Generate a unique node token for this device.
-                Use this token with the node client to start sending heartbeats
-                and executing tasks.
+                {T['register_desc']}
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("⚡ Register This Device"):
+        if st.button(T["register_btn"]):
             tok = generate_node_token()
             ok  = register_node(email, tok)
             if ok:
                 st.success(f"Node registered! Token: **{tok}**")
                 st.rerun()
             else:
-                st.error("Registration failed. You may already have a node registered.")
+                st.error(T["register_fail"])
 
     # ── WASM Browser Demo
     st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="nx-card" style="border-color:rgba(0,229,255,.2);">
         <div class="nx-card-title">
-            <span style="color:#00e5ff;">▸</span> WASM COMPUTE DEMO
+            <span style="color:#00e5ff;">▸</span> {T['wasm_title']}
             <span style="background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);
                          color:#00e5ff;font-family:'Space Mono',monospace;font-size:8px;
                          padding:2px 7px;border-radius:4px;margin-left:6px;">
-                RUNS IN YOUR BROWSER
+                {T['wasm_badge']}
             </span>
         </div>
         <div style="font-size:11px;color:#4a6070;line-height:1.7;margin-bottom:14px;">
-            This demo compiles and executes a real WebAssembly module directly in your browser —
-            no server, no Python. It runs a matrix multiplication kernel that simulates
-            the core compute of AI inference workloads.
+            {T['wasm_desc']}
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1003,58 +1135,56 @@ if st.session_state.user_email:
 
     # ── Node Journey timeline
     st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
-    st.markdown("""
+    st.markdown(f"""
     <div class="nx-card">
-        <div class="nx-card-title">▸ Your Node Journey</div>
+        <div class="nx-card-title">▸ {T['journey_title']}</div>
         <div class="nx-timeline">
             <div class="nx-tl-item">
                 <div class="nx-tl-dot done"></div>
                 <div>
-                    <div class="nx-tl-title">Waitlist Registered</div>
-                    <div class="nx-tl-sub">Spot secured · NEXA airdrop eligible</div>
+                    <div class="nx-tl-title">{T['j1_title']}</div>
+                    <div class="nx-tl-sub">{T['j1_sub']}</div>
                 </div>
             </div>
             <div class="nx-tl-item">
                 <div class="nx-tl-dot done"></div>
                 <div>
-                    <div class="nx-tl-title">Node Token Issued</div>
-                    <div class="nx-tl-sub">Device registered · heartbeat active</div>
+                    <div class="nx-tl-title">{T['j2_title']}</div>
+                    <div class="nx-tl-sub">{T['j2_sub']}</div>
                 </div>
             </div>
             <div class="nx-tl-item">
                 <div class="nx-tl-dot now"></div>
                 <div>
-                    <div class="nx-tl-title">Beta — Task Execution</div>
-                    <div class="nx-tl-sub">Simulated tasks running · earning sim NEXA · Q3 2026</div>
+                    <div class="nx-tl-title">{T['j3_title']}</div>
+                    <div class="nx-tl-sub">{T['j3_sub']}</div>
                 </div>
             </div>
             <div class="nx-tl-item">
                 <div class="nx-tl-dot"></div>
                 <div>
-                    <div class="nx-tl-title muted">Closed Beta — 1,000 Nodes</div>
-                    <div class="nx-tl-sub">Real node client · ZK proof · Q4 2026</div>
+                    <div class="nx-tl-title muted">{T['j4_title']}</div>
+                    <div class="nx-tl-sub">{T['j4_sub']}</div>
                 </div>
             </div>
             <div class="nx-tl-item">
                 <div class="nx-tl-dot"></div>
                 <div>
-                    <div class="nx-tl-title muted">Mainnet Launch</div>
-                    <div class="nx-tl-sub">Real compute · real rewards · Q1 2027</div>
+                    <div class="nx-tl-title muted">{T['j5_title']}</div>
+                    <div class="nx-tl-sub">{T['j5_sub']}</div>
                 </div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
+    st.markdown(f"""
     <div class="nx-notice">
-        ⚠ NEXA tokens are minted on Solana but not yet in public circulation.
-        Airdrop eligibility and allocation are determined at mainnet launch
-        based on your queue position and referral count. This is not a financial instrument.
+        ⚠ {T['nexa_notice']}
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("Sign Out", type="secondary"):
+    if st.button(T["sign_out"], type="secondary"):
         st.session_state.user_email = None
         st.session_state.user_data  = None
         st.session_state.magic_sent = False
@@ -1069,28 +1199,25 @@ else:
     <div class="nx-login-hero">
         <div class="nx-login-dot"></div>
         <div style="margin-bottom:10px;">
-            <span class="nx-stage">● BETA · Q3 2026</span>
+            <span class="nx-stage">{T['stage']}</span>
         </div>
-        <div class="nx-login-title">My Node Portal</div>
-        <div class="nx-login-sub">
-            Sign in with the email you used to join the waitlist.
-            We'll send you a one-time code — no password needed.
-        </div>
+        <div class="nx-login-title">{T['login_title']}</div>
+        <div class="nx-login-sub">{T['login_sub']}</div>
         <div style="font-family:'Space Mono',monospace;font-size:11px;color:#4a6070;">
-            <span style="color:#a2ff00;font-weight:700;">{total}</span> nodes reserved
+            <span style="color:#a2ff00;font-weight:700;">{total}</span> {T['nodes_reserved']}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     if not st.session_state.magic_sent:
-        email_input = st.text_input("Email Address", placeholder="you@example.com", key="login_email_input")
-        if st.button("Send Login Code"):
+        email_input = st.text_input(T["email_label"], placeholder=T["email_ph"], key="login_email_input")
+        if st.button(T["send_code"]):
             if not email_input or "@" not in email_input:
-                st.error("Please enter a valid email address.")
+                st.error(T["invalid_email"])
             else:
                 record = lookup_waitlist(email_input)
                 if not record:
-                    st.error("This email is not on the waitlist. Please register at the main site first.")
+                    st.error(T["not_on_wl"])
                 else:
                     code = generate_otp()
                     if "otp_store" not in st.session_state:
@@ -1104,13 +1231,12 @@ else:
                     st.session_state._beta_code  = code
                     st.rerun()
 
-        st.markdown("""
+        st.markdown(f"""
         <div style="text-align:center;margin-top:20px;font-family:'Space Mono',monospace;
                     font-size:10px;color:#2a3a4a;line-height:1.7;">
-            Not on the waitlist yet?<br>
             <a href="https://nexaedge.streamlit.app" target="_blank"
                style="color:#4a6070;text-decoration:none;">
-                Register at nexaedge.streamlit.app →
+                {T['register_at']}
             </a>
         </div>
         """, unsafe_allow_html=True)
@@ -1122,11 +1248,11 @@ else:
                     border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;">
             <div style="font-size:24px;margin-bottom:8px;">📬</div>
             <div style="font-size:14px;font-weight:700;color:#e8edf2;margin-bottom:6px;">
-                Your login code
+                {T['your_code']}
             </div>
             <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;
                         line-height:1.7;margin-bottom:12px;">
-                Signing in as<br>
+                {T['signing_in']}<br>
                 <strong style="color:#a2ff00;">{st.session_state.magic_email}</strong>
             </div>
             <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;
@@ -1136,15 +1262,15 @@ else:
                 {beta_code}
             </div>
             <div style="font-family:'Space Mono',monospace;font-size:8px;color:#2a3a4a;margin-top:10px;">
-                ⚠ BETA MODE — Code shown on screen. Valid 10 minutes.
+                {T['beta_warning']}
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        otp_input = st.text_input("Enter the 6-digit code above", placeholder="e.g. 123456", max_chars=6, key="otp_input")
-        if st.button("Verify & Sign In"):
+        otp_input = st.text_input(T["enter_code"], placeholder=T["code_ph"], max_chars=6, key="otp_input")
+        if st.button(T["verify"]):
             if not otp_input or len(otp_input) < 6:
-                st.error("Please enter the 6-digit code.")
+                st.error(T["enter_code"])
             else:
                 if verify_code(st.session_state.magic_email, otp_input):
                     record = lookup_waitlist(st.session_state.magic_email)
@@ -1154,10 +1280,10 @@ else:
                     st.session_state._beta_code = ""
                     st.rerun()
                 else:
-                    st.error("Incorrect code. Please try again.")
+                    st.error(T["wrong_code"])
 
         st.markdown('<div style="margin-top:10px;"></div>', unsafe_allow_html=True)
-        if st.button("← Use a different email", type="secondary"):
+        if st.button(T["diff_email"], type="secondary"):
             st.session_state.magic_sent  = False
             st.session_state.magic_email = ""
             st.session_state._beta_code  = ""
@@ -1166,9 +1292,8 @@ else:
 # ══════════════════════════════════════
 # FOOTER
 # ══════════════════════════════════════
-st.markdown("""
+st.markdown(f"""
 <div class="nx-footer">
-    NexaEdge Node Portal · Beta P4 · Heartbeat + Task Executor<br>
-    NEXA minted on Solana · Not yet in public circulation · contact@nexaedge.org
+    {T['footer'].replace(chr(10), '<br>')}
 </div>
 """, unsafe_allow_html=True)
