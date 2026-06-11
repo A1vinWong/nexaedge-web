@@ -734,16 +734,16 @@ if st.session_state.user_email:
     if is_zh:
         share_text_only = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}"
         share_text      = f"{share_text_only}\n{site_url}"
+        wa_msg          = f"加入 NexaEdge 候补名单 — 将闲置手机算力变成分布式 AI 网络。使用我的推荐码 {ref_code} . nexaedge.org"
     else:
         share_text_only = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref_code}"
         share_text      = f"{share_text_only}\n{site_url}"
+        wa_msg          = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref_code} . nexaedge.org"
 
     import urllib.parse
     tg_url = "https://telegram.me/share/url?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text)
     x_url  = "https://twitter.com/intent/tweet?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text_only)
-    wa_url = "https://wa.me/?text=" + urllib.parse.quote(share_text)
-
-    share_label = "分享给朋友（含注册链接）" if is_zh else "Share with friends (includes signup link)"
+    wa_url = "https://wa.me/?text=" + urllib.parse.quote(wa_msg)
 
     st.markdown(f"""
     <div class="nx-ref-box">
@@ -753,23 +753,14 @@ if st.session_state.user_email:
             {referrals} {T['joined_with_code_pl'] if referrals != 1 else T['joined_with_code']}
         </div>
     </div>
-    <div style="background:#060b0f;border:1px solid rgba(162,255,0,.15);border-radius:10px;
-                padding:12px 14px;margin-bottom:10px;">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
-                    text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">
-            {share_label}
-        </div>
-        <div style="font-size:11px;color:#e8edf2;line-height:1.7;word-break:break-all;">
-            {share_text}
-        </div>
-    </div>
     <div class="nx-share-row">
         <a class="nx-share-btn" href="{tg_url}" target="_blank">📢 Telegram</a>
+        <a class="nx-share-btn" href="{wa_url}" target="_blank">💬 WhatsApp</a>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown('<div style="margin-top:6px;"></div>', unsafe_allow_html=True)
-    copy_hint = "长按复制完整信息（发到 X 或 WhatsApp）" if is_zh else "Tap & hold to copy full message (for X or WhatsApp)"
+    copy_hint = "长按复制完整信息（发到 X）" if is_zh else "Tap & hold to copy full message (for X)"
     st.text_input(
         copy_hint,
         value=share_text,
