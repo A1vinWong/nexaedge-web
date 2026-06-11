@@ -738,7 +738,7 @@ if st.session_state.user_email:
 
     import urllib.parse
     tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_text)}"
-    x_url  = f"https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}"
+    x_url  = f"https://twitter.com/intent/tweet?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_text)}"
     wa_url = f"https://wa.me/?text={urllib.parse.quote(share_text)}"
 
     share_label = "分享给朋友（含注册链接）" if is_zh else "Share with friends (includes signup link)"
