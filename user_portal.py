@@ -969,26 +969,31 @@ if st.session_state.user_email:
         tasks = get_node_tasks(token)
         if tasks:
             task_rows_html = ""
-            for t in tasks:
+            for t in tasks[:10]:
                 t_type   = t.get("task_type", "—")
                 t_status = t.get("status", "—")
                 t_time   = (t.get("completed_at") or t.get("created_at") or "")[:16].replace("T", " ")
-                s_class  = {"completed": "nx-task-status-done",
-                            "assigned":  "nx-task-status-assigned"}.get(t_status, "nx-task-status-pending")
+                status_color = "#a2ff00" if t_status == "completed" else "#ffb300"
                 task_rows_html += f"""
-                <div class="nx-task-row">
-                    <div class="nx-task-type">{t_type}</div>
-                    <div class="{s_class}">{t_status}</div>
-                    <div class="nx-task-time">{t_time}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;
+                            padding:8px 0;border-bottom:1px solid #182230;">
+                    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#d0d8e4;">{t_type}</div>
+                    <div style="font-family:'Space Mono',monospace;font-size:9px;color:{status_color};
+                                background:rgba(162,255,0,.08);padding:2px 7px;border-radius:4px;">{t_status}</div>
+                    <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;">{t_time}</div>
                 </div>"""
-            st.markdown(f"""
-            <div class="nx-card" style="margin-top:12px;">
-                <div class="nx-card-title">▸ {T['task_history']}
+            st.components.v1.html(f"""
+            <style>@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');</style>
+            <div style="background:linear-gradient(160deg,#0d1720,#090e14);border:1px solid #182230;
+                        border-radius:14px;padding:16px 18px;margin-top:12px;">
+                <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;
+                            text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;">
+                    ▸ {T['task_history']}
                     <span style="color:#a2ff00;margin-left:8px;">{task_count} {T['completed']}</span>
                 </div>
                 {task_rows_html}
             </div>
-            """, unsafe_allow_html=True)
+            """, height=min(60 + len(tasks[:10]) * 38, 440))
 
     else:
         st.markdown(f"""
