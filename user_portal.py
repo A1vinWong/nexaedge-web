@@ -737,9 +737,9 @@ if st.session_state.user_email:
         share_text = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref_code}\n{site_url}"
 
     import urllib.parse
-    tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_text)}"
-    x_url  = f"https://twitter.com/intent/tweet?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_text)}"
-    wa_url = f"https://wa.me/?text={urllib.parse.quote(share_text)}"
+    tg_url = "https://telegram.me/share/url?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text)
+    x_url  = "https://twitter.com/intent/tweet?text=" + urllib.parse.quote(share_text + "\n" + site_url)
+    wa_url = "https://wa.me/?text=" + urllib.parse.quote(share_text)
 
     share_label = "分享给朋友（含注册链接）" if is_zh else "Share with friends (includes signup link)"
 
