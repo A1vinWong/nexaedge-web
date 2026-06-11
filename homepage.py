@@ -617,11 +617,11 @@ elif current_tab == L["nav"][4]:
         ref = st.session_state.wl_ref_code
         site_url = "https://nexaedge.streamlit.app"
 
-        # Share messages with full link
+        # Share messages — URL at end on its own line for WhatsApp compatibility
         if is_zh:
-            share_msg = f"加入 NexaEdge 候补名单——将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。使用我的推荐码 {ref} 注册可提高空投分配比例。立即注册：{site_url}"
+            share_msg = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref}\n👉 {site_url}"
         else:
-            share_msg = f"Join the NexaEdge waitlist — distributed edge AI on smartphones, earn NEXA tokens. Use my referral code {ref} to boost your airdrop allocation. Sign up: {site_url}"
+            share_msg = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref}\n👉 {site_url}"
 
         x_url  = f"https://twitter.com/intent/tweet?text={urllib.parse.quote(share_msg)}"
         tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_msg)}"
