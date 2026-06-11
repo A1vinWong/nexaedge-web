@@ -3,6 +3,7 @@ import time
 import random
 import re
 import hashlib
+import urllib.parse
 from streamlit_autorefresh import st_autorefresh
 from supabase import create_client, Client
 
@@ -622,7 +623,6 @@ elif current_tab == L["nav"][4]:
         else:
             share_msg = f"Join the NexaEdge waitlist — distributed edge AI on smartphones, earn NEXA tokens. Use my referral code {ref} to boost your airdrop allocation. Sign up: {site_url}"
 
-        import urllib.parse
         x_url  = f"https://twitter.com/intent/tweet?text={urllib.parse.quote(share_msg)}"
         tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_msg)}"
         wa_url = f"https://wa.me/?text={urllib.parse.quote(share_msg)}"
