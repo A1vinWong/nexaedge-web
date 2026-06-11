@@ -732,9 +732,9 @@ if st.session_state.user_email:
     # ── Referral box
     site_url = "https://nexaedge.streamlit.app"
     if is_zh:
-        share_text = f"加入 NexaEdge 候补名单——将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。使用我的推荐码 {ref_code} 注册可提高空投分配比例。立即注册：{site_url}"
+        share_text = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}\n👉 {site_url}"
     else:
-        share_text = f"Join the NexaEdge waitlist — distributed edge AI on smartphones, earn NEXA tokens. Use my referral code {ref_code} to boost your airdrop allocation. Sign up: {site_url}"
+        share_text = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref_code}\n👉 {site_url}"
 
     import urllib.parse
     tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_text)}"
