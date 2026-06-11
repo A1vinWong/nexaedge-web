@@ -1153,7 +1153,7 @@ if st.session_state.user_email:
                 "Latency: <span style='color:#a2ff00;'>" + latency + "ms</span><br>" +
                 "Throughput: <span style='color:#00e5ff;'>" + flops + " GFLOPS</span><br>" +
                 "Checksum: <span style='color:#4a6070;'>" + checksum.toFixed(4) + "</span><br>" +
-                "Node: <span style='color:#4a6070;'>{token}</span>";
+                "Node: <span style='color:#4a6070;'>" + "</span>";
         }}, 10);
     }}
     </script>
