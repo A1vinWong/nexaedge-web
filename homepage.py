@@ -614,19 +614,66 @@ elif current_tab == L["nav"][4]:
 
     if st.session_state.wl_success:
         ref = st.session_state.wl_ref_code
+        site_url = "https://nexaedge.streamlit.app"
+
+        # Share messages with full link
+        if is_zh:
+            share_msg = f"加入 NexaEdge 候补名单——将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。使用我的推荐码 {ref} 注册可提高空投分配比例。立即注册：{site_url}"
+        else:
+            share_msg = f"Join the NexaEdge waitlist — distributed edge AI on smartphones, earn NEXA tokens. Use my referral code {ref} to boost your airdrop allocation. Sign up: {site_url}"
+
+        import urllib.parse
+        x_url  = f"https://twitter.com/intent/tweet?text={urllib.parse.quote(share_msg)}"
+        tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_msg)}"
+        wa_url = f"https://wa.me/?text={urllib.parse.quote(share_msg)}"
+
         st.markdown(f"""<div class="nx-success-banner">
         <div style="font-size:20px;font-weight:800;color:#a2ff00;margin-bottom:6px;">{L['wl_success_title']}</div>
         <div style="font-size:12px;color:#4a6070;line-height:1.7;margin-bottom:20px;">{L['wl_success_desc']}</div>
         <div class="nx-ref-display"><div class="nx-ref-label">{L['wl_your_ref']}</div><div class="nx-ref-code">{ref}</div></div></div>""", unsafe_allow_html=True)
-        portal_label = "Login to My Node Portal" if not is_zh else "登录我的节点 Portal"
+
+        portal_label = "Login to My Node Portal" if not is_zh else "登录节点控制台"
         portal_desc  = "See your queue position and activate your node heartbeat" if not is_zh else "查看队列排名、激活节点心跳"
         st.markdown(f"""<a href="https://nexaedge-web-port.streamlit.app?lang={st.session_state.lang}" target="_blank" style="display:block;background:rgba(162,255,0,.06);border:1px solid rgba(162,255,0,.25);border-radius:12px;padding:16px 20px;text-decoration:none;margin-bottom:14px;">
         <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#a2ff00;margin-bottom:4px;">{portal_label}</div>
         <div style="font-size:11px;color:#4a6070;">{portal_desc}</div></a>""", unsafe_allow_html=True)
+
+        # Share message preview
+        share_label = "分享给朋友（含注册链接）" if is_zh else "Share with friends (includes signup link)"
+        st.markdown(f"""
+        <div style="background:#060b0f;border:1px solid rgba(162,255,0,.2);border-radius:10px;
+                    padding:14px 16px;margin-bottom:12px;">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
+                        text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">
+                {share_label}
+            </div>
+            <div style="font-size:12px;color:#e8edf2;line-height:1.7;word-break:break-all;">
+                {share_msg}
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <a href="{x_url}" target="_blank" style="flex:1;text-align:center;padding:10px;
+               background:#0d1720;border:1px solid #182230;border-radius:8px;
+               color:#4a6070;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;">
+               🐦 X
+            </a>
+            <a href="{tg_url}" target="_blank" style="flex:1;text-align:center;padding:10px;
+               background:#0d1720;border:1px solid #182230;border-radius:8px;
+               color:#4a6070;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;">
+               📢 Telegram
+            </a>
+            <a href="{wa_url}" target="_blank" style="flex:1;text-align:center;padding:10px;
+               background:#0d1720;border:1px solid #182230;border-radius:8px;
+               color:#4a6070;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;">
+               💬 WhatsApp
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+
         cb1,cb2=st.columns(2)
         with cb1:
             if st.button(L["wl_copy"], key="copy_ref_btn"):
-                st.components.v1.html(f'<script>navigator.clipboard.writeText("{ref}").catch(()=>{{}});</script>', height=0, width=0)
+                st.components.v1.html(f'<script>navigator.clipboard.writeText("{share_msg}").catch(()=>{{}});</script>', height=0, width=0)
                 st.toast(L["wl_copied"])
         with cb2:
             if st.button(L["wl_reset"], type="secondary", key="wl_reset_btn"):
