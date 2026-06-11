@@ -620,13 +620,15 @@ elif current_tab == L["nav"][4]:
         if is_zh:
             share_text_only = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref}"
             share_msg       = f"{share_text_only}\n{site_url}"
+            wa_msg          = f"加入 NexaEdge 候补名单 — 将闲置手机算力变成分布式 AI 网络。使用我的推荐码 {ref} . nexaedge.org"
         else:
             share_text_only = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref}"
             share_msg       = f"{share_text_only}\n{site_url}"
+        wa_msg = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref} . nexaedge.org"
 
         x_url  = "https://twitter.com/intent/tweet?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text_only)
         tg_url = "https://telegram.me/share/url?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_msg)
-        wa_url = "https://wa.me/?text=" + urllib.parse.quote(share_msg)
+        wa_url = "https://wa.me/?text=" + urllib.parse.quote(wa_msg)
 
         st.markdown(f"""<div class="nx-success-banner">
         <div style="font-size:20px;font-weight:800;color:#a2ff00;margin-bottom:6px;">{L['wl_success_title']}</div>
@@ -642,30 +644,21 @@ elif current_tab == L["nav"][4]:
         # Share message preview
         share_label = "分享给朋友（含注册链接）" if is_zh else "Share with friends (includes signup link)"
         st.markdown(f"""
-        <div style="background:#060b0f;border:1px solid rgba(162,255,0,.2);border-radius:10px;
-                    padding:14px 16px;margin-bottom:12px;">
-            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
-                        text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">
-                {share_label}
-            </div>
-            <div style="font-size:12px;color:#e8edf2;line-height:1.7;word-break:break-all;">
-                {share_msg}
-            </div>
-        </div>
         <div style="display:flex;gap:8px;margin-bottom:8px;">
             <a href="{tg_url}" target="_blank" style="flex:1;text-align:center;padding:10px;
                background:#0d1720;border:1px solid #182230;border-radius:8px;
                color:#4a6070;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;">
                📢 Telegram
             </a>
-        </div>
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;
-                    margin-bottom:10px;text-align:center;">
-            {'长按下方复制完整信息，然后发到 X 或 WhatsApp' if is_zh else 'Tap & hold below to copy full message for X or WhatsApp'}
+            <a href="{wa_url}" target="_blank" style="flex:1;text-align:center;padding:10px;
+               background:#0d1720;border:1px solid #182230;border-radius:8px;
+               color:#4a6070;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;">
+               💬 WhatsApp
+            </a>
         </div>
         """, unsafe_allow_html=True)
 
-        copy_label = "长按复制完整分享信息" if is_zh else "Tap & hold to copy full message"
+        copy_label = "长按复制完整分享信息（X / WhatsApp）" if is_zh else "Tap & hold to copy full message (X / WhatsApp)"
         st.text_input(copy_label, value=share_msg, key="share_msg_copy", label_visibility="visible")
 
         cb1,cb2=st.columns(2)
