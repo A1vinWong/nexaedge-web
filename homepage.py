@@ -13,23 +13,12 @@ st.set_page_config(
     layout="centered"
 )
 
-# ══════════════════════════════════════
-# CONFIG — read from st.secrets only
-# ══════════════════════════════════════
-try:
-    SUPABASE_URL = st.secrets["url"]
-    SUPABASE_KEY = st.secrets["key"]
-except KeyError as e:
-    st.error(f"Missing secret: {e}. Please configure Streamlit secrets.")
-    st.stop()
+SUPABASE_URL = "https://nfafzigmcdybgbxdtymf.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mYWZ6aWdtY2R5YmdieGR0eW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODE3NTMsImV4cCI6MjA5NjU1Nzc1M30.ZIX3sByZ8yQSDGFr-o24CjIXwZ5UsB4rMB3jculLtv0"
 
 @st.cache_resource
 def get_supabase() -> Client:
-    try:
-        return create_client(SUPABASE_URL, SUPABASE_KEY)
-    except Exception as e:
-        st.error(f"Database connection failed: {e}")
-        st.stop()
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 supabase = get_supabase()
 
@@ -635,7 +624,7 @@ elif current_tab == L["nav"][4]:
         else:
             share_text_only = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref}"
             share_msg       = f"{share_text_only}\n{site_url}"
-            wa_msg          = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref} . nexaedge.org"
+        wa_msg = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref} . nexaedge.org"
 
         x_url  = "https://twitter.com/intent/tweet?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text_only)
         tg_url = "https://telegram.me/share/url?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_msg)
@@ -652,6 +641,7 @@ elif current_tab == L["nav"][4]:
         <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#a2ff00;margin-bottom:4px;">{portal_label}</div>
         <div style="font-size:11px;color:#4a6070;">{portal_desc}</div></a>""", unsafe_allow_html=True)
 
+        # Share message preview
         share_label = "分享给朋友（含注册链接）" if is_zh else "Share with friends (includes signup link)"
         st.markdown(f"""
         <div style="display:flex;gap:8px;margin-bottom:8px;">
@@ -721,7 +711,7 @@ elif current_tab == L["nav"][4]:
             st.dataframe(ledger_rows, use_container_width=True, hide_index=True)
 
 # ══════════════════════════════════════
-# TAB 6 — WHITEPAPER
+# TAB 6 — WHITEPAPER (Full 10 sections)
 # ══════════════════════════════════════
 elif current_tab in ["Whitepaper", "白皮书"]:
     is_zh = st.session_state.lang == "ZH"
