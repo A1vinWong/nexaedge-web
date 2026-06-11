@@ -615,17 +615,16 @@ elif current_tab == L["nav"][4]:
 
     if st.session_state.wl_success:
         ref = st.session_state.wl_ref_code
-        site_url = "https://nexaedge.streamlit.app"
+        site_url   = "https://nexaedge.streamlit.app"
 
-        # Share messages — URL at end on its own line for WhatsApp compatibility
         if is_zh:
-            share_msg = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref}\n👉 {site_url}"
+            share_msg = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref}\n{site_url}"
         else:
-            share_msg = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref}\n👉 {site_url}"
+            share_msg = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref}\n{site_url}"
 
-        x_url  = f"https://twitter.com/intent/tweet?text={urllib.parse.quote(share_msg)}"
-        tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_msg)}"
-        wa_url = f"https://wa.me/?text={urllib.parse.quote(share_msg)}"
+        x_url  = "https://twitter.com/intent/tweet?text=" + urllib.parse.quote(share_msg + "\n" + site_url)
+        tg_url = "https://telegram.me/share/url?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_msg)
+        wa_url = "https://wa.me/?text=" + urllib.parse.quote(share_msg)
 
         st.markdown(f"""<div class="nx-success-banner">
         <div style="font-size:20px;font-weight:800;color:#a2ff00;margin-bottom:6px;">{L['wl_success_title']}</div>
