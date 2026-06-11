@@ -730,12 +730,11 @@ if st.session_state.user_email:
     """, unsafe_allow_html=True)
 
     # ── Referral box
-    site_url   = "https://nexaedge.streamlit.app"
-    site_plain = "nexaedge.streamlit.app"
+    site_url = "https://nexaedge.streamlit.app"
     if is_zh:
-        share_text = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}\n注册地址：{site_plain}"
+        share_text = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}\n{site_url}"
     else:
-        share_text = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref_code}\nRegister at: {site_plain}"
+        share_text = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref_code}\n{site_url}"
 
     import urllib.parse
     tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_text)}"
@@ -1038,7 +1037,7 @@ if st.session_state.user_email:
 
     # ── WASM Browser Demo
     st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
-    st.markdown("""
+    st.markdown(f"""
     <div class="nx-card" style="border-color:rgba(0,229,255,.2);">
         <div class="nx-card-title">
             <span style="color:#00e5ff;">▸</span> {T['wasm_title']}
