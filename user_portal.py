@@ -730,10 +730,18 @@ if st.session_state.user_email:
     """, unsafe_allow_html=True)
 
     # ── Referral box
-    share_text = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref_code}"
-    tg_url = f"https://t.me/share/url?url=https://nexaedge.streamlit.app&text={share_text}"
-    x_url  = f"https://twitter.com/intent/tweet?text={share_text}"
-    wa_url = f"https://wa.me/?text={share_text}"
+    site_url = "https://nexaedge.streamlit.app"
+    if is_zh:
+        share_text = f"加入 NexaEdge 候补名单——将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。使用我的推荐码 {ref_code} 注册可提高空投分配比例。立即注册：{site_url}"
+    else:
+        share_text = f"Join the NexaEdge waitlist — distributed edge AI on smartphones, earn NEXA tokens. Use my referral code {ref_code} to boost your airdrop allocation. Sign up: {site_url}"
+
+    import urllib.parse
+    tg_url = f"https://t.me/share/url?url={urllib.parse.quote(site_url)}&text={urllib.parse.quote(share_text)}"
+    x_url  = f"https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}"
+    wa_url = f"https://wa.me/?text={urllib.parse.quote(share_text)}"
+
+    share_label = "分享给朋友（含注册链接）" if is_zh else "Share with friends (includes signup link)"
 
     st.markdown(f"""
     <div class="nx-ref-box">
@@ -741,6 +749,16 @@ if st.session_state.user_email:
         <div class="nx-ref-code">{ref_code}</div>
         <div class="nx-ref-count">
             {referrals} {T['joined_with_code_pl'] if referrals != 1 else T['joined_with_code']}
+        </div>
+    </div>
+    <div style="background:#060b0f;border:1px solid rgba(162,255,0,.15);border-radius:10px;
+                padding:12px 14px;margin-bottom:10px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;
+                    text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">
+            {share_label}
+        </div>
+        <div style="font-size:11px;color:#e8edf2;line-height:1.7;word-break:break-all;">
+            {share_text}
         </div>
     </div>
     <div class="nx-share-row">
@@ -753,7 +771,7 @@ if st.session_state.user_email:
     st.markdown('<div style="margin-top:6px;"></div>', unsafe_allow_html=True)
     st.text_input(
         T["tap_copy"],
-        value=ref_code,
+        value=share_text,
         key="ref_code_display",
         label_visibility="visible",
     )
@@ -968,32 +986,36 @@ if st.session_state.user_email:
         # ── Task history
         tasks = get_node_tasks(token)
         if tasks:
-            task_rows_html = ""
-            for t in tasks[:10]:
-                t_type   = t.get("task_type", "—")
+            rows = ""
+            for t in tasks[:8]:
+                t_type  = t.get("task_type", "—")
                 t_status = t.get("status", "—")
-                t_time   = (t.get("completed_at") or t.get("created_at") or "")[:16].replace("T", " ")
-                status_color = "#a2ff00" if t_status == "completed" else "#ffb300"
-                task_rows_html += f"""
-                <div style="display:flex;justify-content:space-between;align-items:center;
-                            padding:8px 0;border-bottom:1px solid #182230;">
-                    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#d0d8e4;">{t_type}</div>
-                    <div style="font-family:'Space Mono',monospace;font-size:9px;color:{status_color};
-                                background:rgba(162,255,0,.08);padding:2px 7px;border-radius:4px;">{t_status}</div>
-                    <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;">{t_time}</div>
-                </div>"""
-            st.components.v1.html(f"""
-            <style>@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');</style>
-            <div style="background:linear-gradient(160deg,#0d1720,#090e14);border:1px solid #182230;
-                        border-radius:14px;padding:16px 18px;margin-top:12px;">
-                <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;
-                            text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;">
-                    ▸ {T['task_history']}
-                    <span style="color:#a2ff00;margin-left:8px;">{task_count} {T['completed']}</span>
-                </div>
-                {task_rows_html}
-            </div>
-            """, height=min(60 + len(tasks[:10]) * 38, 440))
+                t_time  = (t.get("completed_at") or t.get("created_at") or "")[:16].replace("T", " ")
+                sc = "#a2ff00" if t_status == "completed" else "#ffb300"
+                rows += (
+                    '<div style="display:flex;justify-content:space-between;padding:7px 0;'
+                    'border-bottom:1px solid #182230;">'
+                    f'<span style="font-family:monospace;font-size:10px;color:#d0d8e4;">{t_type}</span>'
+                    f'<span style="font-family:monospace;font-size:9px;color:{sc};">{t_status}</span>'
+                    f'<span style="font-family:monospace;font-size:9px;color:#2a3a4a;">{t_time}</span>'
+                    '</div>'
+                )
+            title_text = T['task_history']
+            count_text = str(task_count)
+            done_text  = T['completed']
+            html_out = (
+                '<style>body{margin:0;padding:0;background:transparent;}</style>'
+                '<div style="background:linear-gradient(160deg,#0d1720,#090e14);'
+                'border:1px solid #182230;border-radius:14px;padding:14px 16px;">'
+                '<div style="font-family:monospace;font-size:10px;color:#4a6070;'
+                'text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">'
+                f'&#9658; {title_text} '
+                f'<span style="color:#a2ff00;">{count_text} {done_text}</span>'
+                '</div>'
+                + rows +
+                '</div>'
+            )
+            st.components.v1.html(html_out, height=min(55 + len(tasks[:8]) * 36, 380))
 
     else:
         st.markdown(f"""
