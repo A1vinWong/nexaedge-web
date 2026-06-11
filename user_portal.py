@@ -732,13 +732,15 @@ if st.session_state.user_email:
     # ── Referral box
     site_url = "https://nexaedge.org"
     if is_zh:
-        share_text = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}\n{site_url}"
+        share_text_only = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}"
+        share_text      = f"{share_text_only}\n{site_url}"
     else:
-        share_text = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref_code}\n{site_url}"
+        share_text_only = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref_code}"
+        share_text      = f"{share_text_only}\n{site_url}"
 
     import urllib.parse
     tg_url = "https://telegram.me/share/url?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text)
-    x_url  = "https://twitter.com/intent/tweet?text=" + urllib.parse.quote(share_text + "\n" + site_url)
+    x_url  = "https://twitter.com/intent/tweet?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text_only)
     wa_url = "https://wa.me/?text=" + urllib.parse.quote(share_text)
 
     share_label = "分享给朋友（含注册链接）" if is_zh else "Share with friends (includes signup link)"
