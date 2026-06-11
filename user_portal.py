@@ -442,7 +442,7 @@ PORTAL_TEXT = {
         "portal_link": "Login to My Node Portal",
         "portal_desc": "See your queue position and activate your node heartbeat",
         "already_reg": "Already registered? Login to Node Portal →",
-        "register_at": "Register at nexaedge.streamlit.app →",
+        "register_at": "Register at nexaedge.org →",
         "footer": "NexaEdge Node Portal · Beta P4 · Heartbeat + Task Executor\nNEXA minted on Solana · Not yet in public circulation · contact@nexaedge.org",
     },
     "ZH": {
@@ -506,7 +506,7 @@ PORTAL_TEXT = {
         "portal_link": "登录节点控制台",
         "portal_desc": "查看队列排名、激活节点心跳",
         "already_reg": "已注册？登录节点 Portal →",
-        "register_at": "在 nexaedge.streamlit.app 注册 →",
+        "register_at": "在 nexaedge.org 注册 →",
         "footer": "NexaEdge 节点 Portal · Beta P4 · 心跳 + 任务执行器\nNEXA 已在 Solana 铸造 · 尚未公开流通 · contact@nexaedge.org",
     }
 }
@@ -730,7 +730,7 @@ if st.session_state.user_email:
     """, unsafe_allow_html=True)
 
     # ── Referral box
-    site_url = "https://nexaedge.streamlit.app"
+    site_url = "https://nexaedge.org"
     if is_zh:
         share_text = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}\n{site_url}"
     else:
@@ -1053,6 +1053,9 @@ if st.session_state.user_email:
     </div>
     """, unsafe_allow_html=True)
 
+    # Get token safely for WASM display
+    _wasm_node = node_rec.get("node_token", "—")[-12:] if node_rec else "—"
+
     wasm_html = f"""
     <div style="background:#040709;border:1px solid rgba(0,229,255,.2);border-radius:10px;
                 padding:16px;font-family:'Space Mono',monospace;font-size:10px;">
@@ -1153,7 +1156,7 @@ if st.session_state.user_email:
                 "Latency: <span style='color:#a2ff00;'>" + latency + "ms</span><br>" +
                 "Throughput: <span style='color:#00e5ff;'>" + flops + " GFLOPS</span><br>" +
                 "Checksum: <span style='color:#4a6070;'>" + checksum.toFixed(4) + "</span><br>" +
-                "Node: <span style='color:#4a6070;'>" + "</span>";
+                "Node: <span style='color:#4a6070;'>{_wasm_node}</span>";
         }}, 10);
     }}
     </script>
@@ -1261,7 +1264,7 @@ else:
         st.markdown(f"""
         <div style="text-align:center;margin-top:20px;font-family:'Space Mono',monospace;
                     font-size:10px;color:#2a3a4a;line-height:1.7;">
-            <a href="https://nexaedge.streamlit.app" target="_blank"
+            <a href="https://nexaedge.org" target="_blank"
                style="color:#4a6070;text-decoration:none;">
                 {T['register_at']}
             </a>
