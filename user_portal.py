@@ -19,14 +19,12 @@ st.set_page_config(
 )
 
 # ══════════════════════════════════════
-# CONFIG — read from st.secrets only
+# CONFIG
 # ══════════════════════════════════════
-try:
-    SUPABASE_URL = st.secrets["url"]
-    SUPABASE_KEY = st.secrets["key"]
-except KeyError as e:
-    st.error(f"Missing secret: {e}. Please configure Streamlit secrets.")
-    st.stop()
+SUPABASE_URL = st.secrets.get("url", "https://nfafzigmcdybgbxdtymf.supabase.co")
+SUPABASE_KEY = st.secrets.get("key", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mYWZ6aWdtY2R5YmdieGR0eW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODE3NTMsImV4cCI6MjA5NjU1Nzc1M30.ZIX3sByZ8yQSDGFr-o24CjIXwZ5UsB4rMB3jculLtv0")
+SUPABASE_URL_JS = SUPABASE_URL
+SUPABASE_KEY_JS = SUPABASE_KEY
 
 # ══════════════════════════════════════
 # CSS
@@ -288,6 +286,78 @@ div[data-testid="stHorizontalBlock"] div.stButton > button { width: auto !import
     text-align: center; font-family: 'Space Mono', monospace;
     font-size: 9px; color: #2a3a4a; line-height: 2;
 }
+.app-dashboard {
+    background: linear-gradient(160deg, #0a1018, #060b0f);
+    border: 1px solid #1a2535;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+.app-header {
+    background: linear-gradient(135deg, #0d1a10, #0a1410);
+    border-bottom: 1px solid #1a2535;
+    padding: 16px 18px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.app-header-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .12em;
+}
+.app-temp-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 6px;
+    font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700;
+}
+.app-chart-area {
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid #1a2535;
+}
+.app-stats-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 0; border-bottom: 1px solid #1a2535;
+}
+.app-stat-cell {
+    padding: 12px 14px; text-align: center;
+    border-right: 1px solid #1a2535;
+}
+.app-stat-cell:last-child { border-right: none; }
+.app-stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px; font-weight: 700; color: #e8edf2; line-height: 1.1;
+}
+.app-stat-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 7px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .06em; margin-top: 3px;
+}
+.app-node-section {
+    padding: 14px 18px;
+    border-bottom: 1px solid #1a2535;
+}
+.app-node-label {
+    font-family: 'Space Mono', monospace; font-size: 8px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px;
+}
+.app-node-id {
+    font-family: 'Space Mono', monospace; font-size: 11px; color: #a2ff00; margin-bottom: 12px;
+}
+.app-status-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+}
+.app-status-block { flex: 1; }
+.app-status-lbl {
+    font-family: 'Space Mono', monospace; font-size: 8px; color: #4a6070;
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px;
+}
+.app-status-val {
+    font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
+}
+.app-nexa-val {
+    font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: #a2ff00;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -296,11 +366,7 @@ div[data-testid="stHorizontalBlock"] div.stButton > button { width: auto !import
 # ══════════════════════════════════════
 @st.cache_resource
 def get_supabase() -> Client:
-    try:
-        return create_client(SUPABASE_URL, SUPABASE_KEY)
-    except Exception as e:
-        st.error(f"Database connection failed: {e}")
-        st.stop()
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 supabase = get_supabase()
 
@@ -308,6 +374,7 @@ supabase = get_supabase()
 # LANGUAGE — detect from URL param
 # ══════════════════════════════════════
 if "portal_lang" not in st.session_state:
+    # Read ?lang=ZH from URL if present
     url_lang = st.query_params.get("lang", "EN")
     st.session_state.portal_lang = "ZH" if url_lang == "ZH" else "EN"
 
@@ -502,6 +569,7 @@ def register_node(email, node_token):
     except: return False
 
 def get_latest_heartbeat(token):
+    """Get most recent heartbeat for this node."""
     try:
         res = (supabase.table("heartbeats")
                .select("cpu_usage,temperature,battery_level,tasks_completed,reported_at")
@@ -513,6 +581,7 @@ def get_latest_heartbeat(token):
     except: return None
 
 def get_node_tasks(token, limit=10):
+    """Get recent tasks assigned to this node."""
     try:
         res = (supabase.table("tasks")
                .select("id,task_type,status,result,created_at,completed_at")
@@ -524,6 +593,7 @@ def get_node_tasks(token, limit=10):
     except: return []
 
 def get_node_task_count(token):
+    """Total completed tasks for this node."""
     try:
         res = (supabase.table("tasks")
                .select("id", count="exact")
@@ -558,6 +628,7 @@ with c2:
     st.image('IMG_7859.jpeg', use_container_width=True)
 st.markdown('<div style="margin-bottom:8px;"></div>', unsafe_allow_html=True)
 
+# Language toggle in header
 h1, h2 = st.columns([3, 1])
 with h1:
     st.markdown(f"""
@@ -609,6 +680,7 @@ if st.session_state.user_email:
     referrals = count_referrals(ref_code)
     pct_rank  = round((1 - (rank - 1) / max(total, 1)) * 100) if total > 0 else 0
 
+    # ── Rank ring
     circ = 326.7
     dash = circ * (pct_rank / 100)
     gap  = circ - dash
@@ -634,6 +706,7 @@ if st.session_state.user_email:
     </div>
     """, unsafe_allow_html=True)
 
+    # ── Stats grid
     wallet_short = wallet[:6] + "..." + wallet[-4:] if wallet != "—" and len(wallet) > 10 else wallet
     st.markdown(f"""
     <div class="nx-stat-grid">
@@ -656,7 +729,7 @@ if st.session_state.user_email:
     </div>
     """, unsafe_allow_html=True)
 
-    import urllib.parse
+    # ── Referral box
     site_url = "https://nexaedge.org"
     if is_zh:
         share_text_only = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}"
@@ -667,6 +740,7 @@ if st.session_state.user_email:
         share_text      = f"{share_text_only}\n{site_url}"
         wa_msg          = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref_code} . nexaedge.org"
 
+    import urllib.parse
     tg_url = "https://telegram.me/share/url?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text)
     x_url  = "https://twitter.com/intent/tweet?url=" + urllib.parse.quote(site_url) + "&text=" + urllib.parse.quote(share_text_only)
     wa_url = "https://wa.me/?text=" + urllib.parse.quote(wa_msg)
@@ -695,7 +769,7 @@ if st.session_state.user_email:
     )
 
     # ══════════════════════════════════════
-    # DASHBOARD
+    # DASHBOARD — App Style
     # ══════════════════════════════════════
     st.markdown('<div style="margin-top:16px;"></div>', unsafe_allow_html=True)
     node_rec = get_node_record(email)
@@ -706,6 +780,7 @@ if st.session_state.user_email:
         hb = get_latest_heartbeat(token)
         task_count = get_node_task_count(token)
 
+        # live stats
         cpu  = hb.get("cpu_usage", 0) or 0 if hb else 0
         temp = hb.get("temperature", 0) or 0 if hb else 0
         batt = hb.get("battery_level", 100) or 100 if hb else 100
@@ -717,8 +792,10 @@ if st.session_state.user_email:
         temp_color = "#a2ff00" if temp_safe else "#f43f5e"
         temp_bg    = "rgba(162,255,0,.1)" if temp_safe else "rgba(244,63,94,.1)"
 
+        # Simulated NEXA earnings based on tasks completed
         nexa_earned = round(task_count * 0.0022, 4)
 
+        # Hash rate sparkline data (simulated based on cpu)
         hr_points = [random.uniform(max(0, cpu-20), cpu+20) for _ in range(12)]
         hr_max = max(hr_points) if hr_points else 1
         hr_norm = [round(h / hr_max * 60, 1) for h in hr_points]
@@ -801,6 +878,7 @@ if st.session_state.user_email:
         </div>
         """, height=310)
 
+        # ── Activate / Stop buttons
         node_active = st.session_state.get("node_active", False)
         col_act, col_stop = st.columns([3, 2])
         with col_act:
@@ -821,8 +899,6 @@ if st.session_state.user_email:
             from streamlit_autorefresh import st_autorefresh
             st_autorefresh(interval=30000, key="portal_tick")
 
-            hb_msg   = ""
-            hb_color = "#a2ff00"
             try:
                 cpu_sim  = round(random.uniform(5, 35), 1)
                 temp_sim = round(random.uniform(32, 38), 1)
@@ -843,14 +919,15 @@ if st.session_state.user_email:
                     "last_seen": now_iso,
                 }).eq("node_token", token).execute()
 
-                hb_msg   = f"♥ CPU {cpu_sim}%  Temp {temp_sim}°C  Batt {batt_sim}%"
+                hb_msg = f"♥ CPU {cpu_sim}%  Temp {temp_sim}°C  Batt {batt_sim}%"
                 hb_color = "#a2ff00"
             except Exception as e:
-                hb_msg   = f"Heartbeat error: {e}"
+                hb_msg  = f"Heartbeat error: {e}"
                 hb_color = "#f43f5e"
 
             task_msg = None
             try:
+                # Auto-inject a simulated task every cycle so NEXA always increases
                 task_types = ["slm_inference", "rlhf_validation", "zk_proof"]
                 ttype = random.choice(task_types)
                 result = f"[Portal] {ttype} OK | latency={round(random.uniform(2,5),1)}ms | node={token[-8:]}"
@@ -869,8 +946,7 @@ if st.session_state.user_email:
 
             log = st.session_state.get("node_log", [])
             ts_str = datetime.now().strftime("%H:%M:%S")
-            if hb_msg:
-                log.insert(0, (f"[{ts_str}] {hb_msg}", hb_color))
+            log.insert(0, (f"[{ts_str}] {hb_msg}", hb_color))
             if task_msg:
                 log.insert(0, (f"[{ts_str}] {task_msg}", "#a2ff00"))
             log = log[:6]
@@ -899,13 +975,14 @@ if st.session_state.user_email:
             </div>
             """, unsafe_allow_html=True)
 
+        # ── Task history
         tasks = get_node_tasks(token)
         if tasks:
             rows = ""
             for t in tasks[:8]:
-                t_type   = t.get("task_type", "—")
+                t_type  = t.get("task_type", "—")
                 t_status = t.get("status", "—")
-                t_time   = (t.get("completed_at") or t.get("created_at") or "")[:16].replace("T", " ")
+                t_time  = (t.get("completed_at") or t.get("created_at") or "")[:16].replace("T", " ")
                 sc = "#a2ff00" if t_status == "completed" else "#ffb300"
                 rows += (
                     '<div style="display:flex;justify-content:space-between;padding:7px 0;'
@@ -968,6 +1045,7 @@ if st.session_state.user_email:
     </div>
     """, unsafe_allow_html=True)
 
+    # Get token safely for WASM display
     _wasm_node = node_rec.get("node_token", "—")[-12:] if node_rec else "—"
 
     wasm_html = f"""
@@ -1029,6 +1107,7 @@ if st.session_state.user_email:
     }}
 
     function matmul(N) {{
+        // Allocate NxN matrices as Float32Arrays
         const A = new Float32Array(N * N);
         const B = new Float32Array(N * N);
         const C = new Float32Array(N * N);
@@ -1050,6 +1129,8 @@ if st.session_state.user_email:
     function runCompute(N) {{
         setStatus("RUNNING...", "#ffb300");
         log("Starting " + N + "×" + N + " FP32 matmul...", "#00e5ff");
+
+        // Use setTimeout to let UI update before heavy compute
         setTimeout(() => {{
             const t0 = performance.now();
             const checksum = matmul(N);
