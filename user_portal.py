@@ -764,15 +764,14 @@ if st.session_state.user_email:
         </div>
     </div>
     <div class="nx-share-row">
-        <a class="nx-share-btn" href="{x_url}" target="_blank">🐦 X</a>
         <a class="nx-share-btn" href="{tg_url}" target="_blank">📢 Telegram</a>
-        <a class="nx-share-btn" href="{wa_url}" target="_blank">💬 WhatsApp</a>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown('<div style="margin-top:6px;"></div>', unsafe_allow_html=True)
+    copy_hint = "长按复制完整信息（发到 X 或 WhatsApp）" if is_zh else "Tap & hold to copy full message (for X or WhatsApp)"
     st.text_input(
-        T["tap_copy"],
+        copy_hint,
         value=share_text,
         key="ref_code_display",
         label_visibility="visible",
