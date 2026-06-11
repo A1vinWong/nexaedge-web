@@ -652,24 +652,21 @@ elif current_tab == L["nav"][4]:
                 {share_msg}
             </div>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
-            <a href="{x_url}" target="_blank" style="flex:1;text-align:center;padding:10px;
-               background:#0d1720;border:1px solid #182230;border-radius:8px;
-               color:#4a6070;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;">
-               🐦 X
-            </a>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
             <a href="{tg_url}" target="_blank" style="flex:1;text-align:center;padding:10px;
                background:#0d1720;border:1px solid #182230;border-radius:8px;
                color:#4a6070;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;">
                📢 Telegram
             </a>
-            <a href="{wa_url}" target="_blank" style="flex:1;text-align:center;padding:10px;
-               background:#0d1720;border:1px solid #182230;border-radius:8px;
-               color:#4a6070;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;">
-               💬 WhatsApp
-            </a>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;
+                    margin-bottom:10px;text-align:center;">
+            {'长按下方复制完整信息，然后发到 X 或 WhatsApp' if is_zh else 'Tap & hold below to copy full message for X or WhatsApp'}
         </div>
         """, unsafe_allow_html=True)
+
+        copy_label = "长按复制完整分享信息" if is_zh else "Tap & hold to copy full message"
+        st.text_input(copy_label, value=share_msg, key="share_msg_copy", label_visibility="visible")
 
         cb1,cb2=st.columns(2)
         with cb1:
