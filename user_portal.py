@@ -775,45 +775,57 @@ else:
                 if not record:
                     st.error(T["not_on_wl"])
                 else:
-                    try:
-                        supabase.auth.sign_in_with_otp({
-                            "email": email_input.lower(),
-                            "options": {"should_create_user": False}
-                        })
-                        st.session_state.magic_sent  = True
-                        st.session_state.magic_email = email_input
-                        st.rerun()
-                    except Exception:
-                        st.error("Failed to send link. Please try again." if st.session_state.portal_lang == "EN" else "发送失败，请重试。")
+                    code = generate_otp()
+                    if "otp_store" not in st.session_state:
+                        st.session_state.otp_store = {}
+                    st.session_state.otp_store[email_input.lower()] = {
+                        "code": code, "created": datetime.now(timezone.utc).timestamp()
+                    }
+                    st.session_state.magic_sent  = True
+                    st.session_state.magic_email = email_input
+                    st.session_state._beta_code  = code
+                    st.rerun()
         st.markdown(f'<div style="text-align:center;margin-top:20px;font-family:\'Space Mono\',monospace;font-size:10px;color:#2a3a4a;"><a href="https://nexaedge.org" target="_blank" style="color:#4a6070;text-decoration:none;">{T["register_at"]}</a></div>', unsafe_allow_html=True)
 
     else:
+        beta_code = st.session_state.get("_beta_code", "")
         is_en = st.session_state.portal_lang == "EN"
-        check_msg  = "Check your inbox and click the sign-in link." if is_en else "请查收邮件并点击登录链接。"
-        resend_msg = "Didn't receive it? Check your spam folder, or use a different email." if is_en else "没收到？请检查垃圾邮件，或使用其他邮箱。"
         st.markdown(f"""
-        <div style="background:rgba(162,255,0,.04);border:1px solid rgba(162,255,0,.15);border-radius:12px;padding:28px;text-align:center;margin-bottom:20px;">
-            <div style="font-size:32px;margin-bottom:12px;">📬</div>
-            <div style="font-size:16px;font-weight:800;color:#e8edf2;margin-bottom:8px;">
-                {'Link sent!' if is_en else '链接已发送！'}
+        <div style="background:rgba(162,255,0,.04);border:1px solid rgba(162,255,0,.15);border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;">
+            <div style="font-size:24px;margin-bottom:8px;">📬</div>
+            <div style="font-size:14px;font-weight:700;color:#e8edf2;margin-bottom:6px;">{T['your_code']}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;line-height:1.7;margin-bottom:12px;">
+                {T['signing_in']}<br><strong style="color:#a2ff00;">{st.session_state.magic_email}</strong>
             </div>
-            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;line-height:1.8;margin-bottom:12px;">
-                {T['signing_in']}<br>
-                <strong style="color:#a2ff00;">{st.session_state.magic_email}</strong>
+            <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:#a2ff00;letter-spacing:.3em;background:#060b0f;border:1px solid rgba(162,255,0,.2);border-radius:8px;padding:12px 20px;display:inline-block;">
+                {beta_code}
             </div>
-            <div style="font-size:13px;color:#a2ff00;font-weight:700;margin-bottom:8px;">
-                {check_msg}
-            </div>
-            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;line-height:1.7;">
-                {resend_msg}
+            <div style="font-family:'Space Mono',monospace;font-size:8px;color:#2a3a4a;margin-top:10px;">{T['beta_warning']}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:8px;color:#2a3a4a;margin-top:4px;">
+                {'Email verification in development' if is_en else '邮件验证功能开发中'}
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+        otp_input = st.text_input(T["enter_code"], placeholder=T["code_ph"], max_chars=6, key="otp_input")
+        if st.button(T["verify"]):
+            if not otp_input or len(otp_input) < 6:
+                st.error(T["enter_code"])
+            elif verify_code(st.session_state.magic_email, otp_input):
+                record = lookup_waitlist(st.session_state.magic_email)
+                st.session_state.user_email = st.session_state.magic_email
+                st.session_state.user_data  = record
+                st.session_state.magic_sent = False
+                st.session_state._beta_code = ""
+                st.rerun()
+            else:
+                st.error(T["wrong_code"])
 
         st.markdown('<div style="margin-top:10px;"></div>', unsafe_allow_html=True)
         if st.button(T["diff_email"], type="secondary"):
             st.session_state.magic_sent  = False
             st.session_state.magic_email = ""
+            st.session_state._beta_code  = ""
             st.rerun()
 
 # ══════════════════════════════════════
