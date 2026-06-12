@@ -9,6 +9,7 @@ import hashlib
 import time
 import random
 import string
+import requests
 from datetime import datetime, timezone
 from supabase import create_client, Client
 
@@ -25,6 +26,7 @@ SUPABASE_URL    = st.secrets["supabase"]["url"]
 SUPABASE_KEY    = st.secrets["supabase"]["key"]
 SUPABASE_URL_JS = SUPABASE_URL
 SUPABASE_KEY_JS = SUPABASE_KEY
+RESEND_API_KEY  = st.secrets["resend"]["api_key"]
 
 # ══════════════════════════════════════
 # CSS
@@ -327,6 +329,50 @@ def get_node_task_count(token):
 
 def generate_otp():
     return "".join(random.choices(string.digits, k=6))
+
+def send_otp_email(to_email: str, code: str, is_zh: bool = False) -> bool:
+    """Send OTP code via Resend API."""
+    try:
+        subject = "NexaEdge — 您的登录验证码" if is_zh else "NexaEdge — Your login code"
+        body_html = f"""
+        <div style="background:#060b0f;padding:40px 20px;text-align:center;font-family:sans-serif;">
+            <img src="https://raw.githubusercontent.com/A1vinWong/nexaedge-web/main/IMG_7859.jpeg"
+                 width="180" style="margin-bottom:20px;border-radius:10px;">
+            <h2 style="color:#a2ff00;font-size:20px;margin-bottom:6px;">NexaEdge Network</h2>
+            <p style="color:#4a6070;font-size:12px;margin-bottom:24px;">
+                {'您的登录验证码' if is_zh else 'Your login code'}
+            </p>
+            <div style="background:#0d1720;border:1px solid rgba(162,255,0,.2);border-radius:10px;
+                        padding:20px 32px;display:inline-block;margin-bottom:24px;">
+                <div style="font-family:monospace;font-size:36px;font-weight:700;
+                            color:#a2ff00;letter-spacing:.3em;">{code}</div>
+            </div>
+            <p style="color:#4a6070;font-size:11px;line-height:1.7;">
+                {'此验证码10分钟内有效，仅可使用一次。' if is_zh else 'This code expires in 10 minutes and can only be used once.'}<br>
+                {'如果您没有请求此验证码，请忽略此邮件。' if is_zh else "If you didn't request this, you can ignore this email."}
+            </p>
+            <p style="color:#2a3a4a;font-size:9px;margin-top:20px;">
+                NexaEdge Network · Early Beta · contact@nexaedge.org
+            </p>
+        </div>
+        """
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": "NexaEdge <auth@nexaedge.org>",
+                "to": [to_email],
+                "subject": subject,
+                "html": body_html,
+            },
+            timeout=10,
+        )
+        return resp.status_code == 200
+    except Exception:
+        return False
 
 def generate_node_token():
     chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -781,28 +827,32 @@ else:
                     st.session_state.otp_store[email_input.lower()] = {
                         "code": code, "created": datetime.now(timezone.utc).timestamp()
                     }
-                    st.session_state.magic_sent  = True
-                    st.session_state.magic_email = email_input
-                    st.session_state._beta_code  = code
-                    st.rerun()
+                    sent = send_otp_email(email_input, code, is_zh)
+                    if sent:
+                        st.session_state.magic_sent  = True
+                        st.session_state.magic_email = email_input
+                        st.rerun()
+                    else:
+                        st.error("Failed to send code. Please try again." if st.session_state.portal_lang == "EN" else "发送失败，请重试。")
         st.markdown(f'<div style="text-align:center;margin-top:20px;font-family:\'Space Mono\',monospace;font-size:10px;color:#2a3a4a;"><a href="https://nexaedge.org" target="_blank" style="color:#4a6070;text-decoration:none;">{T["register_at"]}</a></div>', unsafe_allow_html=True)
 
     else:
-        beta_code = st.session_state.get("_beta_code", "")
         is_en = st.session_state.portal_lang == "EN"
         st.markdown(f"""
-        <div style="background:rgba(162,255,0,.04);border:1px solid rgba(162,255,0,.15);border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;">
-            <div style="font-size:24px;margin-bottom:8px;">📬</div>
-            <div style="font-size:14px;font-weight:700;color:#e8edf2;margin-bottom:6px;">{T['your_code']}</div>
-            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;line-height:1.7;margin-bottom:12px;">
-                {T['signing_in']}<br><strong style="color:#a2ff00;">{st.session_state.magic_email}</strong>
+        <div style="background:rgba(162,255,0,.04);border:1px solid rgba(162,255,0,.15);border-radius:12px;padding:28px;text-align:center;margin-bottom:20px;">
+            <div style="font-size:32px;margin-bottom:12px;">📬</div>
+            <div style="font-size:16px;font-weight:800;color:#e8edf2;margin-bottom:8px;">
+                {'Code sent!' if is_en else '验证码已发送！'}
             </div>
-            <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:#a2ff00;letter-spacing:.3em;background:#060b0f;border:1px solid rgba(162,255,0,.2);border-radius:8px;padding:12px 20px;display:inline-block;">
-                {beta_code}
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;line-height:1.8;margin-bottom:12px;">
+                {T['signing_in']}<br>
+                <strong style="color:#a2ff00;">{st.session_state.magic_email}</strong>
             </div>
-            <div style="font-family:'Space Mono',monospace;font-size:8px;color:#2a3a4a;margin-top:10px;">{T['beta_warning']}</div>
-            <div style="font-family:'Space Mono',monospace;font-size:8px;color:#2a3a4a;margin-top:4px;">
-                {'Email verification in development' if is_en else '邮件验证功能开发中'}
+            <div style="font-size:13px;color:#a2ff00;font-weight:700;margin-bottom:8px;">
+                {'Check your inbox for the 6-digit code.' if is_en else '请查收邮件中的6位验证码。'}
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#2a3a4a;line-height:1.7;">
+                {'Sent from auth@nexaedge.org · Check spam if not received.' if is_en else '从 auth@nexaedge.org 发送 · 如未收到请检查垃圾邮件。'}
             </div>
         </div>
         """, unsafe_allow_html=True)
