@@ -258,6 +258,31 @@ for k, v in {
     if k not in st.session_state:
         st.session_state[k] = v
 
+
+# ══════════════════════════════════════
+# MAGIC LINK TOKEN HANDLER
+# ══════════════════════════════════════
+if not st.session_state.user_email:
+    try:
+        params = st.query_params
+        access_token = params.get("access_token")
+        refresh_token = params.get("refresh_token")
+        if access_token and refresh_token:
+            session = supabase.auth.set_session(access_token, refresh_token)
+            if session and session.user and session.user.email:
+                email_ml = session.user.email
+                record_ml = None
+                try:
+                    res_ml = supabase.table("whitelist").select("*").eq("email", email_ml.lower()).execute()
+                    record_ml = res_ml.data[0] if res_ml.data else None
+                except: pass
+                st.session_state.user_email = email_ml
+                st.session_state.user_data  = record_ml
+                st.session_state.magic_sent = False
+                st.query_params.clear()
+                st.rerun()
+    except: pass
+
 # ══════════════════════════════════════
 # DB HELPERS
 # ══════════════════════════════════════
