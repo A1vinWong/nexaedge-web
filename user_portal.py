@@ -259,29 +259,6 @@ for k, v in {
         st.session_state[k] = v
 
 
-# ══════════════════════════════════════
-# MAGIC LINK TOKEN HANDLER
-# ══════════════════════════════════════
-if not st.session_state.user_email:
-    try:
-        params = st.query_params
-        access_token = params.get("access_token")
-        refresh_token = params.get("refresh_token")
-        if access_token and refresh_token:
-            session = supabase.auth.set_session(access_token, refresh_token)
-            if session and session.user and session.user.email:
-                email_ml = session.user.email
-                record_ml = None
-                try:
-                    res_ml = supabase.table("whitelist").select("*").eq("email", email_ml.lower()).execute()
-                    record_ml = res_ml.data[0] if res_ml.data else None
-                except: pass
-                st.session_state.user_email = email_ml
-                st.session_state.user_data  = record_ml
-                st.session_state.magic_sent = False
-                st.query_params.clear()
-                st.rerun()
-    except: pass
 
 # ══════════════════════════════════════
 # DB HELPERS
@@ -363,30 +340,7 @@ def verify_code(email, entered):
     if age > 600: return False
     return entered.strip() == store["code"]
 
-# ══════════════════════════════════════
-# FRAGMENT TOKEN EXTRACTOR
-# Reads access_token from URL hash and passes via query param
-# ══════════════════════════════════════
-st.components.v1.html("""
-<script>
-(function() {
-    const hash = window.location.hash;
-    if (!hash) return;
-    const params = new URLSearchParams(hash.substring(1));
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    if (access_token && refresh_token) {
-        // Clear the hash so it doesn't loop
-        history.replaceState(null, '', window.location.pathname);
-        // Redirect with tokens as query params so Streamlit can read them
-        const newUrl = window.location.pathname +
-            '?access_token=' + encodeURIComponent(access_token) +
-            '&refresh_token=' + encodeURIComponent(refresh_token);
-        window.location.replace(newUrl);
-    }
-})();
-</script>
-""", height=0)
+
 
 # ══════════════════════════════════════
 # HEADER
