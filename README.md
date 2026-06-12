@@ -5,9 +5,9 @@
 **A protocol to aggregate idle smartphone compute into a distributed edge AI inference network.**
 
 [![Waitlist](https://img.shields.io/badge/Waitlist-Open-22C55E?style=for-the-badge)](https://nexaedge.streamlit.app)
-[![Node Portal](https://img.shields.io/badge/Node_Portal-Live-22C55E?style=for-the-badge)](https://nexaedge-web-port.streamlit.app)
+[![Node Portal](https://img.shields.io/badge/Node_Portal-Live-22C55E?style=for-the-badge)](https://portal.nexaedge.org)
 [![Solana](https://img.shields.io/badge/Solana-SPL_Token-9945FF?style=for-the-badge)](https://solana.com)
-[![Stage](https://img.shields.io/badge/Stage-Pre--Seed_Concept-FF6B35?style=for-the-badge)](#)
+[![Stage](https://img.shields.io/badge/Stage-Early_Beta_·_In_Progress-FF6B35?style=for-the-badge)](#)
 
 </div>
 
@@ -49,16 +49,19 @@ AI Buyers  →  Solana BFT Settlement  →  Device Node Cluster
 
 ## Current Status
 
-> ⚠️ **Pre-Seed Concept Demo** — No production network is running. All node simulation figures are randomly generated for illustration. Real node heartbeat infrastructure is operational for testing.
+> ⚠️ **Early Beta — In Progress** — Core infrastructure is live and validated. All task execution is simulated. Native iOS/Android app is in development. No production inference network is running yet.
 
 |Component                     |Status                        |
 |------------------------------|------------------------------|
 |Protocol Architecture         |✅ Finalized                   |
+|Whitepaper                    |✅ Live                        |
 |Waitlist Portal               |✅ Live                        |
 |Node Registration System      |✅ Live                        |
 |Browser-based Heartbeat Client|✅ Live                        |
+|Task Queue                    |✅ Live (simulated execution)  |
 |Admin Dashboard               |✅ Live                        |
 |NEXA Token (Solana SPL)       |✅ Minted — not yet distributed|
+|iOS/Android Native App        |🔨 In Development (Q3 2026)    |
 |WASM Runtime (iOS/Android)    |🔨 Q3 2026                     |
 |SLM Inference on Device NPU   |🔨 Q3 2026                     |
 |Closed Beta (1,000 nodes)     |🔨 Q4 2026                     |
@@ -85,8 +88,11 @@ nexaedge/
 ├── homepage.py          # Main public-facing app (waitlist, sim, market)
 ├── admin_console.py     # Password-protected admin dashboard
 ├── user_portal.py       # Node portal (login, node registration, heartbeat)
-├── node_client.py       # Python heartbeat client (desktop)
+├── node_client.py       # Python heartbeat client + task executor (desktop)
+├── whitepaper.html      # Standalone whitepaper (static)
 ├── requirements.txt
+├── logo.png             # Brand assets
+├── IMG_7859.jpeg        # Brand assets
 └── .streamlit/
     └── secrets.toml     # Supabase credentials (not committed)
 ```
@@ -100,39 +106,40 @@ nexaedge/
 - **Auth:** Supabase OTP (email-based, no password)
 - **Blockchain:** Solana SPL
 - **Heartbeat:** Browser JS → Supabase REST API
+- **Node Client:** Python + psutil (desktop heartbeat + simulated task executor)
 - **Hosting:** Streamlit Cloud
 
 -----
 
 ## Roadmap
 
-|Phase     |Timeline|Milestone                                 |
-|----------|--------|------------------------------------------|
-|**NOW**   |Q2 2026 |Concept validation, waitlist, token minted|
-|**NEXT**  |Q3 2026 |WASM sandbox MVP, 50-device internal alpha|
-|**BETA**  |Q4 2026 |1,000-node closed beta, Solana testnet    |
-|**LAUNCH**|Q1 2027 |Public mainnet, 100K node target          |
-|**SCALE** |2027+   |ZK-ML live, laptop/IoT expansion, Series A|
+|Phase     |Timeline|Milestone                                                                                              |
+|----------|--------|-------------------------------------------------------------------------------------------------------|
+|**DONE**  |Q2 2026 |Architecture finalized, whitepaper live, waitlist + node registration + heartbeat + task queue deployed|
+|**NOW**   |Q3 2026 |Early Beta — simulated task execution, node portal live, iOS developer recruitment in progress         |
+|**NEXT**  |Q4 2026 |Native iOS/Android app, 1,000-node closed beta, Solana testnet                                         |
+|**LAUNCH**|Q1 2027 |Public mainnet, 100K node target                                                                       |
+|**SCALE** |2027+   |ZK-ML live, laptop/IoT expansion, Series A                                                             |
 
 -----
 
 ## Links
 
-|             |                                                                          |
-|-------------|--------------------------------------------------------------------------|
-|🌐 Main App   |[nexaedge.streamlit.app](https://nexaedge.streamlit.app)                  |
-|📡 Node Portal|[nexaedge-web-port.streamlit.app](https://nexaedge-web-port.streamlit.app)|
-|🐦 X / Twitter|[@nexaedge_](https://x.com/nexaedge_)                                     |
-|📢 Telegram   |[t.me/NexaEdge7](https://t.me/NexaEdge7)                                  |
-|🎵 TikTok     |[@nexaedge7](https://www.tiktok.com/@nexaedge7)                           |
-|📸 Instagram  |[@nexaedge__](https://www.instagram.com/nexaedge__)                       |
-|👥 Facebook   |[NexaEdge](https://www.facebook.com/share/18eXN6P3Ge/)                    |
-|📧 Email      |[contact@nexaedge.org](mailto:contact@nexaedge.org)                       |
+|             |                                                        |
+|-------------|--------------------------------------------------------|
+|🌐 Main App   |[nexaedge.streamlit.app](https://nexaedge.streamlit.app)|
+|📡 Node Portal|[portal.nexaedge.org](https://portal.nexaedge.org)      |
+|🐦 X / Twitter|[@nexaedge_](https://x.com/nexaedge_)                   |
+|📢 Telegram   |[t.me/NexaEdge7](https://t.me/NexaEdge7)                |
+|🎵 TikTok     |[@nexaedge7](https://www.tiktok.com/@nexaedge7)         |
+|📸 Instagram  |[@nexaedge__](https://www.instagram.com/nexaedge__)     |
+|👥 Facebook   |[NexaEdge](https://www.facebook.com/share/18eXN6P3Ge/)  |
+|📧 Email      |[contact@nexaedge.org](mailto:contact@nexaedge.org)     |
 
 -----
 
 ## Disclaimer
 
-NexaEdge is at pre-seed concept stage. All technical claims are design targets, not guarantees. No investment contract has been formed. Joining the waitlist does not create any legal right or entitlement to tokens, equity, or financial instruments.
+NexaEdge is at Early Beta stage. Core infrastructure is live; all compute execution is currently simulated. Technical claims are design targets, not guarantees. No investment contract has been formed. Joining the waitlist does not create any legal right or entitlement to tokens, equity, or financial instruments.
 
 © 2026 NexaEdge Network. All rights reserved.
