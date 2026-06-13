@@ -479,8 +479,8 @@ if st.session_state.user_email:
     """, unsafe_allow_html=True)
 
     import urllib.parse
-    # ── X share URL points to the portal app
-    x_site_url = "https://nexaedge-web-8kbmclc8ma5kuqbcdvbyrj.streamlit.app"
+    # ── 分享链接指向 nexaedge.org（已更新）
+    x_site_url = "https://nexaedge.org"
     if is_zh:
         share_text_only = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}"
         share_text      = f"{share_text_only}\n{x_site_url}"
