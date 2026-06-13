@@ -484,14 +484,14 @@ if st.session_state.user_email:
     if is_zh:
         share_text_only = f"加入 NexaEdge 候补名单 🟢\n将闲置手机算力变成分布式 AI 网络，赚取 NEXA 代币。\n推荐码：{ref_code}"
         share_text      = f"{share_text_only}\n{x_site_url}"
-        wa_msg          = f"加入 NexaEdge 候补名单 — 将闲置手机算力变成分布式 AI 网络。使用我的推荐码 {ref_code} . nexaedge.org"
+        wa_msg          = f"加入 NexaEdge 候补名单 — 将闲置手机算力变成分布式 AI 网络。使用我的推荐码 {ref_code} . {x_site_url}"
         tg_url          = "https://telegram.me/share/url?url=" + urllib.parse.quote(x_site_url) + "&text=" + urllib.parse.quote(share_text)
         wa_url          = "https://wa.me/?text=" + urllib.parse.quote(wa_msg)
         x_url           = "https://x.com/intent/tweet?text=" + urllib.parse.quote(share_text_only) + "&url=" + urllib.parse.quote(x_site_url)
     else:
         share_text_only = f"Join the NexaEdge waitlist 🟢\nDistributed edge AI on smartphones — earn NEXA tokens.\nReferral code: {ref_code}"
         share_text      = f"{share_text_only}\n{x_site_url}"
-        wa_msg          = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref_code} . nexaedge.org"
+        wa_msg          = f"Join the NexaEdge waitlist — distributed edge AI on smartphones. Use my code {ref_code} . {x_site_url}"
         tg_url          = "https://telegram.me/share/url?url=" + urllib.parse.quote(x_site_url) + "&text=" + urllib.parse.quote(share_text)
         wa_url          = "https://wa.me/?text=" + urllib.parse.quote(wa_msg)
         x_url           = "https://x.com/intent/tweet?text=" + urllib.parse.quote(share_text_only) + "&url=" + urllib.parse.quote(x_site_url)
