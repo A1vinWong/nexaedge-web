@@ -805,3 +805,4 @@ NexaEdge Network &nbsp;·&nbsp; Early Beta · Q3 2026 &nbsp;·&nbsp; Infrastruct
 NEXA minted on Solana · Not yet in public circulation &nbsp;·&nbsp; No investment contract formed &nbsp;·&nbsp; contact@nexaedge.org<br>
 © 2026 NexaEdge Network. All rights reserved.
 </div>""", unsafe_allow_html=True)
+
