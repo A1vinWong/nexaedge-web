@@ -12,7 +12,8 @@ st.set_page_config(
     page_icon="🟢",
     layout="centered"
 )
-
+st.write("NEXAEDGE TEST")
+st.stop()
 SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 
