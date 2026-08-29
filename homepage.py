@@ -307,8 +307,9 @@ if st.session_state.sim_running:
     st.session_state.nexa_earned += reward
 
 is_zh = st.session_state.lang == 'ZH'
-total_reg_count = db_count()
-live = db_live_nodes()
+
+total_reg_count = 0
+live = {"online": 0, "total": 0}
 
 c1, c2, c3 = st.columns([1, 2, 1])
 with c2:
