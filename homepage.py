@@ -306,8 +306,6 @@ if st.session_state.sim_running:
     st.session_state.nexa_rate = reward
     st.session_state.nexa_earned += reward
 
-is_zh = st.session_state.lang == 'ZH'
-
 total_reg_count = 0
 live = {"online": 0, "total": 0}
 
