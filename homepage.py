@@ -306,8 +306,9 @@ if st.session_state.sim_running:
     st.session_state.nexa_rate = reward
     st.session_state.nexa_earned += reward
 
-total_reg_count = 0
-live = {"online": 0, "total": 0}
+is_zh = st.session_state.lang == 'ZH'
+total_reg_count = db_count()
+live = db_live_nodes()
 
 c1, c2, c3 = st.columns([1, 2, 1])
 with c2:
@@ -804,4 +805,3 @@ NexaEdge Network &nbsp;·&nbsp; Early Beta · Q3 2026 &nbsp;·&nbsp; Infrastruct
 NEXA minted on Solana · Not yet in public circulation &nbsp;·&nbsp; No investment contract formed &nbsp;·&nbsp; contact@nexaedge.org<br>
 © 2026 NexaEdge Network. All rights reserved.
 </div>""", unsafe_allow_html=True)
-
